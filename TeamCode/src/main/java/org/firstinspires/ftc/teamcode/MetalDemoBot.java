@@ -4,15 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-/**
- * Created by hprobotics on 9/10/16.
- */
-
 @TeleOp(name = "Metal Demo Bot", group = "Teleop")
 public class MetalDemoBot extends OpMode {
 
-    DcMotor motorLeft;
-    DcMotor motorRight;
+    private DcMotor motorLeft;
+    private DcMotor motorRight;
 
     @Override
     public void init() {

@@ -4,16 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-/**
- * Created by hprobotics on 9/10/16.
- */
-
 @TeleOp(name = "Scissor Lift Bot", group = "Teleop")
 public class ScissorLiftBot extends OpMode {
 
-    DcMotor motorLeft;
-    DcMotor motorRight1;
-    DcMotor motorRight2;
+    private DcMotor motorLeft;
+    private DcMotor motorRight1;
+    private DcMotor motorRight2;
 
     @Override
     public void init() {

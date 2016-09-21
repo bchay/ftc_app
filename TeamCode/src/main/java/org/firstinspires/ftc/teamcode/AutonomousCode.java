@@ -5,22 +5,19 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-/**
- * Created by hprobotics on 9/19/16.
- */
-
 @Autonomous(name = "Autonomous", group = "Autonomous")
 public class AutonomousCode extends LinearOpMode {
 
-    DcMotor motorFrontLeft;
-    DcMotor motorBackLeft;
-    DcMotor motorFrontRight;
-    DcMotor motorBackRight;
+    private DcMotor motorFrontLeft;
+    private DcMotor motorBackLeft;
+    private DcMotor motorFrontRight;
+    private DcMotor motorBackRight;
 
-    ModernRoboticsI2cGyro gyro;
+    private ModernRoboticsI2cGyro gyro;
 
     //Constants
-    public static final double ENCODER_RATIO = 1;
+    private final double ENCODER_RATIO = 1;
+
 
     public void runOpMode() throws InterruptedException {
 

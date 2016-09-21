@@ -6,15 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
-/**
- * Created by hprobotics on 9/20/16.
- */
-
 @TeleOp(name = "Color Sensor Test", group = "Teleop")
 public class ColorSensorTest extends OpMode {
 
-    public ColorSensor colorSensor;
-    float[] hsv = {0F, 0F, 0F};
+    private ColorSensor colorSensor;
+    private float[] hsv = {0F, 0F, 0F};
 
     public void init() {
         colorSensor = hardwareMap.colorSensor.get("color");
