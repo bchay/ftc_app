@@ -11,6 +11,9 @@ public class Gyroscope extends OpMode {
     public void init() {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();
+
+        telemetry.addData("Gyroscope is calibrated.", "");
+        telemetry.update();
     }
 
     public void loop() {

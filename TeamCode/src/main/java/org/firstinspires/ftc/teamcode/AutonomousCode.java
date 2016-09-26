@@ -27,7 +27,8 @@ public class AutonomousCode extends LinearOpMode {
     private OpticalDistanceSensor ods;
 
     //Variables
-    private final double ENCODER_RATIO = 1;
+    private final double ENCODER_RATIO = 25.8693401577559; //ticks / in
+
     private float[] hsv = {0F, 0F, 0F};
 
 
@@ -82,7 +83,7 @@ public class AutonomousCode extends LinearOpMode {
         waitForStart();
 
         //Beginning of Actual Code
-        turn(90);
+        move(24);
 
     }
 
@@ -141,7 +142,7 @@ public class AutonomousCode extends LinearOpMode {
         motorRight1.setTargetPosition((int) (motorRight1.getCurrentPosition() + distance));
         motorRight2.setTargetPosition((int) (motorRight2.getCurrentPosition() + distance));
 
-        Thread.sleep(100);
+        Thread.sleep(50);
 
         motorLeft1.setPower(.5);
         motorLeft2.setPower(.5);
@@ -149,6 +150,8 @@ public class AutonomousCode extends LinearOpMode {
         motorRight2.setPower(.5);
 
         while(motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy()) {
+            telemetry.addData("Gyroscope Heading", gyro.getIntegratedZValue());
+            telemetry.update();
             idle();
         }
 
