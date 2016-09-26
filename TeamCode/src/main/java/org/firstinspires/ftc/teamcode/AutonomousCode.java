@@ -3,37 +3,61 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name = "Autonomous", group = "Autonomous")
+@Autonomous(name = "Autonomous", group = "Main Code")
 public class AutonomousCode extends LinearOpMode {
 
-    private DcMotor motorFrontLeft;
-    private DcMotor motorBackLeft;
-    private DcMotor motorFrontRight;
-    private DcMotor motorBackRight;
+    //Hardware Declaration
+    private DcMotor motorLeft1;
+    private DcMotor motorLeft2;
+    private DcMotor motorRight1;
+    private DcMotor motorRight2;
+
+    private Servo buttonPresserLeft;
+    private Servo buttonPresserRight;
 
     private ModernRoboticsI2cGyro gyro;
+    private ColorSensor colorFront;
+    //private ColorSensor colorBottom;
+    private OpticalDistanceSensor ods;
 
-    //Constants
+    //Variables
     private final double ENCODER_RATIO = 1;
+    private float[] hsv = {0F, 0F, 0F};
 
 
     public void runOpMode() throws InterruptedException {
 
-        //Variable Instantiation
-        motorFrontLeft = hardwareMap.dcMotor.get("frontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("backLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("frontRight");
-        motorBackRight = hardwareMap.dcMotor.get("backRight");
+        //Hardware Instantiation
+        motorLeft1 = hardwareMap.dcMotor.get("left1");
+        motorLeft2 = hardwareMap.dcMotor.get("left2");
+        motorRight1 = hardwareMap.dcMotor.get("right1");
+        motorRight2 = hardwareMap.dcMotor.get("right2");
+
+        motorLeft1.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeft2.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRight1.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRight2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        buttonPresserLeft = hardwareMap.servo.get("button_left");
+        buttonPresserRight = hardwareMap.servo.get("button_left");
 
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
+        colorFront = hardwareMap.colorSensor.get("color_front");
+        //colorBottom = hardwareMap.colorSensor.get("color_bottom");
+        ods = hardwareMap.opticalDistanceSensor.get("ods");
+
         //Gyro reset
         gyro.calibrate();
-        while(gyro.isCalibrating()) {
-            telemetry.addData("Gyroscope is being calibrated.", "");
-            telemetry.update();
+
+        // Wait while gyro is calibrating
+        while (gyro.isCalibrating())  {
             Thread.sleep(50);
             idle();
         }
@@ -42,81 +66,95 @@ public class AutonomousCode extends LinearOpMode {
         telemetry.update();
 
         //Motor Reset
-        motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        motorFrontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorFrontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        telemetry.addData("Encoders are reset", "");
+        telemetry.update();
 
         waitForStart();
 
         //Beginning of Actual Code
-        turn(-45);
+        turn(90);
 
     }
 
-    public void turn(int degrees) throws InterruptedException { //positive degree for turning right
+    public void turn(int degrees) throws InterruptedException { //Positive degree for turning left
         int currentHeading = gyro.getIntegratedZValue();
         int targetHeading = currentHeading + degrees;
 
-        telemetry.addData("Current heading: ", gyro.getIntegratedZValue());
-        telemetry.addData("Degrees: ", degrees);
+        //Change mode because turn() uses motor power and not motor position
+        motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        if(degrees < 0) {
+            while(gyro.getIntegratedZValue() > targetHeading) {
+                motorLeft1.setPower(-.5);
+                motorLeft2.setPower(-.5);
+                motorRight1.setPower(.5);
+                motorRight2.setPower(.5);
 
-        if(degrees < 0) { //Left turn
-            while(gyro.getIntegratedZValue() > currentHeading + degrees) {
-                motorFrontLeft.setPower(-.5);
-                motorBackLeft.setPower(-.5);
-                motorFrontRight.setPower(.5);
-                motorFrontLeft.setPower(.5);
-                telemetry.addData("Distance to turn: ", gyro.getIntegratedZValue() - targetHeading);
+                telemetry.addData("Heading", gyro.getIntegratedZValue());
                 telemetry.update();
-                Thread.sleep(50);
                 idle();
             }
-        } else { //Right turn
-            while (gyro.getIntegratedZValue() < currentHeading + degrees) { //Left turn
-                motorFrontLeft.setPower(.5);
-                motorBackLeft.setPower(.5);
-                motorFrontRight.setPower(-.5);
-                motorFrontLeft.setPower(-.5);
+        } else { //Left
+            while (gyro.getIntegratedZValue() < targetHeading) {
+                motorLeft1.setPower(.5);
+                motorLeft2.setPower(.5);
+                motorRight1.setPower(-.5);
+                motorRight2.setPower(-.5);
 
-                telemetry.addData("Distance to turn: ", targetHeading - gyro.getIntegratedZValue());
+                telemetry.addData("Heading", gyro.getIntegratedZValue());
                 telemetry.update();
-                Thread.sleep(50);
                 idle();
             }
         }
 
-        motorFrontLeft.setPower(0);
-        motorBackLeft.setPower(0);
-        motorFrontRight.setPower(0);
-        motorFrontLeft.setPower(0);
+        motorLeft1.setPower(0);
+        motorLeft2.setPower(0);
+        motorRight1.setPower(0);
+        motorRight2.setPower(0);
     }
 
-    public void drive (double distance) throws InterruptedException { //distance in inches
-        double ticks = distance * ENCODER_RATIO;
-        motorFrontLeft.setTargetPosition((int) (motorFrontLeft.getCurrentPosition() + ticks));
-        motorBackLeft.setTargetPosition((int) (motorBackLeft.getCurrentPosition() + ticks));
-        motorFrontRight.setTargetPosition((int) (motorFrontRight.getCurrentPosition() + ticks));
-        motorBackRight.setTargetPosition((int) (motorBackRight.getCurrentPosition() + ticks));
+    public void move(double distance) throws InterruptedException {
+        distance *= ENCODER_RATIO;
 
-        motorFrontLeft.setPower(.5);
-        motorBackLeft.setPower(.5);
-        motorFrontRight.setPower(.5);
-        motorBackRight.setPower(.5);
 
-        if(motorFrontLeft.isBusy() && motorBackLeft.isBusy() && motorFrontRight.isBusy() && motorBackRight.isBusy()) { //Forward
+        //Change mode because move() uses setTargetPosition()
+        motorLeft1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        motorLeft1.setTargetPosition((int) (motorLeft1.getCurrentPosition() + distance));
+        motorLeft2.setTargetPosition((int) (motorLeft2.getCurrentPosition() + distance));
+        motorRight1.setTargetPosition((int) (motorRight1.getCurrentPosition() + distance));
+        motorRight2.setTargetPosition((int) (motorRight2.getCurrentPosition() + distance));
+
+        Thread.sleep(100);
+
+        motorLeft1.setPower(.5);
+        motorLeft2.setPower(.5);
+        motorRight1.setPower(.5);
+        motorRight2.setPower(.5);
+
+        while(motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy()) {
             idle();
         }
 
-        motorFrontLeft.setPower(0);
-        motorBackLeft.setPower(0);
-        motorFrontRight.setPower(0);
-        motorBackRight.setPower(0);
+        motorLeft1.setPower(0);
+        motorLeft2.setPower(0);
+        motorRight1.setPower(0);
+        motorRight2.setPower(0);
     }
 }

@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "Metal Demo Bot", group = "Teleop")
+@TeleOp(name = "Metal Demo Bot", group = "Demo Bot")
 public class MetalDemoBot extends OpMode {
 
     private DcMotor motorLeft;

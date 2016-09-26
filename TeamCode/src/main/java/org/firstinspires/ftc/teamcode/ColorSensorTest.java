@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
-@TeleOp(name = "Color Sensor Test", group = "Teleop")
+@TeleOp(name = "Color Sensor Test", group = "Test Code")
 public class ColorSensorTest extends OpMode {
 
     private ColorSensor colorSensor;
@@ -26,7 +26,7 @@ public class ColorSensorTest extends OpMode {
         telemetry.addData("Alpha", colorSensor.alpha());
 
         telemetry.addData("Hue", hsv[0]);
-        telemetry.addData("Value", hsv[1]);
-        telemetry.addData("Saturation", hsv[2]);
+        telemetry.addData("Saturation", hsv[1]);
+        telemetry.addData("Value", hsv[2]);
     }
 }
