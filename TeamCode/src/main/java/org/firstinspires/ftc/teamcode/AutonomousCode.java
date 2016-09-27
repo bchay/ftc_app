@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name = "Autonomous", group = "Main Code")
 public class AutonomousCode extends LinearOpMode {
@@ -27,7 +28,7 @@ public class AutonomousCode extends LinearOpMode {
     private OpticalDistanceSensor ods;
 
     //Variables
-    private final double ENCODER_RATIO = 25.8693401577559; //ticks / in
+    private final double ENCODER_RATIO = 166.898634962; //ticks / in
 
     private float[] hsv = {0F, 0F, 0F};
 
@@ -82,12 +83,20 @@ public class AutonomousCode extends LinearOpMode {
 
         waitForStart();
 
-        //Beginning of Actual Code
-        move(24);
+        String allianceColor = "red";
 
+        //Beginning of Actual Code
+
+        //Robot begins third tile away from corner vortex wall, wheels touching next full tile next to vortex
+
+        if(allianceColor.equals("red")) {
+            //move(44, .5); //initial forward movement
+            turn(90, .1);
+            //move(31, .5); //Apporach to beacon
+        }
     }
 
-    public void turn(int degrees) throws InterruptedException { //Positive degree for turning left
+    public void turn(int degrees, double maxSpeed) throws InterruptedException { //Positive degree for turning left
         int currentHeading = gyro.getIntegratedZValue();
         int targetHeading = currentHeading + degrees;
 
@@ -97,24 +106,36 @@ public class AutonomousCode extends LinearOpMode {
         motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        double speed = .1;
+
         if(degrees < 0) {
             while(gyro.getIntegratedZValue() > targetHeading) {
-                motorLeft1.setPower(-.5);
-                motorLeft2.setPower(-.5);
-                motorRight1.setPower(.5);
-                motorRight2.setPower(.5);
 
+                if((gyro.getIntegratedZValue() - targetHeading) / targetHeading < .25) speed = Range.clip(speed + .02, .1, maxSpeed);
+                else speed = Range.clip(speed - .02, maxSpeed, .1);
+
+
+                motorLeft1.setPower(-maxSpeed);
+                motorLeft2.setPower(-maxSpeed);
+                motorRight1.setPower(maxSpeed);
+                motorRight2.setPower(maxSpeed);
+
+                telemetry.addData("Distance to turn: ", gyro.getIntegratedZValue() - targetHeading);
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
                 telemetry.update();
                 idle();
             }
         } else { //Left
             while (gyro.getIntegratedZValue() < targetHeading) {
-                motorLeft1.setPower(.5);
-                motorLeft2.setPower(.5);
-                motorRight1.setPower(-.5);
-                motorRight2.setPower(-.5);
+                if((targetHeading - gyro.getIntegratedZValue()) / targetHeading < .25) speed = Range.clip(speed + .02, .1, maxSpeed);
+                else speed = Range.clip(speed - .02, maxSpeed, .1);
 
+                motorLeft1.setPower(speed);
+                motorLeft2.setPower(speed);
+                motorRight1.setPower(-speed);
+                motorRight2.setPower(-speed);
+
+                telemetry.addData("Distance to turn: ", targetHeading - gyro.getIntegratedZValue());
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
                 telemetry.update();
                 idle();
@@ -127,7 +148,7 @@ public class AutonomousCode extends LinearOpMode {
         motorRight2.setPower(0);
     }
 
-    public void move(double distance) throws InterruptedException {
+    public void move(double distance, double maxSpeed) throws InterruptedException {
         distance *= ENCODER_RATIO;
 
 
@@ -144,10 +165,10 @@ public class AutonomousCode extends LinearOpMode {
 
         Thread.sleep(50);
 
-        motorLeft1.setPower(.5);
-        motorLeft2.setPower(.5);
-        motorRight1.setPower(.5);
-        motorRight2.setPower(.5);
+        motorLeft1.setPower(maxSpeed);
+        motorLeft2.setPower(maxSpeed);
+        motorRight1.setPower(maxSpeed);
+        motorRight2.setPower(maxSpeed);
 
         while(motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy()) {
             telemetry.addData("Gyroscope Heading", gyro.getIntegratedZValue());
@@ -159,5 +180,11 @@ public class AutonomousCode extends LinearOpMode {
         motorLeft2.setPower(0);
         motorRight1.setPower(0);
         motorRight2.setPower(0);
+    }
+
+    public String getColorName(float[] hsv) {
+        if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return "red";
+        else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return "blue";
+        return null;
     }
 }

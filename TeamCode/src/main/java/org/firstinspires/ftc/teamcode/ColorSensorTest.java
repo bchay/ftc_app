@@ -13,7 +13,7 @@ public class ColorSensorTest extends OpMode {
     private float[] hsv = {0F, 0F, 0F};
 
     public void init() {
-        colorSensor = hardwareMap.colorSensor.get("color");
+        colorSensor = hardwareMap.colorSensor.get("color_front");
         colorSensor.enableLed(false);
     }
 
@@ -28,5 +28,9 @@ public class ColorSensorTest extends OpMode {
         telemetry.addData("Hue", hsv[0]);
         telemetry.addData("Saturation", hsv[1]);
         telemetry.addData("Value", hsv[2]);
+
+        if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) telemetry.addData("Color is RED", "");
+        else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) telemetry.addData("Color is BLUE", "");
+        else telemetry.addData("Color cannot be determined.", "");
     }
 }
