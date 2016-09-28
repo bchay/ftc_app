@@ -97,8 +97,7 @@ public class AutonomousCode extends LinearOpMode {
     }
 
     public void turn(int degrees, double maxSpeed) throws InterruptedException { //Positive degree for turning left
-        int currentHeading = gyro.getIntegratedZValue();
-        int targetHeading = currentHeading + degrees;
+        int targetHeading = gyro.getHeading() + degrees;
 
         //Change mode because turn() uses motor power and not motor position
         motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -111,14 +110,14 @@ public class AutonomousCode extends LinearOpMode {
         if(degrees < 0) {
             while(gyro.getIntegratedZValue() > targetHeading) {
 
-                if((gyro.getIntegratedZValue() - targetHeading) / targetHeading < .25) speed = Range.clip(speed + .02, .1, maxSpeed);
-                else speed = Range.clip(speed - .02, maxSpeed, .1);
+                if(Math.abs(gyro.getIntegratedZValue() - targetHeading) > Math.abs(.25 * degrees)) speed = Range.clip(speed + .02, .1, maxSpeed);
+                else speed = Range.clip(speed - .02, .1, maxSpeed);
 
 
-                motorLeft1.setPower(-maxSpeed);
-                motorLeft2.setPower(-maxSpeed);
-                motorRight1.setPower(maxSpeed);
-                motorRight2.setPower(maxSpeed);
+                motorLeft1.setPower(-speed);
+                motorLeft2.setPower(-speed);
+                motorRight1.setPower(speed);
+                motorRight2.setPower(speed);
 
                 telemetry.addData("Distance to turn: ", gyro.getIntegratedZValue() - targetHeading);
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
@@ -127,8 +126,8 @@ public class AutonomousCode extends LinearOpMode {
             }
         } else { //Left
             while (gyro.getIntegratedZValue() < targetHeading) {
-                if((targetHeading - gyro.getIntegratedZValue()) / targetHeading < .25) speed = Range.clip(speed + .02, .1, maxSpeed);
-                else speed = Range.clip(speed - .02, maxSpeed, .1);
+                if(Math.abs(targetHeading - gyro.getIntegratedZValue()) > Math.abs(.25 * degrees)) speed = Range.clip(speed + .02, .1, maxSpeed);
+                else speed = Range.clip(speed - .02, .1, maxSpeed);
 
                 motorLeft1.setPower(speed);
                 motorLeft2.setPower(speed);
