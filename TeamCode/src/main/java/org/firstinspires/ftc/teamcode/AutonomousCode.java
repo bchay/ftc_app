@@ -24,11 +24,13 @@ public class AutonomousCode extends LinearOpMode {
 
     private ModernRoboticsI2cGyro gyro;
     private ColorSensor colorFront;
-    //private ColorSensor colorBottom;
+    private ColorSensor colorBottom;
     private OpticalDistanceSensor ods;
 
     //Variables
     private final double ENCODER_RATIO = 166.898634962; //ticks / in
+    private final double BUTTON_PRESSER_LEFT_UP = .5;
+    private final double BUTTON_PRESSER_RIGHT_UP = .5;
 
     private float[] hsv = {0F, 0F, 0F};
 
@@ -52,7 +54,7 @@ public class AutonomousCode extends LinearOpMode {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
         colorFront = hardwareMap.colorSensor.get("color_front");
-        //colorBottom = hardwareMap.colorSensor.get("color_bottom");
+        colorBottom = hardwareMap.colorSensor.get("color_bottom");
         ods = hardwareMap.opticalDistanceSensor.get("ods");
 
         //Gyro reset
@@ -66,6 +68,14 @@ public class AutonomousCode extends LinearOpMode {
 
         telemetry.addData("Gyroscope is calibrated.", "");
         telemetry.update();
+
+        //Position Servoes
+        buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_UP);
+        buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_UP);
+
+        //Enable Color Sensor LEDs
+        colorBottom.enableLed(true);
+        colorFront.enableLed(false);
 
         //Motor Reset
         motorLeft1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -91,7 +101,7 @@ public class AutonomousCode extends LinearOpMode {
 
         if(allianceColor.equals("red")) {
             //move(44, .5); //initial forward movement
-            turn(90, .1);
+            //turn(90, .1);
             //move(31, .5); //Apporach to beacon
         }
     }
@@ -105,19 +115,12 @@ public class AutonomousCode extends LinearOpMode {
         motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double speed = .1;
-
         if(degrees < 0) {
             while(gyro.getIntegratedZValue() > targetHeading) {
-
-                if(Math.abs(gyro.getIntegratedZValue() - targetHeading) > Math.abs(.25 * degrees)) speed = Range.clip(speed + .02, .1, maxSpeed);
-                else speed = Range.clip(speed - .02, .1, maxSpeed);
-
-
-                motorLeft1.setPower(-speed);
-                motorLeft2.setPower(-speed);
-                motorRight1.setPower(speed);
-                motorRight2.setPower(speed);
+                motorLeft1.setPower(-maxSpeed);
+                motorLeft2.setPower(-maxSpeed);
+                motorRight1.setPower(maxSpeed);
+                motorRight2.setPower(maxSpeed);
 
                 telemetry.addData("Distance to turn: ", gyro.getIntegratedZValue() - targetHeading);
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
@@ -126,13 +129,10 @@ public class AutonomousCode extends LinearOpMode {
             }
         } else { //Left
             while (gyro.getIntegratedZValue() < targetHeading) {
-                if(Math.abs(targetHeading - gyro.getIntegratedZValue()) > Math.abs(.25 * degrees)) speed = Range.clip(speed + .02, .1, maxSpeed);
-                else speed = Range.clip(speed - .02, .1, maxSpeed);
-
-                motorLeft1.setPower(speed);
-                motorLeft2.setPower(speed);
-                motorRight1.setPower(-speed);
-                motorRight2.setPower(-speed);
+                motorLeft1.setPower(maxSpeed);
+                motorLeft2.setPower(maxSpeed);
+                motorRight1.setPower(-maxSpeed);
+                motorRight2.setPower(-maxSpeed);
 
                 telemetry.addData("Distance to turn: ", targetHeading - gyro.getIntegratedZValue());
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
