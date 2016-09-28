@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -84,9 +84,9 @@ import java.util.List;
  * is explained below.
  */
 
-@Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
+@Autonomous(name="Test: Vuforia Navigation", group ="Test")
 @Disabled
-public class ConceptVuforiaNavigation extends LinearOpMode {
+public class VuforiaTest extends LinearOpMode {
 
     public static final String TAG = "Vuforia Test";
 
@@ -123,7 +123,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * {@link Parameters} instance with which you initialize Vuforia.
          */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        parameters.vuforiaLicenseKey = "ATsODcD/////AAAAAVw2lR...d45oGpdljdOh5LuFB9nDNfckoxb8COxKSFX";
+        parameters.vuforiaLicenseKey = "AUi+nV//////AAAAGZq1peRKQEjKg3d9p19GK8E1ZjKtWfHRXSGqTvSJLu/4/" +
+         "aVJU/dEjc5hzg3mMw8yWUdNFMBGVKLfnbfvdGCYnkHmvvCq0QMpwyq9Tn2igmrb5A4x5Lwv3L81dvR36kwhCJJdQNkS" +
+         "S7iYxBxKHo5UbSERkmJeq3QDaF87iNPTM7klpNJ8mQLhHva3ooAlsxLJ2SBQwuZdaQILxzWvUYAqETX7n60x7NsTcm+" +
+         "xhofqWyMBz2C9WPtfsuk0qPIBYkHvFLsfue//qH/ABY+nGsFe8XbXaPYMCg3krlCp4/j6SWuX3cUgqyKJrNsumwy0VU" +
+         "LyM+5FBGzt9mAHeIY84tKTUGRfoJJj4eSMaRAYI95a1bf5";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
@@ -135,16 +139,22 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("StonesAndChips");
-        VuforiaTrackable redTarget = stonesAndChips.get(0);
-        redTarget.setName("RedTarget");  // Stones
+        VuforiaTrackables gltw = this.vuforia.loadTrackablesFromAsset("GearsLegosToolsWheels");
+        VuforiaTrackable target1 = gltw.get(0);
+        target1.setName("GearsTarget");  // gears
 
-        VuforiaTrackable blueTarget  = stonesAndChips.get(1);
-        blueTarget.setName("BlueTarget");  // Chips
+        VuforiaTrackable target2  = gltw.get(1);
+        target2.setName("LegosTarget");  // legos
+
+        VuforiaTrackable target3  = gltw.get(2);
+        target3.setName("ToolsTarget");  // tools
+
+        VuforiaTrackable target4  = gltw.get(3);
+        target4.setName("WheelsTarget");  // wheels
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(stonesAndChips);
+        allTrackables.addAll(gltw);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
