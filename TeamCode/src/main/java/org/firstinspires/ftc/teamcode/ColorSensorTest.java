@@ -5,6 +5,7 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 
 @TeleOp(name = "Color Sensor Test", group = "Test Code")
 public class ColorSensorTest extends OpMode {
@@ -14,6 +15,8 @@ public class ColorSensorTest extends OpMode {
 
     public void init() {
         colorSensor = hardwareMap.colorSensor.get("color_front");
+        I2cAddr i2CAddress = I2cAddr.create8bit(0x3c);
+        colorSensor.setI2cAddress(i2CAddress);
         colorSensor.enableLed(false);
     }
 
