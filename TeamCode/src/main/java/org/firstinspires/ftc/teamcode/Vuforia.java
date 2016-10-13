@@ -56,7 +56,7 @@ import java.util.List;
  */
 
 @Autonomous(name="Real Vuforia Navigation", group ="Real")
-@Disabled
+//@Disabled
 public class Vuforia extends LinearOpMode {
 
     public static final String TAG = "Vuforia";
@@ -194,46 +194,55 @@ public class Vuforia extends LinearOpMode {
          * - Then we rotate it  90 around the field's Z access to face it away from the audience.
          * - Finally, we translate it back along the X axis towards the red audience wall.
          */
+
+
+        // RED AUDIENCE WALL
+
+
         OpenGLMatrix GearsTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
-                .translation(-mFTCFieldWidth/2, 0, 0)
+                .translation(-mFTCFieldWidth/2, (float) -0.300565, (float) .14605)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, 90, 90, 0));
+                        AngleUnit.DEGREES, 90, 0, 90));
         target1.setLocation(GearsTargetLocationOnField);
         RobotLog.ii(TAG, "gears=%s", format(GearsTargetLocationOnField));
-
-       //--------------------------------------------------------------------------------------------
-        OpenGLMatrix LegosTargetLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.*/
-                .translation(-mFTCFieldWidth/2, 0, 0)
-                .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
-                        AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, 90, 90, 0));
-        target1.setLocation(LegosTargetLocationOnField);
-        RobotLog.ii(TAG, "legos=%s", format(LegosTargetLocationOnField));
 // ------------------------------------------------------------------------------------
         OpenGLMatrix ToolsTargetLocationOnField = OpenGLMatrix
 
-                .translation(-mFTCFieldWidth/2, 0, 0)
+                .translation(-mFTCFieldWidth/2, (float) 0.90178, (float) .14605)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, 90, 90, 0));
+                        AngleUnit.DEGREES, 90, 0, 90));
         target1.setLocation(ToolsTargetLocationOnField);
         RobotLog.ii(TAG, "tools=%s", format(ToolsTargetLocationOnField));
+       //--------------------------------------------------------------------------------------------
+
+
+        //BLUE AUDIENCE WALL
+
+
+        OpenGLMatrix LegosTargetLocationOnField = OpenGLMatrix
+
+                .translation((float) -0.90178, mFTCFieldWidth, (float) .14605)
+                .multiplied(Orientation.getRotationMatrix(
+
+                        AxesReference.EXTRINSIC, AxesOrder.XYZ,
+                        AngleUnit.DEGREES, 90, 0, 0));
+        target1.setLocation(LegosTargetLocationOnField);
+        RobotLog.ii(TAG, "legos=%s", format(LegosTargetLocationOnField));
+
 // -----------------------------------------------------------------------------------------
         OpenGLMatrix WheelsTargetLocationOnField = OpenGLMatrix
 
-                .translation(-mFTCFieldWidth/2, 0, 0)
+                .translation((float) .300565, mFTCFieldWidth, (float) .14605)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, 90, 90, 0));
+                        AngleUnit.DEGREES, 90, 0, 0));
         target1.setLocation(WheelsTargetLocationOnField);
         RobotLog.ii(TAG, "wheels=%s", format(WheelsTargetLocationOnField));
         /**
