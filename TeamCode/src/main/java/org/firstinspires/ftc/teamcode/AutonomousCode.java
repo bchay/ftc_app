@@ -112,8 +112,7 @@ public class AutonomousCode extends LinearOpMode {
         String allianceColor = "red";
 
         //Beginning of Actual Code
-
-        turn(-90, .5);
+        turn(90, 5);
 
         //Robot begins third tile away from corner vortex wall, wheels touching next full tile next to vortex
 
@@ -125,7 +124,7 @@ public class AutonomousCode extends LinearOpMode {
     }
 
     public void turn(int degrees, double maxSpeed) throws InterruptedException { //Positive degree for turning left
-        int targetHeading = gyro.getHeading() + degrees;
+        int targetHeading = gyro.getIntegratedZValue() + degrees;
 
         //Change mode because turn() uses motor power and not motor position
         motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -166,7 +165,7 @@ public class AutonomousCode extends LinearOpMode {
         idle();
         Thread.sleep(1000);
 
-        /*
+
         Thread.sleep(2000);
         telemetry.addData("Distance to turn", Math.abs(gyro.getIntegratedZValue() - targetHeading));
         telemetry.addData("Direction", -1 * (int) Math.signum(degrees));
@@ -177,7 +176,6 @@ public class AutonomousCode extends LinearOpMode {
         if(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 0) {
             turn(Math.abs(gyro.getIntegratedZValue() - targetHeading) * -1 * (int) Math.signum(degrees), .1);
         }
-        */
     }
 
     public void move(double distance, double maxSpeed) throws InterruptedException {
