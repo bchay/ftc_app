@@ -55,7 +55,7 @@ import java.util.List;
  * is explained below.
  */
 
-@Autonomous(name="Real Vuforia Navigation", group ="Real")
+@Autonomous(name="Vuforia Navigation", group ="Test Code")
 //@Disabled
 public class Vuforia extends LinearOpMode {
 
