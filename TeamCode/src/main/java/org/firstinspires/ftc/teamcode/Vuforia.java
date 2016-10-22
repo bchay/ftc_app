@@ -216,7 +216,7 @@ public class Vuforia extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 90));
-        target1.setLocation(ToolsTargetLocationOnField);
+        target2.setLocation(ToolsTargetLocationOnField);
         RobotLog.ii(TAG, "tools=%s", format(ToolsTargetLocationOnField));
        //--------------------------------------------------------------------------------------------
 
@@ -231,7 +231,7 @@ public class Vuforia extends LinearOpMode {
 
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 0));
-        target1.setLocation(LegosTargetLocationOnField);
+        target3.setLocation(LegosTargetLocationOnField);
         RobotLog.ii(TAG, "legos=%s", format(LegosTargetLocationOnField));
 
 // -----------------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ public class Vuforia extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 0));
-        target1.setLocation(WheelsTargetLocationOnField);
+        target4.setLocation(WheelsTargetLocationOnField);
         RobotLog.ii(TAG, "wheels=%s", format(WheelsTargetLocationOnField));
         /**
          * Create a transformation matrix describing where the phone is on the robot. Here, we
