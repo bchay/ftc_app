@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -62,6 +63,7 @@ public class Vuforia extends LinearOpMode {
     public static final String TAG = "Vuforia";
 
     OpenGLMatrix lastLocation = null;
+    OpenGLMatrix pose = null;
 
     /**
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
@@ -110,22 +112,23 @@ public class Vuforia extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables gltw = this.vuforia.loadTrackablesFromAsset("GearsLegosToolsWheels");
-        VuforiaTrackable target1 = gltw.get(0);
-        target1.setName("gears");  // gears
+        VuforiaTrackables trackableAssets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
 
-        VuforiaTrackable target2  = gltw.get(1);
-        target2.setName("legos");  // legos
+        VuforiaTrackable gearsTarget = trackableAssets.get(0);
+        gearsTarget.setName("gears");
 
-        VuforiaTrackable target3  = gltw.get(2);
-        target3.setName("tools");  // tools
+        VuforiaTrackable legosTarget  = trackableAssets.get(1);
+        legosTarget.setName("legos");
 
-        VuforiaTrackable target4  = gltw.get(3);
-        target4.setName("wheels");  // wheels
+        VuforiaTrackable toolsTarget  = trackableAssets.get(2);
+        toolsTarget.setName("tools");
+
+        VuforiaTrackable wheelsTarget  = trackableAssets.get(3);
+        wheelsTarget.setName("wheels");
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(gltw);
+        allTrackables.addAll(trackableAssets);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -136,7 +139,7 @@ public class Vuforia extends LinearOpMode {
          */
         float mPerInch        = .0254f;
         float mBotWidth       = 18 * mPerInch;            // ... or whatever is right for your robot
-        float mFTCFieldWidth  = (12*12 - 2) * mPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
+        float mFTCFieldWidth  = (12 * 12 - 2) * mPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
 
         /**
          * In order for localization to work, we need to tell the system where each target we
@@ -202,22 +205,22 @@ public class Vuforia extends LinearOpMode {
         OpenGLMatrix GearsTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
-                .translation(-mFTCFieldWidth/2, (float) -0.300565, (float) .14605)
+                .translation(-mFTCFieldWidth / 2, (float) -0.300565, (float) .14605)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 90));
-        target1.setLocation(GearsTargetLocationOnField);
+        gearsTarget.setLocation(GearsTargetLocationOnField);
         RobotLog.ii(TAG, "gears=%s", format(GearsTargetLocationOnField));
 // ------------------------------------------------------------------------------------
         OpenGLMatrix ToolsTargetLocationOnField = OpenGLMatrix
 
-                .translation(-mFTCFieldWidth/2, (float) 0.90178, (float) .14605)
+                .translation(-mFTCFieldWidth / 2, (float) 0.90178, (float) .14605)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 90));
-        target1.setLocation(ToolsTargetLocationOnField);
+        toolsTarget.setLocation(ToolsTargetLocationOnField);
         RobotLog.ii(TAG, "tools=%s", format(ToolsTargetLocationOnField));
        //--------------------------------------------------------------------------------------------
 
@@ -232,7 +235,7 @@ public class Vuforia extends LinearOpMode {
 
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 0));
-        target1.setLocation(LegosTargetLocationOnField);
+        legosTarget.setLocation(LegosTargetLocationOnField);
         RobotLog.ii(TAG, "legos=%s", format(LegosTargetLocationOnField));
 
 // -----------------------------------------------------------------------------------------
@@ -243,8 +246,9 @@ public class Vuforia extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 0));
-        target1.setLocation(WheelsTargetLocationOnField);
+        wheelsTarget.setLocation(WheelsTargetLocationOnField);
         RobotLog.ii(TAG, "wheels=%s", format(WheelsTargetLocationOnField));
+
         /**
          * Create a transformation matrix describing where the phone is on the robot. Here, we
          * put the phone on the right hand side of the robot with the screen facing in (see our
@@ -258,7 +262,7 @@ public class Vuforia extends LinearOpMode {
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(mBotWidth/2,0,0)
+                .translation(mBotWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         AxesReference.EXTRINSIC, AxesOrder.YZY,
                         AngleUnit.DEGREES, -90, 0, 0));
@@ -269,10 +273,10 @@ public class Vuforia extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)target1.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)target2.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)target3.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)target4.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) gearsTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) legosTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) toolsTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) wheelsTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
         /**
          * A brief tutorial: here's how all the math is going to work:
@@ -299,7 +303,7 @@ public class Vuforia extends LinearOpMode {
         waitForStart();
 
         /** Start tracking the data sets we care about. */
-        gltw.activate();
+        trackableAssets.activate();
 
         while (opModeIsActive()) {
 
@@ -309,19 +313,39 @@ public class Vuforia extends LinearOpMode {
                  * the last time that call was made, or if the trackable is not currently visible.
                  * getRobotLocation() will return null if the trackable is not currently visible.
                  */
-                telemetry.addData(trackable.getName(), ((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible() ? "Visible" : "Not Visible");    //
 
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+
+                pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose(); //Position of trackable
+
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
                 }
             }
+
             /**
              * Provide feedback as to where the robot was last located (if we know).
              */
+
             if (lastLocation != null) {
-                //  RobotLog.vv(TAG, "robot=%s", format(lastLocation));
-                telemetry.addData("Pos", format(lastLocation));
+                telemetry.addData("Pos", format(lastLocation)); //Robot location extrinsic
+
+                VectorF trans = lastLocation.getTranslation();
+                Orientation rot = Orientation.getOrientation(lastLocation, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+
+                telemetry.addData("Robot X", trans.get(0)); //Robot location x
+                telemetry.addData("robot Y", trans.get(1)); //Robot location y
+
+                VectorF translation = pose.getTranslation();
+                telemetry.addData("pos translation", translation); //Position of trackeable
+
+                telemetry.addData("robot bearing", rot.thirdAngle); //Robot bearing
+
+                telemetry.addData("Pos angle", Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)))); //Position of trackable
+
+                float[] robotLocationArray = lastLocation.getData();
+                telemetry.addData("heading", Math.atan2(robotLocationArray[5], robotLocationArray[4]) * 180.0/Math.PI); //Heading of robot
+
             } else {
                 telemetry.addData("Pos", "Unknown");
             }
@@ -334,6 +358,7 @@ public class Vuforia extends LinearOpMode {
      * A simple utility that extracts positioning information from a transformation matrix
      * and formats it in a form palatable to a human being.
      */
+
     String format(OpenGLMatrix transformationMatrix) {
         return transformationMatrix.formatAsTransform();
     }

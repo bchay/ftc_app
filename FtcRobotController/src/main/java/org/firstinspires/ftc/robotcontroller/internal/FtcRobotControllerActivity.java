@@ -439,6 +439,13 @@ public class FtcRobotControllerActivity extends Activity {
       startActivity(intent);
       return true;
     }
+
+    //********************ADDED CODE********************
+    else if (id == R.id.action_configure_autonomous) {
+      Intent intent = new Intent(this, AutonomousConfiguration.class);
+      startActivity(intent);
+      return true;
+    }
     else if (id == R.id.action_exit_app) {
       finish();
       return true;

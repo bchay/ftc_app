@@ -17,12 +17,11 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-@Autonomous(name = "OpenCV")
+@Autonomous(name = "OpenCV", group = "Test Code")
 public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCameraViewListener2 {
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba;
     private Mat mGray;
-
 
     public void runOpMode() {
         BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(hardwareMap.appContext) {

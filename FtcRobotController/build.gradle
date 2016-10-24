@@ -1,4 +1,5 @@
 import java.util.regex.Pattern
+
 //
 // build.gradle in FtcRobotController
 //
@@ -8,6 +9,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 19
+        vectorDrawables.useSupportLibrary = true
     }
 
     compileSdkVersion 23
@@ -26,4 +28,6 @@ apply from: 'build.release.gradle'
 
 dependencies {
     compile project(':libraries:opencv')
+    compile 'com.android.support:support-v4:23.4.0'
+    compile 'com.android.support:support-vector-drawable:23.4.0'
 }

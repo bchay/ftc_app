@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
@@ -10,6 +12,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 
 import java.io.InterruptedIOException;
 
@@ -30,9 +34,9 @@ public class AutonomousCode extends LinearOpMode {
     private OpticalDistanceSensor ods;
 
     //Variables
-    private final double ENCODER_RATIO = 166.898634962; //ticks / in
-    private final double BUTTON_PRESSER_LEFT_UP = 0;
-    private final double BUTTON_PRESSER_RIGHT_UP = 1;
+    private final double ENCODER_RATIO = 89.4575644937; //ticks / in
+    private final double BUTTON_PRESSER_LEFT_UP = .2;
+    private final double BUTTON_PRESSER_RIGHT_UP = .7;
     private final double BUTTON_PRESSER_LEFT_DOWN = 1;
     private final double BUTTON_PRESSER_RIGHT_DOWN = .1;
 
@@ -42,7 +46,11 @@ public class AutonomousCode extends LinearOpMode {
 
     private float[] hsv = {0F, 0F, 0F};
 
+    SharedPreferences sharedPreferences;
+
     public void runOpMode() throws InterruptedException {
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
 
         //Hardware Instantiation
         motorLeft1 = hardwareMap.dcMotor.get("left1");
@@ -99,24 +107,23 @@ public class AutonomousCode extends LinearOpMode {
         //Disable Color Sensor LED
         colorFront.enableLed(false);
 
+        String allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
+
         telemetry.addData("Ready to Start Program", "");
         telemetry.update();
 
         waitForStart();
 
-        String allianceColor = "blue";
+
 
         //Beginning of Actual Code
 
         //Robot begins third tile away from corner vortex wall, wheels touching next full tile next to vortex
-        if(allianceColor.equals("blue")) {
+        if(allianceColor.equals("Blue")) {
             turnDirection = "right";
         } else turnDirection = "left";
 
-        move(12, moveSpeed);
-        turn(50, turnDirection, turnSpeed);
-        move(55, moveSpeed);
-        turn(40, turnDirection, turnSpeed);
+        move(24, moveSpeed);
     }
 
     public void turn(int degrees, String direction, double maxSpeed) throws InterruptedException {
@@ -185,18 +192,43 @@ public class AutonomousCode extends LinearOpMode {
         motorRight1.setTargetPosition((int) (motorRight1.getCurrentPosition() + distance));
         motorRight2.setTargetPosition((int) (motorRight2.getCurrentPosition() + distance));
 
-        Thread.sleep(50);
+        Thread.sleep(100);
 
         motorLeft1.setPower(maxSpeed);
         motorLeft2.setPower(maxSpeed);
         motorRight1.setPower(maxSpeed);
         motorRight2.setPower(maxSpeed);
 
-        while((motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy() && opModeIsActive())) {
+        while((motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy()) && opModeIsActive()) {
             //All targets must be reached
             telemetry.addData("Gyroscope Heading", gyro.getIntegratedZValue());
-            telemetry.addData("Distance to move", Math.abs(motorLeft1.getCurrentPosition() - motorLeft1.getTargetPosition()));
+            telemetry.addData("Left 1 Distance", Math.abs(motorLeft1.getCurrentPosition() - motorLeft1.getTargetPosition()));
+            telemetry.addData("Left 2 Distance", Math.abs(motorLeft2.getCurrentPosition() - motorLeft2.getTargetPosition()));
+            telemetry.addData("Right 1 Distance", Math.abs(motorRight1.getCurrentPosition() - motorRight1.getTargetPosition()));
+            telemetry.addData("Right 2 Distance", Math.abs(motorRight2.getCurrentPosition() - motorRight2.getTargetPosition()));
             telemetry.update();
+            idle();
+        }
+
+        motorLeft1.setPower(0);
+        motorLeft2.setPower(0);
+        motorRight1.setPower(0);
+        motorRight2.setPower(0);
+        Thread.sleep(100);
+    }
+
+    public void driveToWhiteLine() {
+        //Uses encoders for PID, no target for RUN_TO_POSITION
+        motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        while(ods.getRawLightDetected() < .90 && opModeIsActive()) { //.8-.9 is white, ODS averages values
+            motorLeft1.setPower(.5);
+            motorLeft2.setPower(.5);
+            motorRight1.setPower(.5);
+            motorRight2.setPower(.5);
             idle();
         }
 
