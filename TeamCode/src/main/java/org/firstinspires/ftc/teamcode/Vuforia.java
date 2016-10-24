@@ -5,7 +5,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -221,6 +220,7 @@ public class Vuforia extends LinearOpMode {
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 90));
         toolsTarget.setLocation(ToolsTargetLocationOnField);
+
         RobotLog.ii(TAG, "tools=%s", format(ToolsTargetLocationOnField));
        //--------------------------------------------------------------------------------------------
 
@@ -246,7 +246,9 @@ public class Vuforia extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 0));
+
         wheelsTarget.setLocation(WheelsTargetLocationOnField);
+
         RobotLog.ii(TAG, "wheels=%s", format(WheelsTargetLocationOnField));
 
         /**
@@ -264,7 +266,7 @@ public class Vuforia extends LinearOpMode {
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
                 .translation(mBotWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
-                        AxesReference.EXTRINSIC, AxesOrder.YZY,
+                        AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, -90, 0, 0));
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
