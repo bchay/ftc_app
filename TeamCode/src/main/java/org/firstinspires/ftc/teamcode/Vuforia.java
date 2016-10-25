@@ -137,7 +137,7 @@ public class Vuforia extends LinearOpMode {
          * target configuration files *must* correspond for the math to work out correctly.
          */
         float mmPerInch        = 25.4f;
-        float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
+        float mmBotWidth       = 415.5f;            // ... or whatever is right for your robot
         float mmFTCFieldWidth  = (12 * 12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
 
         /**
@@ -264,10 +264,10 @@ public class Vuforia extends LinearOpMode {
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(mmBotWidth / 2, 0, 0)
+                .translation(mmBotWidth/2, 0, 140)
                 .multiplied(Orientation.getRotationMatrix(
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, -90, 0, 0));
+                        AngleUnit.DEGREES, 0, -90, 180));
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
         /**
