@@ -317,11 +317,14 @@ public class Vuforia extends LinearOpMode {
                  */
 
                 OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-
-                pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose(); //Position of trackable
+                OpenGLMatrix targetPose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose(); //Position of trackable
 
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
+                }
+
+                if(targetPose != null) {
+                    pose = targetPose;
                 }
             }
 
@@ -330,27 +333,33 @@ public class Vuforia extends LinearOpMode {
              */
 
             if (lastLocation != null) {
-                telemetry.addData("Pos", format(lastLocation)); //Robot location extrinsic
+                telemetry.addData("lastlocation", format(lastLocation)); //Robot location extrinsic
 
-                VectorF trans = lastLocation.getTranslation();
-                Orientation rot = Orientation.getOrientation(lastLocation, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                VectorF robotTranslation = lastLocation.getTranslation();
 
-                telemetry.addData("Robot X", trans.get(0)); //Robot location x
-                telemetry.addData("robot Y", trans.get(1)); //Robot location y
+                if(robotTranslation != null) {
+                    telemetry.addData("Robot X", robotTranslation.get(0)); //Robot location x
+                    telemetry.addData("robot Y", robotTranslation.get(1)); //Robot location y
+                }
+                
+                Orientation robotRotation = Orientation.getOrientation(lastLocation, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
 
-                VectorF translation = pose.getTranslation();
+                if(robotRotation != null) telemetry.addData("robot bearing", robotRotation.thirdAngle); //Robot bearing
+
+            }
+
+            if(pose != null) {
+                VectorF translation;
+
+                telemetry.addData("Pose", pose);
+                translation = pose.getTranslation();
+
                 telemetry.addData("pos translation", translation); //Position of trackable
-
-                telemetry.addData("robot bearing", rot.thirdAngle); //Robot bearing
-
                 telemetry.addData("Pos angle", Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)))); //Position of trackable
-
-                float[] robotLocationArray = lastLocation.getData();
-                telemetry.addData("heading", Math.atan2(robotLocationArray[5], robotLocationArray[4]) * 180.0/Math.PI); //Heading of robot
-
             } else {
                 telemetry.addData("Pos", "Unknown");
             }
+
             telemetry.update();
             idle();
         }
