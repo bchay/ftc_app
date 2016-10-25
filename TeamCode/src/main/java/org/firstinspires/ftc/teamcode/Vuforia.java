@@ -136,9 +136,9 @@ public class Vuforia extends LinearOpMode {
          * You don't *have to* use mm here, but the units here and the units used in the XML
          * target configuration files *must* correspond for the math to work out correctly.
          */
-        float mPerInch        = .0254f;
-        float mBotWidth       = 18 * mPerInch;            // ... or whatever is right for your robot
-        float mFTCFieldWidth  = (12 * 12 - 2) * mPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
+        float mmPerInch        = 25.4f;
+        float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
+        float mmFTCFieldWidth  = (12 * 12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
 
         /**
          * In order for localization to work, we need to tell the system where each target we
@@ -204,7 +204,7 @@ public class Vuforia extends LinearOpMode {
         OpenGLMatrix GearsTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
-                .translation(-mFTCFieldWidth / 2, (float) -0.300565, (float) .14605)
+                .translation(-mmFTCFieldWidth / 2, -300.565f, 146.05f)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
@@ -214,7 +214,7 @@ public class Vuforia extends LinearOpMode {
 // ------------------------------------------------------------------------------------
         OpenGLMatrix ToolsTargetLocationOnField = OpenGLMatrix
 
-                .translation(-mFTCFieldWidth / 2, (float) 0.90178, (float) .14605)
+                .translation(-mmFTCFieldWidth / 2, 901.78f, 146.05f)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
@@ -230,7 +230,7 @@ public class Vuforia extends LinearOpMode {
 
         OpenGLMatrix LegosTargetLocationOnField = OpenGLMatrix
 
-                .translation((float) -0.90178, mFTCFieldWidth, (float) .14605)
+                .translation(-901.78f, mmFTCFieldWidth, 146.05f)
                 .multiplied(Orientation.getRotationMatrix(
 
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
@@ -241,7 +241,7 @@ public class Vuforia extends LinearOpMode {
 // -----------------------------------------------------------------------------------------
         OpenGLMatrix WheelsTargetLocationOnField = OpenGLMatrix
 
-                .translation((float) .300565, mFTCFieldWidth, (float) .14605)
+                .translation(300.565f, mmFTCFieldWidth, 146.05f)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
@@ -264,7 +264,7 @@ public class Vuforia extends LinearOpMode {
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(mBotWidth / 2, 0, 0)
+                .translation(mmBotWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, -90, 0, 0));
@@ -339,7 +339,7 @@ public class Vuforia extends LinearOpMode {
                 telemetry.addData("robot Y", trans.get(1)); //Robot location y
 
                 VectorF translation = pose.getTranslation();
-                telemetry.addData("pos translation", translation); //Position of trackeable
+                telemetry.addData("pos translation", translation); //Position of trackable
 
                 telemetry.addData("robot bearing", rot.thirdAngle); //Robot bearing
 
