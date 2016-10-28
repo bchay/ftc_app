@@ -224,7 +224,6 @@ public class Vuforia extends LinearOpMode {
         RobotLog.ii(TAG, "tools=%s", format(ToolsTargetLocationOnField));
        //--------------------------------------------------------------------------------------------
 
-
         //BLUE AUDIENCE WALL
 
 
@@ -332,6 +331,7 @@ public class Vuforia extends LinearOpMode {
              * Provide feedback as to where the robot was last located (if we know).
              */
 
+        /*
             if (lastLocation != null) {
                 telemetry.addData("lastlocation", format(lastLocation)); //Robot location extrinsic
 
@@ -341,21 +341,22 @@ public class Vuforia extends LinearOpMode {
                     telemetry.addData("Robot X", robotTranslation.get(0)); //Robot location x
                     telemetry.addData("robot Y", robotTranslation.get(1)); //Robot location y
                 }
-                
+
                 Orientation robotRotation = Orientation.getOrientation(lastLocation, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
 
                 if(robotRotation != null) telemetry.addData("robot bearing", robotRotation.thirdAngle); //Robot bearing
 
             }
-
+*/
             if(pose != null) {
                 VectorF translation;
 
-                telemetry.addData("Pose", pose);
                 translation = pose.getTranslation();
 
-                telemetry.addData("pos translation", translation); //Position of trackable
-                telemetry.addData("Pos angle", Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)))); //Position of trackable
+                //telemetry.addData("Pose", pose);
+                telemetry.addData("pos translation", translation); //Position of trackable based on phone coords
+                telemetry.addData("Pos angle", Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)))); //Degrees of trackable in relation to phone coords
+
             } else {
                 telemetry.addData("Pos", "Unknown");
             }
