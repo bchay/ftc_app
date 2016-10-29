@@ -111,7 +111,7 @@ public class Vuforia extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables trackableAssets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        VuforiaTrackables trackableAssets = this.vuforia.loadTrackablesFromAsset("GearsLegosToolsWheels");
 
         VuforiaTrackable gearsTarget = trackableAssets.get(0);
         gearsTarget.setName("gears");
@@ -263,10 +263,10 @@ public class Vuforia extends LinearOpMode {
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(mmBotWidth/2, 0, 140)
+                .translation(0, mmBotWidth, 150)
                 .multiplied(Orientation.getRotationMatrix(
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
-                        AngleUnit.DEGREES, 0, -90, 180));
+                        AngleUnit.DEGREES, 90, 0, 0));
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
         /**
