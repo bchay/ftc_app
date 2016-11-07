@@ -61,8 +61,6 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         }
     }
 
-
-
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);

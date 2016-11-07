@@ -17,6 +17,7 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     Spinner allianceColor;
+    Spinner location;
     NumberPicker delay;
 
     @Override
@@ -31,9 +32,13 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
         String savedLocation = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "null");
         int savedDelay = sharedPreferences.getInt("com.qualcomm.ftcrobotcontroller.Autonomous.Delay", 0);
 
-        allianceColor = (Spinner) findViewById(R.id.spinner);
+        allianceColor = (Spinner) findViewById(R.id.colorSpinner);
         allianceColor.setOnItemSelectedListener(this);
-        allianceColor.setSelection(savedColor.equals("Red") ? 0 : 1, true);
+        allianceColor.setSelection(savedColor.equals("Red") ? 0 : 1, true); //0, 1 are color positions
+
+        location = (Spinner) findViewById(R.id.locationSpinner);
+        location.setOnItemSelectedListener(this);
+        location.setSelection(savedLocation.equals("Close") ? 0 : 1, true);
 
         delay = (NumberPicker) findViewById(R.id.delay);
         delay.setOnValueChangedListener(this);
@@ -45,7 +50,12 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
     }
 
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-        editor.putString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", parentView.getItemAtPosition(position).toString());
+        Spinner spinner = (Spinner) parentView;
+        if(spinner.getId() == R.id.locationSpinner) {
+            editor.putString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", parentView.getItemAtPosition(position).toString());
+        } else if(spinner.getId() == R.id.colorSpinner) {
+            editor.putString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", parentView.getItemAtPosition(position).toString());
+        }
         editor.commit();
     }
 

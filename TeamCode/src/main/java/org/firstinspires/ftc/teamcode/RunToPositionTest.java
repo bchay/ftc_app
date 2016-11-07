@@ -7,29 +7,20 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @Autonomous(name = "Run to Position Test", group = "Test Code")
 public class RunToPositionTest extends LinearOpMode {
-    private DcMotor motorLeft1;
-    private DcMotor motorLeft2;
-    private DcMotor motorRight1;
-    private DcMotor motorRight2;
+    private DcMotor motorLeft;
+    private DcMotor motorRight;
 
     public void runOpMode() throws InterruptedException {
-        motorLeft1 = hardwareMap.dcMotor.get("left1");
-        motorLeft2 = hardwareMap.dcMotor.get("left2");
-        motorRight1 = hardwareMap.dcMotor.get("right1");
-        motorRight2 = hardwareMap.dcMotor.get("right2");
+        motorLeft = hardwareMap.dcMotor.get("left");
+        motorRight = hardwareMap.dcMotor.get("left");
 
-        motorRight1.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRight2.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motorLeft1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLeft2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRight2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        motorLeft1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLeft2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRight1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRight2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         telemetry.addData("Encoders reset", "");
         telemetry.update();
@@ -40,25 +31,19 @@ public class RunToPositionTest extends LinearOpMode {
     }
 
     public void move() throws InterruptedException {
-        motorLeft1.setTargetPosition(5000);
-        motorLeft2.setTargetPosition(5000);
-        motorRight1.setTargetPosition(5000);
-        motorRight2.setTargetPosition(5000);
+        motorLeft.setTargetPosition(5000);
+        motorRight.setTargetPosition(5000);
 
         Thread.sleep(100);
 
-        motorLeft1.setPower(.5);
-        motorLeft2.setPower(.5);
-        motorRight1.setPower(.5);
-        motorRight2.setPower(.5);
+        motorLeft.setPower(.5);
+        motorRight.setPower(.5);
 
-        while(motorLeft1.isBusy() || motorLeft2.isBusy() || motorRight1.isBusy() || motorRight2.isBusy()) {
+        while(motorLeft.isBusy() || motorRight.isBusy()) {
             idle();
         }
 
-        motorLeft1.setPower(0);
-        motorLeft2.setPower(0);
-        motorRight1.setPower(0);
-        motorRight2.setPower(0);
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
     }
 }

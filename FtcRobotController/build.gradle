@@ -5,6 +5,9 @@ import java.util.regex.Pattern
 //
 apply plugin: 'com.android.library'
 android {
+    dexOptions {
+        javaMaxHeapSize "3g"
+    }
 
     defaultConfig {
         minSdkVersion 19

@@ -11,7 +11,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="22dp"
         android:layout_marginTop="20dp"
-        android:id="@+id/spinner"
+        android:id="@+id/colorSpinner"
         android:entries="@array/alliance_color_options"
         />
 
@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="61dp"
         android:id="@+id/textView16"
-        android:layout_below="@+id/spinner"
+        android:layout_below="@+id/colorSpinner"
         android:layout_alignParentStart="true" />
 
     <NumberPicker
@@ -41,4 +41,24 @@
         android:layout_marginTop="25dp"
         android:id="@+id/delay"
         />
+
+    <TextView
+        android:text="Location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView17"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="103dp" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView17"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="28dp"
+        android:spinnerMode="dialog"
+        android:id="@+id/locationSpinner"
+        android:entries="@array/location" />
+
 </RelativeLayout>
