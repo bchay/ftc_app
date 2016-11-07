@@ -265,13 +265,6 @@ public class AutonomousCode extends LinearOpMode {
     }
 
     private void move(double distance, double maxSpeed) {
-        /*
-        Reverse left, maxSpeed, distance: target +, ticks -, robot backwards
-        Reverse left, - maxSpeed, distance: target +, ticks -, robot backwards
-        Reverse left, - maxSpeed, -distance: target +, ticks -, robot backwards
-         */
-
-
         distance *= ENCODER_RATIO;
         int initialHeading = gyro.getIntegratedZValue();
 
@@ -286,6 +279,9 @@ public class AutonomousCode extends LinearOpMode {
         motorRight.setPower(maxSpeed);
 
         while(motorLeft.isBusy() && motorRight.isBusy() && opModeIsActive()) {
+            motorLeft.setPower(maxSpeed + (gyro.getIntegratedZValue() - initialHeading)); //TODO: TEST
+            motorRight.setPower(maxSpeed - (gyro.getIntegratedZValue() - initialHeading)); //TODO: TEST
+
             //One encoder target must be reached
             telemetry.addData("Gyroscope Heading", gyro.getIntegratedZValue());
 
