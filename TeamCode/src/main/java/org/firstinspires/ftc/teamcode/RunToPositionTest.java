@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -12,12 +13,12 @@ public class RunToPositionTest extends LinearOpMode {
 
     public void runOpMode() throws InterruptedException {
         motorLeft = hardwareMap.dcMotor.get("left");
-        motorRight = hardwareMap.dcMotor.get("left");
+        motorRight = hardwareMap.dcMotor.get("right");
 
         motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -39,7 +40,7 @@ public class RunToPositionTest extends LinearOpMode {
         motorLeft.setPower(.5);
         motorRight.setPower(.5);
 
-        while(motorLeft.isBusy() || motorRight.isBusy()) {
+        while(motorLeft.isBusy() && motorRight.isBusy() && opModeIsActive()) {
             idle();
         }
 

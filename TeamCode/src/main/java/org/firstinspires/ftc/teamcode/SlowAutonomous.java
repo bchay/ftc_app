@@ -14,8 +14,8 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name = "Autonomous", group = "Main Code")
-public class AutonomousCode extends LinearOpMode {
+@Autonomous(name = "Slow Autonomous", group = "Main Code")
+public class SlowAutonomous extends LinearOpMode {
 
     //Hardware Declaration
     private DcMotor motorLeft; //Controls both left side motors
@@ -45,14 +45,14 @@ public class AutonomousCode extends LinearOpMode {
     private final double BUTTON_PRESSER_RIGHT_OUT = .7;
 
     //Starting positions of ball manipulation servos
-    private final double BALL_KICKER_DOWN = .65;
+    private final double BALL_KICKER_DOWN = .75;
     private final double BALL_STOPPER_OUT = .5;
 
     private final double BALL_KICKER_UP = .3;
     private final double BALL_STOPPER_IN = .25;
 
-    private double moveSpeed = .9;
-    private double turnSpeed = .45;
+    private double moveSpeed = .3;
+    private double turnSpeed = .2;
 
     private float[] hsv = {0F, 0F, 0F};
 
@@ -160,12 +160,12 @@ public class AutonomousCode extends LinearOpMode {
             move(12, moveSpeed);
             turn(48, moveDirection, turnSpeed);
             move(25, 1); //Approach white line
-            driveToWhiteLine(.4);
-            move(3.5, .5); //Position robot so that servos are in correct location
+            driveToWhiteLine(.2);
+            move(3.5, .2); //Position robot so that servos are in correct location
             turn(42, moveDirection, turnSpeed);
-            move(3.5, moveSpeed);
+            move(2.5, moveSpeed); //Move close to beacon
 
-            Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
+            Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv); //Read color of beacon
             String beaconColor = getColorName(hsv);
 
             if(beaconColor.equals(allianceColor)) {
@@ -174,30 +174,11 @@ public class AutonomousCode extends LinearOpMode {
                 buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_OUT);
             }
 
-            sleep(400);
-            move(15, .65); //Push beacon
+            sleep(1000);
+            move(20, .5); //Push beacon
 
             buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_IN);
             buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_IN);
-
-            move(-5, moveSpeed); //Back away from wall
-            turn(90, moveDirection.next(), turnSpeed);
-            move(40, moveSpeed); //Drive to second beacon
-            driveToWhiteLine(.4);
-            move(4, .5);
-            turn(90, moveDirection, turnSpeed);
-
-            Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
-            beaconColor = getColorName(hsv);
-
-            if(beaconColor.equals(allianceColor)) {
-                buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_OUT);
-            } else {
-                buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_OUT);
-            }
-
-            sleep(400);
-            move(16, .65); //Push beacon
         }
     }
 
@@ -216,8 +197,8 @@ public class AutonomousCode extends LinearOpMode {
 
         if(degrees < 0) {
             while(gyro.getIntegratedZValue() > targetHeading && opModeIsActive()) {
-                motorLeft.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 30 ? maxSpeed: .1);
-                motorRight.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 30 ? -maxSpeed: -.1);
+                motorLeft.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 45 ? maxSpeed: .1);
+                motorRight.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 45 ? -maxSpeed: -.1);
 
                 telemetry.addData("Left power", motorLeft.getPower());
                 telemetry.addData("Right power", motorRight.getPower());
@@ -231,8 +212,8 @@ public class AutonomousCode extends LinearOpMode {
             }
         } else { //Left
             while (gyro.getIntegratedZValue() < targetHeading && opModeIsActive()) {
-                motorLeft.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 25 ? -maxSpeed: -.15);
-                motorRight.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 25 ? maxSpeed: .15);
+                motorLeft.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 45 ? -maxSpeed: -.1);
+                motorRight.setPower(Math.abs(gyro.getIntegratedZValue() - targetHeading) > 45 ? maxSpeed: .1);
 
                 telemetry.addData("Left power", motorLeft.getPower());
                 telemetry.addData("Right power", motorRight.getPower());
@@ -248,7 +229,7 @@ public class AutonomousCode extends LinearOpMode {
 
         motorLeft.setPower(0);
         motorRight.setPower(0);
-        sleep(200);
+        sleep(400);
 
         telemetry.addData("Distance to turn", Math.abs(gyro.getIntegratedZValue() - targetHeading));
         telemetry.addData("Direction", -1 * (int) Math.signum(degrees));
@@ -301,7 +282,7 @@ public class AutonomousCode extends LinearOpMode {
 
         motorLeft.setPower(0);
         motorRight.setPower(0);
-        sleep(350);
+        sleep(700);
 
         //Correct if robot turned during movement
         if(Math.abs(gyro.getIntegratedZValue() - initialHeading) > 0) turn(Math.abs(gyro.getIntegratedZValue() - initialHeading), gyro.getIntegratedZValue() > initialHeading ? Direction.RIGHT : Direction.LEFT, .2);
@@ -325,7 +306,7 @@ public class AutonomousCode extends LinearOpMode {
 
         motorLeft.setPower(0);
         motorRight.setPower(0);
-        sleep(400);
+        sleep(600);
 
         int finalHeading = gyro.getIntegratedZValue();
         if(Math.abs(initialHeading - finalHeading) > 0) {
@@ -338,47 +319,4 @@ public class AutonomousCode extends LinearOpMode {
         else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return "Blue";
         return "Undefined";
     }
-
-    private void shoot() {
-        ballShooter.setPower(.23);
-        ballLift.setPower(.2);
-        sleep(4000);
-        ballStopper.setPosition(BALL_STOPPER_IN);
-
-        //Launch first ball
-        sleep(300);
-        ballKicker.setPosition(BALL_KICKER_UP);
-        ballLift.setPower(1);
-        sleep(350);
-        ballStopper.setPosition(BALL_STOPPER_OUT);
-        sleep(1150);
-        ballStopper.setPosition(BALL_STOPPER_IN);
-
-        sleep(300);
-
-        //Launch second ball
-        ballKicker.setPosition(BALL_KICKER_DOWN);
-        sleep(500);
-        ballKicker.setPosition(BALL_KICKER_UP);
-        sleep(1500);
-
-        //Reset
-        ballLift.setPower(0);
-        ballShooter.setPower(0);
-        ballStopper.setPosition(BALL_STOPPER_OUT);
-        ballKicker.setPosition(BALL_KICKER_DOWN);
-    }
 }
-
-//1000 / 14.8 = 67.5675675676 ticks / in
-//2000 / 25.2 = 79.3650793651
-//3000 / 36.4 = 82.4175824176
-//4000 / 47.5 = 84.2105263158
-//5000 / 57.4 = 87.1080139373
-//6000 / 69.35 = 86.5176640231
-//6500 / 76.1 = 85.4139290407
-//7000 / 81 = 86.4197530864
-//7500 / 87 = 86.2068965517
-//8000 / 93.5 = 85.5614973262
-//9000 / 103.8 = 86.7052023121
-//10000 / 114.5 = 87.3362445415

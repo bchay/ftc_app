@@ -107,15 +107,14 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         Imgproc.cvtColor(rgb, gray, COLOR_BGR2GRAY);
 
         //Blue Code - TODO
-        Scalar min = new Scalar(0, 100, 100);
-        Scalar max = new Scalar(180, 255, 255);
+        //Scalar min = new Scalar(100, 50, 50); //
+        //Scalar max = new Scalar(140, 255, 255);
 
-        //Red Code
-        //Scalar min = new Scalar(220/2, 190, 80);
-        //Scalar max = new Scalar(260, 255, 255);
+        //Red Code - Black box
+        Scalar min = new Scalar(220/2, 190, 80);
+        Scalar max = new Scalar(260, 255, 255);
 
         Core.inRange(mat, min, max, mat);
-
 
         Mat str_el = Imgproc.getStructuringElement(MORPH_RECT, new Size(3, 3));
         Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, str_el);
@@ -158,6 +157,7 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
             Imgproc.drawContours(mat, contours, largest_contour_index, color, Core.FILLED, 8, hierarchy, 0, new Point(0, 0));
             Imgproc.rectangle(rgb, new Point(bounding_rect.x, bounding_rect.y), new Point(bounding_rect.x + bounding_rect.width, bounding_rect.y + bounding_rect.height), new Scalar(255, 255, 255), Core.FILLED);
         }
+
         return rgb;
     }
 
