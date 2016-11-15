@@ -38,145 +38,54 @@ Driver Two - Operations - Gamepad 2
  */
 
 @TeleOp(name = "Teleop")
-public class Teleop extends OpMode {
-    //Hardware Declaration
-    private DcMotor motorLeft; //Controls both left side motors
-    private DcMotor motorRight; //Controls both right side motors
+public class Teleop extends OpModeBase {
 
-    private DcMotor ballShooter;
-    private DcMotor ballLift;
+    public void runOpMode() {
+        while (opModeIsActive()) {
+            //Set motor power
+            motorLeft.setPower(-gamepad1.left_stick_y);
+            motorRight.setPower(-gamepad1.right_stick_y);
 
-    private DcMotor verticalSlide;
+            //Start of gamepad 2 (Operator) controls
+            ballLift.setPower(gamepad2.left_stick_y);
 
-    private Servo buttonPresserLeft;
-    private Servo buttonPresserRight;
+            //Set servo positions based on gamepad input
+            if (gamepad2.y) {
+                buttonPresserLeft.setPosition(Range.clip(buttonPresserLeft.getPosition() + .01, 0, 1));
+            } else if (gamepad2.a) {
+                buttonPresserLeft.setPosition(Range.clip(buttonPresserLeft.getPosition() - .01, 0, 1));
+            }
 
-    private Servo ballKicker;
-    private Servo ballStopper;
+            if (gamepad2.x) {
+                buttonPresserRight.setPosition(Range.clip(buttonPresserRight.getPosition() + .01, 0, 1));
+            } else if (gamepad2.b) {
+                buttonPresserRight.setPosition(Range.clip(buttonPresserRight.getPosition() - .01, 0, 1));
+            }
 
-    private Servo capBallLiftLeft;
-    private Servo capBallLiftRight;
+            if (gamepad2.left_bumper) ballKicker.setPosition(BALL_KICKER_UP);
+            else ballKicker.setPosition(BALL_KICKER_DOWN);
 
-    //Variables
-    private final double BUTTON_PRESSER_LEFT_IN = 0;
-    private final double BUTTON_PRESSER_RIGHT_IN = .6;
+            if (gamepad2.dpad_left) ballStopper.setPosition(BALL_STOPPER_IN);
+            else ballStopper.setPosition(BALL_STOPPER_OUT);
 
-    //Starting positions of ball manipulation servos
-    private final double BALL_KICKER_DOWN = .65;
-    private final double BALL_STOPPER_OUT = .5;
+            //Toggle shooter
+            if (gamepad2.dpad_right && !ballShooterTriggered) {
+                ballShooterTriggered = true;
+                if (ballShooterOn) ballShooter.setPower(getShooterPower());
+                else ballShooter.setPower(0);
+                ballShooterOn = !ballShooterOn;
+            } else if (!gamepad2.dpad_right) ballShooterTriggered = false;
 
-    private final double BALL_KICKER_UP = .3;
-    private final double BALL_STOPPER_IN = .25;
+            if (gamepad1.dpad_up) shooterPower = Range.clip(shooterPower + .001, 0, .4);
+            if (gamepad1.dpad_down) shooterPower = Range.clip(shooterPower - .001, 0, .4);
 
-    private final double LEFT_CAP_BALL_LIFT_UP = .15;
-    private final double RIGHT_CAP_BALL_LIFT_UP = .85;
-
-    //Variables for toggle
-    boolean ballShooterOn = true;
-    boolean ballShooterTriggered = false;
-
-    private double motorPower = .23;
-
-    public void init() {
-        motorLeft = hardwareMap.dcMotor.get("left");
-        motorRight = hardwareMap.dcMotor.get("right");
-
-        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        ballShooter = hardwareMap.dcMotor.get("ball_shooter");
-        ballShooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        ballShooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-        ballLift = hardwareMap.dcMotor.get("ball_lift");
-
-        //verticalSlide = hardwareMap.dcMotor.get("vertical_slide");
-
-        buttonPresserRight = hardwareMap.servo.get("button_right");
-        buttonPresserLeft = hardwareMap.servo.get("button_left");
-
-        ballKicker = hardwareMap.servo.get("ball_kicker");
-        ballStopper = hardwareMap.servo.get("ball_stopper");
-
-        capBallLiftLeft = hardwareMap.servo.get("cap_ball_left");
-        capBallLiftRight = hardwareMap.servo.get("cap_ball_right");
-
-        //Set initial servo positions
-        buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_IN);
-        buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_IN);
-
-        ballKicker.setPosition(BALL_KICKER_DOWN);
-        ballStopper.setPosition(BALL_STOPPER_OUT);
-
-        capBallLiftLeft.setPosition(LEFT_CAP_BALL_LIFT_UP);
-        capBallLiftRight.setPosition(RIGHT_CAP_BALL_LIFT_UP);
+            telemetry.addData("Shooter motor power", ballShooter.getPower());
+            telemetry.addData("Shooter power", shooterPower);
+            telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
+        }
     }
 
-    public void loop() {
-
-        //Set motor power
-        motorLeft.setPower(-gamepad1.left_stick_y);
-        motorRight.setPower(-gamepad1.right_stick_y);
-
-        //Start of gamepad 2 (Operator) controls
-        ballLift.setPower(gamepad2.left_stick_y);
-
-        //Set servo positions based on gamepad input
-        if(gamepad2.y) {
-            buttonPresserLeft.setPosition(Range.clip(buttonPresserLeft.getPosition() + .01, 0, 1));
-        } else if(gamepad2.a) {
-            buttonPresserLeft.setPosition(Range.clip(buttonPresserLeft.getPosition() - .01, 0, 1));
-        }
-
-        if(gamepad2.x) {
-            buttonPresserRight.setPosition(Range.clip(buttonPresserRight.getPosition() + .01, 0, 1));
-        } else if(gamepad2.b) {
-            buttonPresserRight.setPosition(Range.clip(buttonPresserRight.getPosition() - .01, 0, 1));
-        }
-
-        if (gamepad2.left_bumper) ballKicker.setPosition(BALL_KICKER_UP);
-        else ballKicker.setPosition(BALL_KICKER_DOWN);
-
-        if(gamepad2.dpad_left) ballStopper.setPosition(BALL_STOPPER_IN);
-        else ballStopper.setPosition(BALL_STOPPER_OUT);
-
-        if(gamepad2.dpad_up) {
-            capBallLiftLeft.setPosition(Range.clip(capBallLiftLeft.getPosition() + .01, 0, 1));
-            capBallLiftRight.setPosition(Range.clip(capBallLiftRight.getPosition() - .01, 0, 1));
-        }
-
-        if(gamepad2.dpad_down) {
-            capBallLiftLeft.setPosition(Range.clip(capBallLiftLeft.getPosition() + .01, 0, 1));
-            capBallLiftRight.setPosition(Range.clip(capBallLiftRight.getPosition() - .01, 0, 1));
-        }
-
-        //TODO Lift cap ball
-
-
-        //Toggle shooter
-        if (gamepad2.dpad_right && !ballShooterTriggered) {
-            ballShooterTriggered = true;
-            if(ballShooterOn) ballShooter.setPower(getShooterPower());
-            else ballShooter.setPower(0);
-            ballShooterOn = !ballShooterOn;
-        } else if(!gamepad2.dpad_right) ballShooterTriggered = false;
-
-        if(gamepad1.dpad_up) motorPower = Range.clip(motorPower + .001, 0, .4);
-        if(gamepad1.dpad_down) motorPower = Range.clip(motorPower - .001, 0, .4);
-
-        telemetry.addData("Shooter motor power", ballShooter.getPower());
-        telemetry.addData("Shooter power", motorPower);
-        telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
-    }
-
-    private double getShooterPower() {
-        return -motorPower; //.7;
-
-        /*
-            12.78 = .28
-            12.76 = .265
-            13.00 = .226
-         */
+    private double getShooterPower() { //Will eventually return power based on battery voltage
+        return -shooterPower;
     }
 }
