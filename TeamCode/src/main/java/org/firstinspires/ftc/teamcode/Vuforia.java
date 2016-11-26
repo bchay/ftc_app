@@ -209,6 +209,7 @@ public class Vuforia extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XYZ,
                         AngleUnit.DEGREES, 90, 0, 90));
+
         gearsTarget.setLocation(GearsTargetLocationOnField);
         RobotLog.ii(TAG, "gears=%s", format(GearsTargetLocationOnField));
 // ------------------------------------------------------------------------------------
