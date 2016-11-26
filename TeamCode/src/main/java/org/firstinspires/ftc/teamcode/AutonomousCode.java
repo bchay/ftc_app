@@ -17,12 +17,15 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "Autonomous", group = "Main Code")
 public class AutonomousCode extends OpModeBase {
     public void runOpMode() {
-        super.init();
+        super.runOpMode();
         waitForStart();
         sleep(delay);
 
         //Robot begins centered at third tile away from corner vortex wall
         if(location.equals("Close")) {
+            driveToWhiteLine(.4);
+
+            /*
             move(12, moveSpeed);
             turn(48, moveDirection, turnSpeed);
             move(25, 1); //Approach white line
@@ -35,16 +38,13 @@ public class AutonomousCode extends OpModeBase {
             String beaconColor = getColorName(hsv);
 
             if(beaconColor.equals(allianceColor)) {
-                buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_OUT);
+                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
             } else {
-                buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_OUT);
+                buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
             }
 
             sleep(400);
             move(15, .65); //Push beacon
-
-            buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_IN);
-            buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_IN);
 
             move(-5, moveSpeed); //Back away from wall
             move(50, moveSpeed);
@@ -58,13 +58,14 @@ public class AutonomousCode extends OpModeBase {
             beaconColor = getColorName(hsv);
 
             if(beaconColor.equals(allianceColor)) {
-                buttonPresserRight.setPosition(BUTTON_PRESSER_RIGHT_OUT);
+                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
             } else {
-                buttonPresserLeft.setPosition(BUTTON_PRESSER_LEFT_OUT);
+                buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
             }
 
             sleep(400);
             move(16, .65); //Push beacon
+            */
         }
     }
 }
