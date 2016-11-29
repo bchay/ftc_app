@@ -23,29 +23,33 @@ public class AutonomousCode extends OpModeBase {
 
         //Robot begins centered at third tile away from corner vortex wall
         if(location.equals("Close")) {
-            driveToWhiteLine(.4);
-
+            followLine(.3);
             /*
+            //First Beacon
             move(12, moveSpeed);
-            turn(48, moveDirection, turnSpeed);
-            move(25, 1); //Approach white line
-            driveToWhiteLine(.4);
-            move(3.5, .5); //Position robot so that servos are in correct location
-            turn(42, moveDirection, turnSpeed);
-            move(3.5, moveSpeed);
+            turn(50, moveDirection, turnSpeed, -1); //Adjust twice
+            move(30, 1); //Approach white line
+            driveToWhiteLine(.2);
+            move(.1, .3); //Center robot to read color and push beacon
 
-            Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
-            String beaconColor = getColorName(hsv);
+            turn(40, moveDirection, turnSpeed);
+            moveUntilDistance(10, .2); //Approach to within ten inches of beacon to read color
 
+            String beaconColor = getColorName();
             if(beaconColor.equals(allianceColor)) {
-                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
-            } else {
                 buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
-            }
-
+            } else if (!beaconColor.equals("Undefined")) { //Alliance color is on the right
+                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
+            } else return; //Beacon color is undefined, something went wrong
             sleep(400);
-            move(15, .65); //Push beacon
+            move(10, .3); //Push beacon
+*/
+            //Second Beacon
+            //moveUntilDistance(15, -.1);
+            //turn(90, moveDirection.next(), turnSpeed);
+            //move(43, moveSpeed);
 
+/*
             move(-5, moveSpeed); //Back away from wall
             move(50, moveSpeed);
             turn(90, moveDirection.next(), turnSpeed);
@@ -54,13 +58,12 @@ public class AutonomousCode extends OpModeBase {
             move(4, .5);
             turn(90, moveDirection, turnSpeed);
 
-            Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
-            beaconColor = getColorName(hsv);
+            beaconColor = getColorName();
 
             if(beaconColor.equals(allianceColor)) {
-                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
-            } else {
                 buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
+            } else {
+                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
             }
 
             sleep(400);

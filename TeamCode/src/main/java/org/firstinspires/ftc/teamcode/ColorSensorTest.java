@@ -14,7 +14,7 @@ public class ColorSensorTest extends OpMode {
     private float[] hsv = {0F, 0F, 0F};
 
     public void init() {
-        colorSensor = hardwareMap.colorSensor.get("color_front");
+        colorSensor = hardwareMap.colorSensor.get("color");
         colorSensor.enableLed(false);
     }
 

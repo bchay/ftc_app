@@ -14,7 +14,7 @@ public class MetalDemoBot extends OpMode {
     public void init() {
         motorLeft = hardwareMap.dcMotor.get("left");
         motorRight = hardwareMap.dcMotor.get("right");
-        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+        motorRight.setDirection(DcMotor.Direction.REVERSE);
     }
 
     @Override

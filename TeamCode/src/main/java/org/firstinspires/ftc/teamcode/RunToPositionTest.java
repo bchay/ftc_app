@@ -7,44 +7,33 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @Autonomous(name = "Run to Position Test", group = "Test Code")
-public class RunToPositionTest extends LinearOpMode {
-    private DcMotor motorLeft;
-    private DcMotor motorRight;
-
-    public void runOpMode() throws InterruptedException {
-        motorLeft = hardwareMap.dcMotor.get("left");
-        motorRight = hardwareMap.dcMotor.get("right");
-
-        motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        telemetry.addData("Encoders reset", "");
-        telemetry.update();
+public class RunToPositionTest extends OpModeBase {
+    public void runOpMode() {
+        super.runOpMode();
 
         waitForStart();
 
         move();
     }
 
-    public void move() throws InterruptedException {
-        motorLeft.setTargetPosition(5000);
-        motorRight.setTargetPosition(5000);
+    private void move()  {
+        motorLeftFront.setTargetPosition(4000);
+        motorLeftBack.setTargetPosition(4000);
+        motorRightFront.setTargetPosition(4000);
+        motorRightBack.setTargetPosition(4000);
 
-        Thread.sleep(100);
+        motorLeftFront.setPower(.5);
+        motorLeftBack.setPower(.5);
+        motorRightFront.setPower(.5);
+        motorRightBack.setPower(.5);
 
-        motorLeft.setPower(.5);
-        motorRight.setPower(.5);
-
-        while(motorLeft.isBusy() && motorRight.isBusy() && opModeIsActive()) {
+        while(motorLeftFront.isBusy() && motorLeftBack.isBusy() && motorRightFront.isBusy() && motorRightBack.isBusy() && opModeIsActive()) {
             idle();
         }
 
-        motorLeft.setPower(0);
-        motorRight.setPower(0);
+        motorLeftFront.setPower(0);
+        motorLeftBack.setPower(0);
+        motorRightFront.setPower(0);
+        motorRightBack.setPower(0);
     }
 }
