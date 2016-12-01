@@ -53,6 +53,10 @@ abstract class OpModeBase extends LinearOpMode {
     private double kP = 0.0160;
     private double slowdownMin = .2;
 
+    private double odsWhite = .98;
+    private double odsGray = .13;
+    private double odsEdge = .555;
+
     enum Direction {
         LEFT, RIGHT;
 
@@ -202,7 +206,7 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     void move(double distance, double maxSpeed) {
-        distance = 47.973 * distance + 475.3;
+        distance = 49.07 * distance - 144.3; //distance = 47.973 * distance + 475.3;
         int initialHeading = gyro.getIntegratedZValue();
 
         //Change mode because move() uses setTargetPosition()
@@ -327,25 +331,26 @@ abstract class OpModeBase extends LinearOpMode {
             sleep(300);
     }
 
-    void followLine(double speed) {
-        double initialHeading = gyro.getIntegratedZValue();
-        while(range.getDistance(DistanceUnit.INCH) < 10) {
-            if(ods.getLightDetected() < 5) {
-                motorLeftFront.setPower(speed);
-                motorLeftBack.setPower(speed);
+    void followLine(double stopDistance, double speed) { //Robot will follow right edge of line
+        while(range.getDistance(DistanceUnit.INCH) > stopDistance) {
+            double error = (odsEdge - ods.getLightDetected()) * .3;
+            if (error >= 0) {
+                motorLeftFront.setPower(Range.clip(speed - error, 0, 1));
+                motorLeftBack.setPower(Range.clip(speed - error, 0, 1));
                 motorRightFront.setPower(speed);
-                motorRightBack.setPower(speed);
-            } else if (gyro.getIntegratedZValue() - initialHeading > 0) { //Robot has moved right
-                motorLeftFront.setPower(speed);
-                motorLeftBack.setPower(speed);
-                motorRightFront.setPower(speed/2);
-                motorRightBack.setPower(speed/2);
+                motorRightBack.setPower(error);
             } else {
-                motorLeftFront.setPower(speed/2);
-                motorLeftBack.setPower(speed/2);
-                motorRightFront.setPower(speed);
-                motorRightBack.setPower(speed);
+                motorLeftFront.setPower(speed);
+                motorLeftBack.setPower(speed);
+                motorRightFront.setPower(Range.clip(speed  - error, 0, 1));
+                motorRightBack.setPower(Range.clip(speed  - error, 0, 1));
             }
+
+            telemetry.addData("Light", ods.getLightDetected());
+            telemetry.addData("Error", error);
+            telemetry.addData("Left power", motorLeftFront.getPower());
+            telemetry.addData("Right power", motorRightFront.getPower());
+            telemetry.update();
         }
     }
 

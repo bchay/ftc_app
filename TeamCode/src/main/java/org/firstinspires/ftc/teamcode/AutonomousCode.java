@@ -23,7 +23,9 @@ public class AutonomousCode extends OpModeBase {
 
         //Robot begins centered at third tile away from corner vortex wall
         if(location.equals("Close")) {
-            followLine(.3);
+            //followLine(10, .4);
+            move(24, moveSpeed);
+
             /*
             //First Beacon
             move(12, moveSpeed);
