@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Gyroscope Test", group = "Test Code")
-public class Gyroscope extends OpMode {
+public class GyroscopeTest extends OpMode {
     private ModernRoboticsI2cGyro gyro;
 
     public void init() {

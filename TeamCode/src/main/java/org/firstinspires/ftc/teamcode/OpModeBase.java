@@ -25,6 +25,10 @@ abstract class OpModeBase extends LinearOpMode {
     DcMotor motorRightFront;
     DcMotor motorRightBack;
 
+    //Vertical Slide Motors
+    DcMotor verticalSlideOne;
+    DcMotor verticalSlideTwo;
+
     //Button Servos
     Servo buttonPresser;
 
@@ -35,7 +39,7 @@ abstract class OpModeBase extends LinearOpMode {
     ModernRoboticsI2cRangeSensor range;
 
     //Variables
-    final double BUTTON_PRESSER_LEFT = .20;
+    final double BUTTON_PRESSER_LEFT = .17;
     final double BUTTON_PRESSER_RIGHT = .89;
     final double BUTTON_PRESSER_NEUTRAL = .55;
 
@@ -48,14 +52,17 @@ abstract class OpModeBase extends LinearOpMode {
     int delay;
 
     //Autonomous Specific Configuration
-    double moveSpeed = .8;
+    double moveSpeed = .85;
     double turnSpeed = .3;
     private double kP = 0.0160;
-    private double slowdownMin = .2;
+    double slowdownMin = .2;
 
-    private double odsWhite = .98;
+    private double odsWhite = .80;
     private double odsGray = .13;
     private double odsEdge = .555;
+
+    //Teleop specific configuration
+    double motorMax = 1;
 
     enum Direction {
         LEFT, RIGHT;
@@ -77,6 +84,10 @@ abstract class OpModeBase extends LinearOpMode {
         motorLeftBack = hardwareMap.dcMotor.get("left_back");
         motorRightFront = hardwareMap.dcMotor.get("right_front");
         motorRightBack = hardwareMap.dcMotor.get("right_back");
+
+        //Vertical Slide Motors
+        verticalSlideOne = hardwareMap.dcMotor.get("vertical_slide_one");
+        verticalSlideTwo = hardwareMap.dcMotor.get("vertical_slide_two");
 
         //Button Servos
         buttonPresser = hardwareMap.servo.get("button_presser");
@@ -106,7 +117,6 @@ abstract class OpModeBase extends LinearOpMode {
         motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
 
         //Configure Servos
         buttonPresser.setPosition(BUTTON_PRESSER_NEUTRAL); //Initially set to left position
@@ -159,10 +169,10 @@ abstract class OpModeBase extends LinearOpMode {
 
         if(degrees < 0) {
             while(gyro.getIntegratedZValue() > targetHeading && opModeIsActive()) {
-                motorLeftFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .01, maxSpeed));
-                motorLeftBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .01, maxSpeed));
-                motorRightFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.01));
-                motorRightBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.01));
+                motorLeftFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
+                motorLeftBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
+                motorRightFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.1));
+                motorRightBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.1));
 
                 telemetry.addData("Distance to turn: ", Math.abs(gyro.getIntegratedZValue() - targetHeading));
                 telemetry.addData("Target", targetHeading);
@@ -206,7 +216,7 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     void move(double distance, double maxSpeed) {
-        distance = 49.07 * distance - 144.3; //distance = 47.973 * distance + 475.3;
+        distance = 45.52 * distance + 240.0; //distance = 49.07 * distance - 144.3;
         int initialHeading = gyro.getIntegratedZValue();
 
         //Change mode because move() uses setTargetPosition()
@@ -261,7 +271,7 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        while (ods.getLightDetected() < 5 && opModeIsActive()) { //ODS averages values
+        while (ods.getLightDetected() < odsWhite && opModeIsActive()) { //ODS averages values
             double error = initialHeading - gyro.getIntegratedZValue();
             double targetError =  error * .015; //Value must be adjusted
 
@@ -310,7 +320,7 @@ abstract class OpModeBase extends LinearOpMode {
                 idle();
             }
         } else {
-            while (range.getDistance(DistanceUnit.INCH) > distance && opModeIsActive()) {
+            while (range.getDistance(DistanceUnit.INCH) < distance && opModeIsActive()) {
                 motorLeftFront.setPower(-speed);
                 motorLeftBack.setPower(-speed);
                 motorRightFront.setPower(-speed);
@@ -333,17 +343,19 @@ abstract class OpModeBase extends LinearOpMode {
 
     void followLine(double stopDistance, double speed) { //Robot will follow right edge of line
         while(range.getDistance(DistanceUnit.INCH) > stopDistance) {
-            double error = (odsEdge - ods.getLightDetected()) * .3;
+            double error = (odsEdge - ods.getLightDetected()) * .35;
+            if(allianceColor.equals("Blue")) error *= -1;
+
             if (error >= 0) {
                 motorLeftFront.setPower(Range.clip(speed - error, 0, 1));
                 motorLeftBack.setPower(Range.clip(speed - error, 0, 1));
                 motorRightFront.setPower(speed);
-                motorRightBack.setPower(error);
+                motorRightBack.setPower(speed);
             } else {
                 motorLeftFront.setPower(speed);
                 motorLeftBack.setPower(speed);
-                motorRightFront.setPower(Range.clip(speed  - error, 0, 1));
-                motorRightBack.setPower(Range.clip(speed  - error, 0, 1));
+                motorRightFront.setPower(Range.clip(speed  + error, 0, 1));
+                motorRightBack.setPower(Range.clip(speed  + error, 0, 1));
             }
 
             telemetry.addData("Light", ods.getLightDetected());
@@ -352,6 +364,13 @@ abstract class OpModeBase extends LinearOpMode {
             telemetry.addData("Right power", motorRightFront.getPower());
             telemetry.update();
         }
+
+        motorLeftFront.setPower(0);
+        motorLeftBack.setPower(0);
+        motorRightFront.setPower(0);
+        motorRightBack.setPower(0);
+        sleep(300);
+
     }
 
     String getColorName() {

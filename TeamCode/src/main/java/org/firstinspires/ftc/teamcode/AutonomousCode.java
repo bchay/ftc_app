@@ -15,62 +15,62 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name = "Autonomous", group = "Main Code")
-public class AutonomousCode extends OpModeBase {
+public class AutonomousCode extends OpModeBase { //Robot begins angled
     public void runOpMode() {
         super.runOpMode();
         waitForStart();
         sleep(delay);
 
-        //Robot begins centered at third tile away from corner vortex wall
-        if(location.equals("Close")) {
-            //followLine(10, .4);
-            move(24, moveSpeed);
-
+        //First Beacon
             /*
-            //First Beacon
             move(12, moveSpeed);
-            turn(50, moveDirection, turnSpeed, -1); //Adjust twice
-            move(30, 1); //Approach white line
-            driveToWhiteLine(.2);
-            move(.1, .3); //Center robot to read color and push beacon
-
-            turn(40, moveDirection, turnSpeed);
-            moveUntilDistance(10, .2); //Approach to within ten inches of beacon to read color
-
-            String beaconColor = getColorName();
-            if(beaconColor.equals(allianceColor)) {
-                buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
-            } else if (!beaconColor.equals("Undefined")) { //Alliance color is on the right
-                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
-            } else return; //Beacon color is undefined, something went wrong
-            sleep(400);
-            move(10, .3); //Push beacon
-*/
-            //Second Beacon
-            //moveUntilDistance(15, -.1);
-            //turn(90, moveDirection.next(), turnSpeed);
-            //move(43, moveSpeed);
-
-/*
-            move(-5, moveSpeed); //Back away from wall
-            move(50, moveSpeed);
-            turn(90, moveDirection.next(), turnSpeed);
-            move(40, moveSpeed); //Drive to second beacon
-            driveToWhiteLine(.4);
-            move(4, .5);
-            turn(90, moveDirection, turnSpeed);
-
-            beaconColor = getColorName();
-
-            if(beaconColor.equals(allianceColor)) {
-                buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
-            } else {
-                buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
-            }
-
-            sleep(400);
-            move(16, .65); //Push beacon
+            turn(46, moveDirection, turnSpeed, -1); //Adjust twice
             */
-        }
+
+        move(56, 1); //Approach white line
+        driveToWhiteLine(.1);
+        move(1, .4);
+        turn(44, moveDirection, turnSpeed); //Point toward beacon
+
+        moveUntilDistance(16, .4); //Back up to make line follower more accurate
+        followLine(7, .3); //Approach to within ten inches of beacon to read color
+
+        String beaconColor = getColorName();
+        if (beaconColor.equals(allianceColor)) {
+            buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
+        } else if (!beaconColor.equals("Undefined")) { //Alliance color is on the right
+            buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
+        } //If beacon color is "Undefined" the robot will still approach beacon in hopes of hitting the second.
+
+        sleep(600);
+
+        move(5, .4); //Push beacon
+
+        //Second Beacon
+        buttonPresser.setPosition(BUTTON_PRESSER_NEUTRAL);
+
+        moveUntilDistance(7, .4); //Back up
+
+        turn(90, moveDirection.next(), turnSpeed, -1); //Turn towards second beacon
+        move(35, moveSpeed); //Move to second beacon location
+
+        driveToWhiteLine(.1);
+        turn(90, moveDirection, turnSpeed, -1);
+
+        move(11, 1); //Move past white line to center ODS to side
+
+        moveUntilDistance(14, .4); //Back up to make line follower more accurate
+
+        followLine(7, .3); //Approach to within ten inches of beacon to read color
+
+        beaconColor = getColorName();
+        if (beaconColor.equals(allianceColor)) {
+            buttonPresser.setPosition(BUTTON_PRESSER_LEFT);
+        } else if (!beaconColor.equals("Undefined")) { //Alliance color is on the right
+            buttonPresser.setPosition(BUTTON_PRESSER_RIGHT);
+        } else return; //Beacon color is undefined, something went wrong
+
+        sleep(600);
+        move(15, .35); //Push beacon
     }
 }
