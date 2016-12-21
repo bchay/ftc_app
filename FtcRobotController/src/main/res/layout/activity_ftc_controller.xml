@@ -176,12 +176,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       android:text="" />
 
       <!--*********************** ADDED CODE ***********************-->
-      <org.opencv.android.JavaCameraView
+
+    <!--<org.opencv.android.JavaCameraView
           android:layout_width="fill_parent"
           android:id="@+id/surfaceView"
           android:layout_height="300dp"
           android:layout_above="@+id/textGamepad1"
           android:layout_alignParentStart="true" />
+    -->
+
+    <org.firstinspires.ftc.teamcode.OpenCVView
+      android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/surfaceView" />
+
   </RelativeLayout>
 
   <WebView

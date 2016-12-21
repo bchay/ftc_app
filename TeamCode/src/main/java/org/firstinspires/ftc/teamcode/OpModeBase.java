@@ -17,33 +17,27 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 abstract class OpModeBase extends LinearOpMode {
-    //Hardware Declaration
+    //*************** Declare Hardware Devices ***************
 
-    //Drive Motors
+    //Motors
     DcMotor motorLeftFront;
     DcMotor motorLeftBack;
     DcMotor motorRightFront;
     DcMotor motorRightBack;
 
-    //Vertical Slide Motors
-    DcMotor verticalSlideOne;
-    DcMotor verticalSlideTwo;
-
-    //Button Servos
+    //Servos
     Servo buttonPresser;
 
-    //Sensor Decleration
+    //Sensors
     private ModernRoboticsI2cGyro gyro;
     private ColorSensor colorSensor;
     private OpticalDistanceSensor ods;
-    ModernRoboticsI2cRangeSensor range;
 
     //Variables
-    final double BUTTON_PRESSER_LEFT = .17;
-    final double BUTTON_PRESSER_RIGHT = .89;
-    final double BUTTON_PRESSER_NEUTRAL = .55;
+    final double BUTTON_PRESSER_IN = 0;
+    final double BUTTON_PRESSER_OUT = 1;
 
-    //SharedPreferences Settings Information
+    //SharedPreferences
     SharedPreferences sharedPreferences;
     Direction moveDirection;
 
@@ -61,9 +55,6 @@ abstract class OpModeBase extends LinearOpMode {
     private double odsGray = .13;
     private double odsEdge = .555;
 
-    //Teleop specific configuration
-    double motorMax = 1;
-
     enum Direction {
         LEFT, RIGHT;
 
@@ -73,21 +64,20 @@ abstract class OpModeBase extends LinearOpMode {
         }
     }
 
-    //Initialize all hardware
+    //Teleop specific configuration
+    double motorMax = 1;
+
+    //Initialize all hardware, do setup for opmodes
     public void runOpMode() {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
 
-        //*************** Instantiate hardware devices ***************
+        //*************** Map hardware devices ***************
 
         //Drive Motors
         motorLeftFront = hardwareMap.dcMotor.get("left_front");
         motorLeftBack = hardwareMap.dcMotor.get("left_back");
         motorRightFront = hardwareMap.dcMotor.get("right_front");
         motorRightBack = hardwareMap.dcMotor.get("right_back");
-
-        //Vertical Slide Motors
-        verticalSlideOne = hardwareMap.dcMotor.get("vertical_slide_one");
-        verticalSlideTwo = hardwareMap.dcMotor.get("vertical_slide_two");
 
         //Button Servos
         buttonPresser = hardwareMap.servo.get("button_presser");
@@ -96,11 +86,10 @@ abstract class OpModeBase extends LinearOpMode {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         colorSensor = hardwareMap.colorSensor.get("color");
         ods = hardwareMap.opticalDistanceSensor.get("ods");
-        range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
 
         //*************** Configure hardware devices ***************
 
-        //Configure Motors
+        //Motors
 
         //Drive motors
         motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -118,13 +107,12 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        //Configure Servos
-        buttonPresser.setPosition(BUTTON_PRESSER_NEUTRAL); //Initially set to left position
+        //Servos
+        buttonPresser.setPosition(BUTTON_PRESSER_IN);
 
+        //Sensors
 
-        //Configure Sensors
-
-        //Gyro Calibration
+        //Gyro
         gyro.calibrate();
 
         //Wait while gyro is calibrating
@@ -133,10 +121,10 @@ abstract class OpModeBase extends LinearOpMode {
             idle();
         }
 
-        //Disable Color Sensor LED
+        //Color Sensor
         colorSensor.enableLed(false);
 
-        //Configure SharedPreferences Settings (For Autonomous)
+        //*************** Configure SharedPreferences ***************
         allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
         location = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "null");
         delay = sharedPreferences.getInt("com.qualcomm.ftcrobotcontroller.Autonomous.Delay", 0);
@@ -298,79 +286,6 @@ abstract class OpModeBase extends LinearOpMode {
         if (Math.abs(initialHeading - finalHeading) > 0) {
             turn(Math.abs(initialHeading - finalHeading), initialHeading > finalHeading ? OpModeBase.Direction.LEFT : OpModeBase.Direction.RIGHT, .1); //Negative degrees for right
         }
-    }
-
-    void moveUntilDistance(double distance, double speed) {
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        if (distance < range.getDistance(DistanceUnit.INCH)) { //Move forward
-            while (range.getDistance(DistanceUnit.INCH) > distance && opModeIsActive()) {
-                motorLeftFront.setPower(speed);
-                motorLeftBack.setPower(speed);
-                motorRightFront.setPower(speed);
-                motorRightBack.setPower(speed);
-
-                telemetry.addData("Left Motor Power", motorLeftFront.getPower());
-                telemetry.addData("Right Motor Power", motorRightFront.getPower());
-                telemetry.addData("Range", range.getDistance(DistanceUnit.INCH));
-                sleep(50);
-                idle();
-            }
-        } else {
-            while (range.getDistance(DistanceUnit.INCH) < distance && opModeIsActive()) {
-                motorLeftFront.setPower(-speed);
-                motorLeftBack.setPower(-speed);
-                motorRightFront.setPower(-speed);
-                motorRightBack.setPower(-speed);
-
-                telemetry.addData("Left Motor Power", motorLeftFront.getPower());
-                telemetry.addData("Right Motor Power", motorRightFront.getPower());
-                telemetry.addData("Range", range.getDistance(DistanceUnit.INCH));
-                sleep(50);
-                idle();
-            }
-        }
-            motorLeftFront.setPower(0);
-            motorLeftBack.setPower(0);
-            motorRightFront.setPower(0);
-            motorRightBack.setPower(0);
-
-            sleep(300);
-    }
-
-    void followLine(double stopDistance, double speed) { //Robot will follow right edge of line
-        while(range.getDistance(DistanceUnit.INCH) > stopDistance) {
-            double error = (odsEdge - ods.getLightDetected()) * .35;
-            if(allianceColor.equals("Blue")) error *= -1;
-
-            if (error >= 0) {
-                motorLeftFront.setPower(Range.clip(speed - error, 0, 1));
-                motorLeftBack.setPower(Range.clip(speed - error, 0, 1));
-                motorRightFront.setPower(speed);
-                motorRightBack.setPower(speed);
-            } else {
-                motorLeftFront.setPower(speed);
-                motorLeftBack.setPower(speed);
-                motorRightFront.setPower(Range.clip(speed  + error, 0, 1));
-                motorRightBack.setPower(Range.clip(speed  + error, 0, 1));
-            }
-
-            telemetry.addData("Light", ods.getLightDetected());
-            telemetry.addData("Error", error);
-            telemetry.addData("Left power", motorLeftFront.getPower());
-            telemetry.addData("Right power", motorRightFront.getPower());
-            telemetry.update();
-        }
-
-        motorLeftFront.setPower(0);
-        motorLeftBack.setPower(0);
-        motorRightFront.setPower(0);
-        motorRightBack.setPower(0);
-        sleep(300);
-
     }
 
     String getColorName() {

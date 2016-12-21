@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.app.Activity;
+import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,20 +14,18 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
-import static org.opencv.imgproc.Imgproc.COLOR_HSV2RGB;
-import static org.opencv.imgproc.Imgproc.MORPH_RECT;
-import static org.opencv.imgproc.Imgproc.contourArea;
 
 @Autonomous(name = "OpenCV", group = "Test Code")
 public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCameraViewListener2 {
-    private CameraBridgeViewBase mOpenCvCameraView;
-    private Mat hsv;
+    private OpenCVView mOpenCvCameraView;
+    private Mat mat;
     private Mat rgb;
+    private Mat gray;
+    private Mat resized;
 
     public void runOpMode() {
         BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(hardwareMap.appContext) {
@@ -45,10 +44,12 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
             }
         };
 
-        mOpenCvCameraView = (CameraBridgeViewBase) ((Activity) hardwareMap.appContext).findViewById(R.id.surfaceView);
-        mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
+        mOpenCvCameraView = (OpenCVView) ((Activity) hardwareMap.appContext).findViewById(R.id.surfaceView);
+        //mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        //mOpenCvCameraView.setMaxFrameSize(64, 64);
 
         if (!OpenCVLoader.initDebug()) {
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, hardwareMap.appContext, mLoaderCallback);
@@ -67,34 +68,43 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
     }
 
     public void onCameraViewStarted(int width, int height) {
-        hsv = new Mat(height, width, CvType.CV_8UC4);
+        mat = new Mat(height, width, CvType.CV_8UC4);
         rgb = new Mat(height, width, CvType.CV_8UC4);
+        gray = new Mat(height, width, CvType.CV_8UC1);
+        resized = new Mat(height, width, CvType.CV_8UC4);
     }
 
     public void onCameraViewStopped() {
-        hsv.release();
+        mat.release();
         rgb.release();
+        gray.release();
+        resized.release();
     }
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        hsv.release();
+        mat.release();
         rgb.release();
+        gray.release();
+        resized.release();
 
         rgb = inputFrame.rgba();
 
-        Imgproc.cvtColor(rgb, hsv, COLOR_BGR2HSV);
+        Imgproc.cvtColor(rgb, mat, COLOR_BGR2HSV);
+        Imgproc.cvtColor(rgb, gray, COLOR_BGR2GRAY);
 
-        //Blue Code
-        //Scalar min = new Scalar(200/2, 190, 80);
-        //Scalar max = new Scalar(180/2, 255, 255);
+        //Blue Code - TODO
+        //Scalar min = new Scalar(100, 50, 50);
+        //Scalar max = new Scalar(140, 255, 255);
 
-        //Red Code
+        //Red Code - Black box
         Scalar min = new Scalar(220/2, 190, 80);
         Scalar max = new Scalar(260, 255, 255);
 
-        Core.inRange(hsv, min, max, hsv);
-        Imgproc.cvtColor(hsv, rgb, COLOR_HSV2RGB);
+        Core.inRange(mat, min, max, rgb);
 
+        //Imgproc.resize(rgb, resized, resized.size());
+
+        //return resized;
         return rgb;
     }
 }

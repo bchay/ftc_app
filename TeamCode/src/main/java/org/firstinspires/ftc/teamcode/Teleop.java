@@ -17,21 +17,18 @@ GAMEPAD MAPPINGS:
 
 Driver One - Movement - Gamepad 1
     Tank Drive:
-    Right Joystick: Move right side motors
-    Left Joystick: Move left side motors
+    Right Joystick: Right drivetrain motors
+    Left Joystick: Left drivetrain motors
 
 Driver Two - Operations - Gamepad 2
-    X: Button Presser Left
-    B: Button Presser right
-
-    Right Trigger: Vertical Slide up
-    Left Trigger: Vertical Slide down
- */
+    X: Button Presser in
+    B: Button Presser out
+*/
 
 @TeleOp(name = "Teleop")
-public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so that both it and AutonomousCode can extend the same superclass
+public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can extend the same base class as autonomous
     public void runOpMode() {
-        super.runOpMode();
+        super.runOpMode(); //Configure hardware
         waitForStart();
 
         motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -44,27 +41,16 @@ public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so that both
             if(gamepad1.a) motorMax = .3; //Enables slow mode
             if(gamepad1.b) motorMax = 1; //Enables slow mode
 
-            motorLeftFront.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax)); //Motors are reversed in OpModeBase for autonomous
+            motorLeftFront.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
             motorLeftBack.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
             motorRightFront.setPower(Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
             motorRightBack.setPower(Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
 
             //Set servo positions based on gamepad input
-            if (gamepad2.x) { //Left
-                buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() - .01, BUTTON_PRESSER_LEFT, BUTTON_PRESSER_RIGHT));
+            if (gamepad2.x) { //In
+                buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() - .01, BUTTON_PRESSER_IN, BUTTON_PRESSER_OUT));
             } else if (gamepad2.b) {
-                buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() + .01, BUTTON_PRESSER_LEFT, BUTTON_PRESSER_RIGHT));
-            }
-
-            if(gamepad2.right_trigger > .5) {
-                verticalSlideOne.setPower(1);
-                verticalSlideTwo.setPower(1);
-            } else if(gamepad2.left_trigger > .5) {
-                verticalSlideOne.setPower(-1);
-                verticalSlideTwo.setPower(-1);
-            } else {
-                verticalSlideOne.setPower(0);
-                verticalSlideTwo.setPower(0);
+                buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() + .01, BUTTON_PRESSER_IN, BUTTON_PRESSER_OUT));
             }
 
             telemetry.addData("Left Motor Power", motorLeftFront.getPower());
