@@ -58,7 +58,7 @@ abstract class OpModeBase extends LinearOpMode {
     enum Direction {
         LEFT, RIGHT;
 
-
+        //Taken from: http://stackoverflow.com/a/17006263
         private static OpModeBase.Direction[] vals = values();
         public OpModeBase.Direction next() {
             return vals[(this.ordinal() + 1) % vals.length];
