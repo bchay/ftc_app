@@ -21,6 +21,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
@@ -39,6 +40,7 @@ public class OpenCVTest extends LinearOpMode implements CvCameraViewListener2 {
     private Mat rgb;
     private Mat gray;
     private Mat hsv;
+    boolean log = true;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -67,13 +69,13 @@ public class OpenCVTest extends LinearOpMode implements CvCameraViewListener2 {
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-        while(!isStopRequested() && mOpenCvCameraView.getMCamera() == null) {
+        while (!isStopRequested() && mOpenCvCameraView.getMCamera() == null) {
             idle();
         }
 
 
         //Wait for all camera resolutions to load
-        while(!isStopRequested() && mOpenCvCameraView.getResolutionList().size() < 9) {
+        while (!isStopRequested() && mOpenCvCameraView.getResolutionList().size() < 9) {
             idle();
         }
 
@@ -83,22 +85,9 @@ public class OpenCVTest extends LinearOpMode implements CvCameraViewListener2 {
         telemetry.addData("Start", "");
         telemetry.update();
 
-        double currentTime = System.currentTimeMillis();
         waitForStart();
-        while(opModeIsActive()) {
-            if(System.currentTimeMillis() - currentTime > 5000) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
-                String currentDateandTime = sdf.format(new Date());
-                String fileName = Environment.getExternalStorageDirectory().getPath() +
-                        "/sample_picture_" + currentDateandTime + ".jpg";
-                mOpenCvCameraView.takePicture(fileName);
-                currentTime = System.currentTimeMillis();
-            }
+        while (opModeIsActive()) {
             idle();
-        }
-
-        if (mOpenCvCameraView != null) {
-            //mOpenCvCameraView.disableView();
         }
     }
 
@@ -115,14 +104,13 @@ public class OpenCVTest extends LinearOpMode implements CvCameraViewListener2 {
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        rgb.release();
-        hsv.release();
-        gray.release();
+        if (rgb != null) rgb.release();
+        if (hsv != null) hsv.release();
+        if (gray != null) gray.release();
 
         rgb = inputFrame.rgba();
 
         Imgproc.cvtColor(rgb, hsv, COLOR_RGB2HSV);
-        Imgproc.cvtColor(rgb, gray, COLOR_RGB2GRAY);
 
         //Blue Code
         Scalar min = new Scalar(90, 110, 110); //Hue is 0 - 179
@@ -134,6 +122,22 @@ public class OpenCVTest extends LinearOpMode implements CvCameraViewListener2 {
 
         Core.inRange(hsv, min, max, gray); //Threshold for alliance color
 
+        Mat m = new Mat();
+        Imgproc.resize(gray, m, new org.opencv.core.Size(20, 20));
+
+        byte[] pixels = new byte[m.height() * m.width()];
+        m.get(0, 0, pixels);
+        Log.i("MAT", Arrays.toString(convertToIntArray(pixels)));
+
         return gray;
+    }
+
+    private static int[] convertToIntArray(byte[] input) {
+        int[] ret = new int[input.length];
+        for (int i = 0; i < input.length; i++)
+        {
+            ret[i] = input[i] & 0xff; // Range 0 to 255, not -128 to 127
+        }
+        return ret;
     }
 }
