@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -10,14 +12,21 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.Exchanger;
 
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
@@ -101,22 +110,58 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
 
         Core.inRange(hsv, min, max, gray); //Threshold for alliance color
 
-        Mat m = new Mat();
-        Imgproc.resize(gray, m, new org.opencv.core.Size(20, 20));
+        Mat smallMat = new Mat();
 
-        byte[] pixels = new byte[m.height() * m.width()];
-        m.get(0, 0, pixels);
-        Log.i("MAT", Arrays.toString(convertToIntArray(pixels)));
+        double desiredWidth = 64;
+        double imageWidth = rgb.width();
+        double imageHeight = rgb.height();
+        double divideFactor = desiredWidth / imageWidth;
 
-        return gray;
-    }
+        Imgproc.resize(gray, smallMat, new org.opencv.core.Size((int) (imageWidth * divideFactor), (int) (imageHeight * divideFactor)));
 
-    //Taken from: http://stackoverflow.com/a/6057546
-    private static int[] convertToIntArray(byte[] input) {
-        int[] ret = new int[input.length];
-        for (int i = 0; i < input.length; i++) {
-            ret[i] = input[i] & 0xff; //Range 0 to 255, not -128 to 127
+        Core.transpose(smallMat, smallMat);
+        Core.flip(smallMat, smallMat, 1);
+
+        Bitmap bmp = null;
+
+        try {
+            bmp = Bitmap.createBitmap(smallMat.cols(), smallMat.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(smallMat, bmp);
+        } catch (CvException e) {
+            e.printStackTrace();
         }
-        return ret;
+
+        smallMat.release();
+
+        FileOutputStream out = null;
+
+        String filename = new Date() + ".png";
+
+        File dir = new File(Environment.getExternalStorageDirectory() + "/FTC Center Vortex");
+        boolean success = true;
+
+        if (!dir.exists()) {
+            success = dir.mkdir();
+        }
+
+        if (success) {
+            File dest = new File(dir, filename);
+
+            try {
+                out = new FileOutputStream(dest);
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (out != null) {
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return gray;
     }
 }
