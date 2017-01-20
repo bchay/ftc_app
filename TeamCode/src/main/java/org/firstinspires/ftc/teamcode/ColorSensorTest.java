@@ -33,8 +33,8 @@ public class ColorSensorTest extends OpMode {
     }
 
     public String getColorName(float[] hsv) {
-        if (hsv[0] < 30 || hsv[0] > 340) return "red";
-        else if (hsv[0] > 170 && hsv[0] < 260) return "blue";
+        if (hsv[0] < 30 || hsv[0] > 340) return "Red";
+        else if (hsv[0] > 170 && hsv[0] < 260) return "Blue";
         return "undefined";
     }
 }

@@ -28,6 +28,11 @@ public class RunToPositionTest extends OpModeBase {
         motorRightBack.setPower(.5);
 
         while(motorLeftFront.isBusy() && motorLeftBack.isBusy() && motorRightFront.isBusy() && motorRightBack.isBusy() && opModeIsActive()) {
+            telemetry.addData("Left front position", motorLeftFront.getCurrentPosition());
+            telemetry.addData("Left back position", motorLeftBack.getCurrentPosition());
+            telemetry.addData("Right front position", motorRightFront.getCurrentPosition());
+            telemetry.addData("Right back position", motorRightBack.getCurrentPosition());
+            telemetry.update();
             idle();
         }
 

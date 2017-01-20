@@ -22,6 +22,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -100,13 +101,16 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         rgb = inputFrame.rgba();
         Imgproc.cvtColor(rgb, hsv, COLOR_RGB2HSV);
 
-        //Blue Code
-        Scalar min = new Scalar(90, 110, 110); //Hue is 0 - 179
-        Scalar max = new Scalar(140, 255, 255);
+        //Blue Code - G3
+        //Scalar min = new Scalar(120, 20, 20); //Hue is 0 - 179
+        //Scalar max = new Scalar(140, 255, 255);
+
+        //Scalar min = new Scalar(100, 20, 20); //Hue is 0 - 179
+        //Scalar max = new Scalar(130, 255, 255);
 
         //Red Code
-        //Scalar min = new Scalar(0, 150, 150);
-        //Scalar max = new Scalar(5, 255, 255);
+        Scalar min = new Scalar(0, 150, 150);
+        Scalar max = new Scalar(5, 255, 255);
 
         Core.inRange(hsv, min, max, gray); //Threshold for alliance color
 
@@ -118,6 +122,7 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         double divideFactor = desiredWidth / imageWidth;
 
         Imgproc.resize(gray, smallMat, new org.opencv.core.Size((int) (imageWidth * divideFactor), (int) (imageHeight * divideFactor)));
+        //48 * 64
 
         Core.transpose(smallMat, smallMat);
         Core.flip(smallMat, smallMat, 1);
@@ -138,6 +143,7 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         String filename = new Date() + ".png";
 
         File dir = new File(Environment.getExternalStorageDirectory() + "/FTC Center Vortex");
+        Log.i("Directory: ", dir.getAbsolutePath());
         boolean success = true;
 
         if (!dir.exists()) {
@@ -161,7 +167,10 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
                     e.printStackTrace();
                 }
             }
+        } else {
+            Log.i("Error", "success is false");
         }
+
         return gray;
     }
 }
