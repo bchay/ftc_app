@@ -152,7 +152,7 @@ abstract class OpModeBase extends LinearOpMode {
         }
 
         telemetry.addData("Ready to start program", "");
-        telemetry.addData("Alliance color: ", allianceColor);
+        telemetry.addData("Alliance color", allianceColor);
         telemetry.update();
     }
 

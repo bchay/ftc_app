@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -31,6 +32,7 @@ import java.util.concurrent.Exchanger;
 
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
+import static org.opencv.imgproc.Imgproc.COLOR_GRAY2RGB;
 import static org.opencv.imgproc.Imgproc.COLOR_HSV2RGB;
 import static org.opencv.imgproc.Imgproc.COLOR_RGB2HSV;
 import static org.opencv.imgproc.Imgproc.MORPH_RECT;
@@ -101,28 +103,35 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         rgb = inputFrame.rgba();
         Imgproc.cvtColor(rgb, hsv, COLOR_RGB2HSV);
 
-        //Blue Code - G3
-        //Scalar min = new Scalar(120, 20, 20); //Hue is 0 - 179
-        //Scalar max = new Scalar(140, 255, 255);
+        String color = "red";
+        if(color.equals("blue")) {
+            Scalar min = new Scalar(100, 20, 20); //Hue is 0 - 179
+            Scalar max = new Scalar(130, 255, 255);
+            Core.inRange(hsv, min, max, gray);
 
-        //Scalar min = new Scalar(100, 20, 20); //Hue is 0 - 179
-        //Scalar max = new Scalar(130, 255, 255);
+            /*
+            211, 44, 32
+            231, 100, 71
+             */
 
-        //Red Code
-        Scalar min = new Scalar(0, 150, 150);
-        Scalar max = new Scalar(5, 255, 255);
+        } else {
+            Mat lowerRed = new Mat(); //Red color loops through cylinder
+            Core.inRange(hsv, new Scalar(0, 247, 76), new Scalar(11, 255, 138), lowerRed); //0, 68, 30 /// 11, 100, 93)
 
-        Core.inRange(hsv, min, max, gray); //Threshold for alliance color
+            Mat upperRed = new Mat();
+            Core.inRange(hsv, new Scalar(172, 189, 104), new Scalar(179, 255, 188), upperRed); //345, 84, 41 /// 359, 100, 74
 
+            Core.bitwise_or(lowerRed, upperRed, gray); //Bitwise or combines the ranges
+        }
         Mat smallMat = new Mat();
 
-        double desiredWidth = 64;
+        double desiredWidth = 128;
         double imageWidth = rgb.width();
         double imageHeight = rgb.height();
         double divideFactor = desiredWidth / imageWidth;
 
         Imgproc.resize(gray, smallMat, new org.opencv.core.Size((int) (imageWidth * divideFactor), (int) (imageHeight * divideFactor)));
-        //48 * 64
+        //48 * 128 (w * h)
 
         Core.transpose(smallMat, smallMat);
         Core.flip(smallMat, smallMat, 1);
@@ -168,9 +177,18 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
                 }
             }
         } else {
-            Log.i("Error", "success is false");
+            Log.i("SUCCESS", String.valueOf(success));
         }
 
         return gray;
     }
 }
+
+/*
+
+345, 90, 41
+359, 100, 74
+
+0, 97, 30
+11, 100, 54
+ */
