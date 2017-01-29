@@ -5,16 +5,14 @@ import android.graphics.Color;
 import android.preference.PreferenceManager;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
@@ -36,10 +34,11 @@ abstract class OpModeBase extends LinearOpMode {
     private ModernRoboticsI2cGyro gyro;
     private ColorSensor colorSensor;
     private OpticalDistanceSensor ods;
+    TouchSensor touchSensor;
 
     //Variables
-    final double BUTTON_PRESSER_IN = .2;
-    final double BUTTON_PRESSER_OUT = 1;
+    final double BUTTON_PRESSER_IN = .7;
+    final double BUTTON_PRESSER_OUT = .3;
 
     final double BALL_STOP_UP = 0;
     final double BALL_STOP_BLOCKED = .63;
@@ -53,10 +52,14 @@ abstract class OpModeBase extends LinearOpMode {
     int delay;
 
     //Autonomous Specific Configuration
-    double moveSpeed = .85;
+    double moveSpeed = .6;
+    double movementSlowdownMin = .2;
+    private double kP = 0;
+
     double turnSpeed = .3;
-    private double kP = .04;
-    double slowdownMin = .2;
+    double turnSlowdown = .1;
+
+
 
     private double odsWhite = .51; //Value from ods.getRawLightDetected()
     private double odsGray = .07;
@@ -99,6 +102,7 @@ abstract class OpModeBase extends LinearOpMode {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         colorSensor = hardwareMap.colorSensor.get("color");
         ods = hardwareMap.opticalDistanceSensor.get("ods");
+        touchSensor = hardwareMap.touchSensor.get("touch");
 
         //*************** Configure hardware devices ***************
 
@@ -158,7 +162,7 @@ abstract class OpModeBase extends LinearOpMode {
 
     void turn(double degrees, OpModeBase.Direction direction, double maxSpeed) { //count is optional, set to 0 if not provided
         if (!opModeIsActive()) return;
-        turn(degrees, direction, maxSpeed, 0);
+        turn(degrees, direction, maxSpeed, 1);
     }
 
     void turn(double degrees, OpModeBase.Direction direction, double maxSpeed, int count) {
@@ -174,16 +178,14 @@ abstract class OpModeBase extends LinearOpMode {
 
         if (degrees < 0) {
             while (gyro.getIntegratedZValue() > targetHeading && opModeIsActive()) {
-                motorLeftFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
-                motorLeftBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
-                motorRightFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -.1, -.2));
-                motorRightBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -.1, -.2));
+                motorLeftFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorLeftBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorRightFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorRightBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
 
                 telemetry.addData("Distance to turn: ", Math.abs(gyro.getIntegratedZValue() - targetHeading));
                 telemetry.addData("Target", targetHeading);
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
-                telemetry.addData("Original Speed", maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)));
-                telemetry.addData("Speed", Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
                 telemetry.update();
                 idle();
             }
@@ -197,13 +199,10 @@ abstract class OpModeBase extends LinearOpMode {
                 telemetry.addData("Distance to turn: ", Math.abs(gyro.getIntegratedZValue() - targetHeading));
                 telemetry.addData("Target", targetHeading);
                 telemetry.addData("Heading", gyro.getIntegratedZValue());
-                telemetry.addData("Original Speed", maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)));
-                telemetry.addData("Speed", Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
                 telemetry.update();
                 idle();
             }
         }
-
         motorLeftFront.setPower(0);
         motorLeftBack.setPower(0);
         motorRightFront.setPower(0);
@@ -214,15 +213,19 @@ abstract class OpModeBase extends LinearOpMode {
         telemetry.addData("Direction", -1 * (int) Math.signum(degrees));
         telemetry.update();
 
-        if (Math.abs(gyro.getIntegratedZValue() - targetHeading) > 0 && count < 1) {
+        if (Math.abs(gyro.getIntegratedZValue() - targetHeading) > 0 && count > 0) {
             //Recurse to correct turn
-            turn(Math.abs(gyro.getIntegratedZValue() - targetHeading), direction.equals(OpModeBase.Direction.RIGHT) ? OpModeBase.Direction.LEFT : OpModeBase.Direction.RIGHT, .08, ++count);
+            turn(Math.abs(gyro.getIntegratedZValue() - targetHeading), direction.next(), .06, --count);
         }
     }
 
     void move(double distance, double maxSpeed) {
-        double distanceSign = Math.signum(distance);
-        distance = distanceSign * (48.642 * Math.abs(distance) - 267.32);
+        move(distance, maxSpeed, true); //Default is recurse
+    }
+
+    void move(double distance, double maxSpeed, boolean recurse) {
+        double distanceSign = Math.signum(distance); //Necessary for moving backwards
+        distance = distanceSign * (45.717 * Math.abs(distance) - 227.17);
         int initialHeading = gyro.getIntegratedZValue();
 
         //Change mode because move() uses setTargetPosition()
@@ -246,10 +249,10 @@ abstract class OpModeBase extends LinearOpMode {
             double error = initialHeading - gyro.getIntegratedZValue();
             double targetError = error * kP * distanceSign;
 
-            motorLeftFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftFront.getCurrentPosition() - motorLeftFront.getTargetPosition()) / distance), slowdownMin, maxSpeed) - targetError, 0, 1));
-            motorLeftBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftBack.getCurrentPosition() - motorLeftBack.getTargetPosition()) / distance), slowdownMin, maxSpeed) - targetError, 0, 1));
-            motorRightFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightFront.getCurrentPosition() - motorRightFront.getTargetPosition()) / distance), slowdownMin, maxSpeed) + targetError, 0, 1));
-            motorRightBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightBack.getCurrentPosition() - motorRightBack.getTargetPosition()) / distance), slowdownMin, maxSpeed) + targetError, 0, 1));
+            motorLeftFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftFront.getCurrentPosition() - motorLeftFront.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) - targetError, 0, 1));
+            motorLeftBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftBack.getCurrentPosition() - motorLeftBack.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) - targetError, 0, 1));
+            motorRightFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightFront.getCurrentPosition() - motorRightFront.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) + targetError, 0, 1));
+            motorRightBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightBack.getCurrentPosition() - motorRightBack.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) + targetError, 0, 1));
 
             telemetry.addData("Left motor power", motorLeftFront.getPower());
             telemetry.addData("Right motor power", motorRightFront.getPower());
@@ -271,8 +274,9 @@ abstract class OpModeBase extends LinearOpMode {
         sleep(300);
 
         //Correct if robot turned during movement
-        if (Math.abs(gyro.getIntegratedZValue() - initialHeading) > 0)
+        if (Math.abs(gyro.getIntegratedZValue() - initialHeading) > 0 && recurse) {
             turn(Math.abs(gyro.getIntegratedZValue() - initialHeading), gyro.getIntegratedZValue() > initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .1);
+        }
     }
 
     void driveToWhiteLine(double leftPower, double rightPower) {
@@ -305,21 +309,24 @@ abstract class OpModeBase extends LinearOpMode {
         float[] hsv = {0F, 0F, 0F};
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
 
+        if(hsv[2] < .2) return "Black";
         if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return "Red";
         else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return "Blue";
         return "Undefined";
     }
 
     void shoot() {
+        ballStop.setPosition(BALL_STOP_BLOCKED);
         shooter.setPower(1);
-        ballStop.setPosition(BALL_STOP_UP);
         sleep(200);
         intake.setPower(1);
         sleep(900);
-        shooter.setPower(0);
+        shooter.setPower(0); //First ball has been shot, second is pushed up
 
         //Second ball
-        sleep(1800); //Intake still running
+        sleep(200);
+        ballStop.setPosition(BALL_STOP_UP);
+        sleep(1500); //Intake still running, second ball being loaded
         intake.setPower(0);
         shooter.setPower(1);
         sleep(1000);

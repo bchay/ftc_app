@@ -23,7 +23,7 @@ public class TwoBeacons extends OpModeBase {
             turn(20, moveDirection.next(), turnSpeed, 2); //Does not correct itself
 
             moveSpeed = .4;
-            slowdownMin = .4;
+            movementSlowdownMin = .4;
 
             driveToWhiteLine(-moveSpeed, -moveSpeed);
             driveToWhiteLine(.1, .1);
@@ -72,7 +72,7 @@ public class TwoBeacons extends OpModeBase {
             turn(20, moveDirection.next(), turnSpeed, 2); //Does not correct itself
 
             moveSpeed = .4;
-            slowdownMin = .4;
+            movementSlowdownMin = .4;
 
             driveToWhiteLine(moveSpeed, moveSpeed);
             driveToWhiteLine(-.1, -.1); //Drive to exactly white line

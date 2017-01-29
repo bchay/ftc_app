@@ -72,14 +72,19 @@ public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can ex
             else if (gamepad2.b)
                 buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() + .01, BUTTON_PRESSER_IN, BUTTON_PRESSER_OUT));
 
+            /*
             if (gamepad2.y)
                 ballStop.setPosition(Range.clip(ballStop.getPosition() - .01, BALL_STOP_UP, BALL_STOP_BLOCKED));
             if (gamepad2.a)
                 ballStop.setPosition(Range.clip(ballStop.getPosition() + .01, BALL_STOP_UP, BALL_STOP_BLOCKED));
 
+*/
             shooter.setPower(gamepad2.left_trigger);
             intake.setPower(gamepad2.right_trigger);
             if (gamepad2.right_bumper) intake.setPower(-1);
+
+            if(touchSensor.isPressed()) ballStop.setPosition(BALL_STOP_BLOCKED);
+            else ballStop.setPosition(BALL_STOP_UP);
 
             telemetry.addData("Left Motor Power", motorLeftFront.getPower());
             telemetry.addData("Right Motor Power", motorRightFront.getPower());

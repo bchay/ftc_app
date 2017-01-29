@@ -9,23 +9,17 @@ public class WallRiderAutonomous extends OpModeBase {
         telemetry.update();
         waitForStart();
 
-        turnSpeed = .2;
-        moveSpeed = .6;
-        move(23, moveSpeed);
-        shoot();
+        //Beginning of actual code
+        move(20, moveSpeed);
+        //shoot();
 
         if(allianceColor.equals("Red")) {
-            turn(140, moveDirection.next(), turnSpeed);
+            turn(120, moveDirection.next(), turnSpeed); //Initial movement to wall
+            move(-66, moveSpeed - .15, false); //Movement to wall
+            turn(30, moveDirection.next(), turnSpeed, 0);
+            move(-40, moveSpeed, false); //Move closer to wall
 
-            moveSpeed = .45;
-            moveFast(-50, moveSpeed); //Movement to wall, no PID
-
-            moveSpeed = .65;
-            turn(20, moveDirection.next(), turnSpeed, 2); //Does not correct itself
-
-            moveSpeed = .4;
-            slowdownMin = .4;
-
+            /*
             driveToWhiteLine(-moveSpeed, -moveSpeed);
             driveToWhiteLine(.1, .1);
             move(-9, moveSpeed);
@@ -63,6 +57,7 @@ public class WallRiderAutonomous extends OpModeBase {
                     move(9, moveSpeed); //Push past beacon with servo extended to hit beacon
                 }
             }
+*/
         } else if(allianceColor.equals("Blue")) {
             turn(70, moveDirection, turnSpeed); //Turn towards beacon
 
@@ -70,17 +65,17 @@ public class WallRiderAutonomous extends OpModeBase {
             moveFast(78, moveSpeed); //Movement to wall, no PID
 
             moveSpeed = .65;
-            turn(25, moveDirection.next(), turnSpeed, 2); //Does not correct itself
+            turn(25, moveDirection.next(), turnSpeed, 0); //Does not correct itself
 
             moveSpeed = .4;
-            slowdownMin = .4;
+            movementSlowdownMin = .4;
 
             driveToWhiteLine(moveSpeed, moveSpeed);
             driveToWhiteLine(-.2, -.2); //Drive to exactly white line
 
             move(7, moveSpeed);
 
-            if (getColorName().equals(allianceColor) || true) { //Furthest button on second beacon is alliance color
+            if (getColorName().equals(allianceColor)) { //Furthest button on second beacon is alliance color
                 buttonPresser.setPosition(BUTTON_PRESSER_OUT);
                 sleep(1000);
                 move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
@@ -101,7 +96,7 @@ public class WallRiderAutonomous extends OpModeBase {
             driveToWhiteLine(.1, .1);
             move(10, moveSpeed); //Move to far button
 
-            if (getColorName().equals(allianceColor) || true) { //Furthest button on close beacon is alliance color
+            if (getColorName().equals(allianceColor)) { //Furthest button on close beacon is alliance color
                 buttonPresser.setPosition(BUTTON_PRESSER_OUT);
                 sleep(1800);
                 move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
