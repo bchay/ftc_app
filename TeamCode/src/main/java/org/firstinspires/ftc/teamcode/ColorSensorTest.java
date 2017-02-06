@@ -35,7 +35,6 @@ public class ColorSensorTest extends OpMode {
     private String getColorName(float[] hsv) {
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
 
-        if(hsv[2] < .2) return "Black";
         if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return "Red";
         else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return "Blue";
         return "Undefined";

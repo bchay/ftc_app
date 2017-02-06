@@ -1,0 +1,14 @@
+Logcat:
+	adb pull "/storage/emulated/0/com.qualcomm.ftcrobotcontroller.logcat" "Users/hprobotics/Desktop/logcat-latest.txt"
+	adb shell
+	adb shell
+		rm -rf "/storage/emulated/0/com.qualcomm.ftcrobotcontroller.logcat"
+
+Connect via adb:
+	adb tcpip 5555
+	adb connect 192.168.49.1
+
+Access OpenCV Images:
+	adb pull "/storage/emulated/0/FTC Center Vortex" "Users/hprobotics/Desktop/"
+	adb shell
+		rm -rf "/storage/emulated/0/FTC Center Vortex"

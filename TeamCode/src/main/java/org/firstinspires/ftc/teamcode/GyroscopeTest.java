@@ -17,6 +17,7 @@ public class GyroscopeTest extends OpMode {
     }
 
     public void loop() {
+        System.out.println(gyro.getIntegratedZValue());
         telemetry.addData("Integrated Z Value: ", gyro.getIntegratedZValue()); //Provides +/- values for heading
     }
 }

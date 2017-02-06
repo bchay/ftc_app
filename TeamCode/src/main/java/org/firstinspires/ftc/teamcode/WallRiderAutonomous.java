@@ -6,109 +6,117 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class WallRiderAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode();
-        telemetry.update();
         waitForStart();
 
         //Beginning of actual code
-        move(20, moveSpeed);
-        //shoot();
+        move(20, moveSpeed, true, kP, 1.3, .05);
+        shoot();
 
         if(allianceColor.equals("Red")) {
-            turn(120, moveDirection.next(), turnSpeed); //Initial movement to wall
-            move(-66, moveSpeed - .15, false); //Movement to wall
-            turn(30, moveDirection.next(), turnSpeed, 0);
-            move(-40, moveSpeed, false); //Move closer to wall
+            turn(45, moveDirection, .2); //Initial turn towards wall
+            move(64, .9, true, .025, 1.3, .05);
+            turn(165, Direction.LEFT, .4, 0); //Turn backwards to use rider wheels
+            move(-14, moveSpeed, false, 0, 0, .2);
+            turn(10, Direction.RIGHT, turnSpeed, 0);
+            move(-13.5, moveSpeed, false, 0, 0, .2);
 
-            /*
-            driveToWhiteLine(-moveSpeed, -moveSpeed);
-            driveToWhiteLine(.1, .1);
-            move(-9, moveSpeed);
+            driveToWhiteLine(.13, .11); //Drive forward, robot is reversed
+            move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
 
             if (getColorName().equals(allianceColor)) {
                 buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                sleep(900);
+                move(-2, .2, false, 0, 0, .2);
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
                 sleep(1000);
-                move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
+                move(3, .4, false);
             } else {
-                move(9, moveSpeed); //Moves backwards to closer button
+                move(3, moveSpeed); //Moves to closer button
                 if (getColorName().equals(allianceColor)) {
                     buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                    sleep(1800);
-                    move(9, moveSpeed); //Push past beacon with servo extended to hit beacon
+                    sleep(900);
+                    move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
+                }
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
+            }
+
+            //Second beacon
+            move(26, .75, true, kP, 1.3, .05);
+
+            driveToWhiteLine(.16, .14); //Drive forward, robot is reversed
+            move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
+
+            if (getColorName().equals(allianceColor)) {
+                buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                sleep(900);
+                move(-2, .2, false, 0, 0, .2);
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
+                sleep(900);
+                move(3, .4); //Move to hit beacon (button presser is angled)
+            } else {
+                move(3, moveSpeed); //Moves to closer button
+                if (getColorName().equals(allianceColor)) {
+                    buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                    sleep(900);
+                    move(-3, moveSpeed, false, 0, 0, .2); //Move to hit beacon (button presser is angled)
                 }
             }
             buttonPresser.setPosition(BUTTON_PRESSER_IN);
-
-            //Second beacon
-            move(12, moveSpeed); //Move past white line
-
-            driveToWhiteLine(moveSpeed, moveSpeed); //Robot is facing away from start, move with positive power
-            driveToWhiteLine(-.1, -.1);
-            move(-9.5, moveSpeed); //Move to far button
-
-            if (getColorName().equals(allianceColor)) {
-                buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                sleep(1800);
-                move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
-            } else {
-                move(10, moveSpeed); //Move to the close button
-                if (getColorName().equals(allianceColor)) {
-                    buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                    sleep(1000);
-                    move(9, moveSpeed); //Push past beacon with servo extended to hit beacon
-                }
-            }
-*/
+            sleep(500);
         } else if(allianceColor.equals("Blue")) {
-            turn(70, moveDirection, turnSpeed); //Turn towards beacon
+            turn(45, moveDirection, .2); //Initial turn towards wall
+            move(64, .9, true, .025, 1.3, .05);
+            turn(28, Direction.RIGHT, .4); //Turn towards wall
+            move(13.5, moveSpeed, false, 0, 0, .2);
+            turn(10, Direction.LEFT, turnSpeed, 0);
+            move(13.5, moveSpeed, false, 0, 0, .2);
 
-            moveSpeed = .45;
-            moveFast(78, moveSpeed); //Movement to wall, no PID
-
-            moveSpeed = .65;
-            turn(25, moveDirection.next(), turnSpeed, 0); //Does not correct itself
-
-            moveSpeed = .4;
-            movementSlowdownMin = .4;
-
-            driveToWhiteLine(moveSpeed, moveSpeed);
-            driveToWhiteLine(-.2, -.2); //Drive to exactly white line
-
-            move(7, moveSpeed);
-
-            if (getColorName().equals(allianceColor)) { //Furthest button on second beacon is alliance color
+            driveToWhiteLine(-.13, -.11); //Drive forward, robot is reversed
+            move(2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
+/*
+            if (getColorName().equals(allianceColor)) {
                 buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                sleep(900);
+                move(-2, .2, false, 0, 0, .2);
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
                 sleep(1000);
-                move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
+                move(6, .4);
             } else {
-                move(-9, moveSpeed); //Moves backwards to closer button
+                move(3, moveSpeed); //Moves to closer button
                 if (getColorName().equals(allianceColor)) {
                     buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                    sleep(1800);
-                    move(9, moveSpeed); //Push past beacon with servo extended to hit beacon
+                    sleep(900);
+                    move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
+                }
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
+            }
+
+            //Second beacon
+            move(26, .75, true, kP, 1.3, .05);
+
+            driveToWhiteLine(.16, .14); //Drive forward, robot is reversed
+            move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
+
+            if (getColorName().equals(allianceColor)) {
+                buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                sleep(900);
+                move(-2, .2, false, 0, 0, .2);
+                buttonPresser.setPosition(BUTTON_PRESSER_IN);
+                sleep(900);
+                move(3, .4);
+            } else {
+                move(3, moveSpeed); //Moves to closer button
+                if (getColorName().equals(allianceColor)) {
+                    buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+                    sleep(900);
+                    move(-2, moveSpeed, false, 0, 0, .2); //0 is no speed reduction
                 }
             }
             buttonPresser.setPosition(BUTTON_PRESSER_IN);
-
-            //Second beacon
-            move(-14, moveSpeed); //Move past white line
-
-            driveToWhiteLine(-moveSpeed, -moveSpeed);
-            driveToWhiteLine(.1, .1);
-            move(10, moveSpeed); //Move to far button
-
-            if (getColorName().equals(allianceColor)) { //Furthest button on close beacon is alliance color
-                buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                sleep(1800);
-                move(8, moveSpeed); //Push past beacon with servo extended to hit beacon
-            } else { //Closest button on close beacon is alliance color
-                move(-10, moveSpeed); //Move to the close button
-                if (getColorName().equals(allianceColor)) {
-                    buttonPresser.setPosition(BUTTON_PRESSER_OUT);
-                    sleep(1000);
-                    move(9, moveSpeed); //Push past beacon with servo extended to hit beacon
-                }
-            }
+            sleep(500);
         }
         buttonPresser.setPosition(BUTTON_PRESSER_IN);
+        */
+        }
     }
 }

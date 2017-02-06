@@ -131,11 +131,12 @@ public class OpenCV extends LinearOpMode implements CameraBridgeViewBase.CvCamer
         double divideFactor = desiredWidth / imageWidth;
 
         Imgproc.resize(gray, smallMat, new org.opencv.core.Size((int) (imageWidth * divideFactor), (int) (imageHeight * divideFactor)));
-        //48 * 128 (w * h)
+        //96 * 128 (w * h)
 
         Core.transpose(smallMat, smallMat);
         Core.flip(smallMat, smallMat, 1);
 
+        Log.i("OPENCV SIZE", String.valueOf(smallMat.cols()) + " " + String.valueOf(smallMat.rows()));
         Bitmap bmp = null;
 
         try {

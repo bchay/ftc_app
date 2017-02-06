@@ -14,6 +14,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
+/**
+ * Contains variables and methods used to control the robot.
+ */
 abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
@@ -31,39 +34,37 @@ abstract class OpModeBase extends LinearOpMode {
     Servo ballStop;
 
     //Sensors
-    private ModernRoboticsI2cGyro gyro;
+    ModernRoboticsI2cGyro gyro;
     private ColorSensor colorSensor;
     private OpticalDistanceSensor ods;
-    TouchSensor touchSensor;
+    TouchSensor touchSensorBottom;
+    TouchSensor touchSensorBall;
 
     //Variables
-    final double BUTTON_PRESSER_IN = .7;
-    final double BUTTON_PRESSER_OUT = .3;
+    final double BUTTON_PRESSER_IN = .6;
+    final double BUTTON_PRESSER_OUT = .14;
 
     final double BALL_STOP_UP = 0;
     final double BALL_STOP_BLOCKED = .63;
 
     //SharedPreferences
-    SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences;
     Direction moveDirection;
 
     String allianceColor;
-    String location;
-    int delay;
+    private String location;
+    private int delay;
 
     //Autonomous Specific Configuration
-    double moveSpeed = .6;
-    double movementSlowdownMin = .2;
-    private double kP = 0;
+    double moveSpeed = .65;
+    double movementSlowdownMin = .25;
+    double kP = .048; //Set for 2218 ticks
+    double ticksRatio = 50.1459;
 
     double turnSpeed = .3;
-    double turnSlowdown = .1;
+    private double turnSlowdown = .1;
 
-
-
-    private double odsWhite = .51; //Value from ods.getRawLightDetected()
-    private double odsGray = .07;
-    private double odsEdge = .25;
+    private double odsEdge = .24; //ods.getRawLightDetected()
 
     enum Direction {
         LEFT, RIGHT;
@@ -79,7 +80,10 @@ abstract class OpModeBase extends LinearOpMode {
     //Teleop specific configuration
     double motorMax = 1;
 
-    //Initialize all hardware, do setup for opmodes
+
+    /**
+     * Configures all parts of the robot.
+     */
     public void runOpMode() {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
 
@@ -102,7 +106,8 @@ abstract class OpModeBase extends LinearOpMode {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         colorSensor = hardwareMap.colorSensor.get("color");
         ods = hardwareMap.opticalDistanceSensor.get("ods");
-        touchSensor = hardwareMap.touchSensor.get("touch");
+        touchSensorBall = hardwareMap.touchSensor.get("touch_ball");
+        touchSensorBottom = hardwareMap.touchSensor.get("touch_bottom");
 
         //*************** Configure hardware devices ***************
 
@@ -134,12 +139,9 @@ abstract class OpModeBase extends LinearOpMode {
 
         //Gyro
         gyro.calibrate();
-
-        //Wait while gyro is calibrating
-        while (gyro.isCalibrating() && !isStopRequested()) {
-            sleep(50);
-            idle();
-        }
+        while(gyro.isCalibrating() && !isStopRequested()) idle();
+        telemetry.addData("Gyroscope calibrated", gyro.getIntegratedZValue());
+        telemetry.update();
 
         //Color Sensor
         colorSensor.enableLed(false);
@@ -157,18 +159,61 @@ abstract class OpModeBase extends LinearOpMode {
 
         telemetry.addData("Ready to start program", "");
         telemetry.addData("Alliance color", allianceColor);
+        telemetry.addData("Heading", gyro.getIntegratedZValue());
+        telemetry.addData("Encoders", motorLeftFront.getCurrentPosition() + motorLeftBack.getCurrentPosition() + motorRightFront.getCurrentPosition() + motorRightBack.getCurrentPosition());
         telemetry.update();
     }
 
-    void turn(double degrees, OpModeBase.Direction direction, double maxSpeed) { //count is optional, set to 0 if not provided
+    /**
+     * Calls turn() with a default of recurse = 1, maxSpeed = turnSpeed
+     * It recursively calls itself to improve accuracy and fix overshooting.
+     * The speed decreases as the turn nears completion.
+     *
+     * @param degrees number of degrees to turn (positive)
+     * @param direction Enum Direction.RIGHT or Direction.LEFT
+     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int)
+     * @see ModernRoboticsI2cGyro
+     * @see DcMotor
+     */
+    void turn(double degrees, OpModeBase.Direction direction) {
+        if (!opModeIsActive()) return;
+        turn(degrees, direction, turnSpeed, 1);
+    }
+
+    /**
+     * Calls turn() with a default of recursing once
+     * It recursively calls itself to improve accuracy and fix overshooting.
+     * The speed decreases as the turn nears completion.
+     *
+     * @param degrees number of degrees to turn (positive)
+     * @param direction Enum Direction.RIGHT or Direction.LEFT
+     * @param maxSpeed the maximum speed of the robot
+     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int)
+     * @see ModernRoboticsI2cGyro
+     * @see DcMotor
+     */
+    void turn(double degrees, OpModeBase.Direction direction, double maxSpeed) {
         if (!opModeIsActive()) return;
         turn(degrees, direction, maxSpeed, 1);
     }
 
+    /**
+     * This method is used to turn the robot a specific number of degrees in a specific direction.
+     * It recursively calls itself to improve accuracy and fix overshooting.
+     * The speed decreases as the turn nears completion.
+     *
+     * @param degrees number of degrees to turn (positive)
+     * @param direction Enum Direction.RIGHT or Direction.LEFT
+     * @param maxSpeed the maximum speed of the robot
+     * @param count the number of times to recurese
+     * @see OpModeBase#turn(double, OpModeBase.Direction, double)
+     * @see ModernRoboticsI2cGyro
+     * @see DcMotor
+     */
     void turn(double degrees, OpModeBase.Direction direction, double maxSpeed, int count) {
         if (!opModeIsActive()) return;
         if (direction.equals(OpModeBase.Direction.RIGHT)) degrees *= -1; //Negative degree for turning right
-        double targetHeading = gyro.getIntegratedZValue() + degrees;
+        double targetHeading = gyro.getIntegratedZValue() + degrees; //Turns are relative to current position
 
         //Change mode because turn() uses motor power and not motor position
         motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -191,10 +236,10 @@ abstract class OpModeBase extends LinearOpMode {
             }
         } else { //Left
             while (gyro.getIntegratedZValue() < targetHeading && opModeIsActive()) {
-                motorLeftFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.1));
-                motorLeftBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -.1));
-                motorRightFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
-                motorRightBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), .1, maxSpeed));
+                motorLeftFront.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorLeftBack.setPower(Range.clip(-maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorRightFront.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorRightBack.setPower(Range.clip(maxSpeed * (Math.abs(gyro.getIntegratedZValue() - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
 
                 telemetry.addData("Distance to turn: ", Math.abs(gyro.getIntegratedZValue() - targetHeading));
                 telemetry.addData("Target", targetHeading);
@@ -215,17 +260,70 @@ abstract class OpModeBase extends LinearOpMode {
 
         if (Math.abs(gyro.getIntegratedZValue() - targetHeading) > 0 && count > 0) {
             //Recurse to correct turn
-            turn(Math.abs(gyro.getIntegratedZValue() - targetHeading), direction.next(), .06, --count);
+            turn(Math.abs(gyro.getIntegratedZValue() - targetHeading), direction.next(), .1, --count);
         }
     }
 
-    void move(double distance, double maxSpeed) {
-        move(distance, maxSpeed, true); //Default is recurse
+
+    /**
+     * Calls move with a default of maxSpeed = moveSpeed, recurse = true, PID = true, a = .8, b = .2
+     * a and b tuned for 48 inches
+     * @param distance the distance in inches to move
+     * @see OpModeBase#move(double, double, boolean, double, double, double)
+     * @see DcMotor
+     * @see ModernRoboticsI2cGyro
+     */
+    void move(double distance) {
+        move(distance, moveSpeed, true, kP, .8, .2);
     }
 
+    /**
+     * Calls move with a default of recurse = true, PID = true, a = .8, b = .2
+     * a and b tuned for 48 inches
+     * @param distance the distance in inches to move
+     * @param maxSpeed the maximum speed to run the robot
+     * @see OpModeBase#move(double, double, boolean, double, double, double)
+     * @see DcMotor
+     * @see ModernRoboticsI2cGyro
+     */
+    void move(double distance, double maxSpeed) {
+        move(distance, maxSpeed, true, kP, .8, .2);
+    }
+
+    /**
+     * Calls move with a default of a = .8, b = .2
+     * a and b tuned for 48 inches
+     * @param distance the distance in inches to move
+     * @param maxSpeed the maximum speed to run the robot
+     * @param recurse whether or not to call turn()
+     * @see OpModeBase#move(double, double, boolean, double, double, double)
+     * @see DcMotor
+     * @see ModernRoboticsI2cGyro
+     */
     void move(double distance, double maxSpeed, boolean recurse) {
+        move(distance, maxSpeed, recurse, kP, .8, .2);
+    }
+
+    /**
+     * Moves the robot a specified number of inches.
+     * The speed of the robot decreases in a sigmoid fashion as the target is approached.
+     * It uses the gyroscope to keep the movement straight.
+     * It will call turn() at the end to correct heading eror.
+     *
+     * @param distance the distance in inches to move
+     * @param maxSpeed the maximum speed to run the robot
+     * @param recurse whether or not to call turn()
+     * @param a value used for speed reduction
+     * @param b value used for speed reduction
+     * @see OpModeBase#move(double, double)
+     * @see OpModeBase#turn
+     * @see DcMotor
+     * @see ModernRoboticsI2cGyro
+     * @see OpModeBase#calculateSpeed(double, double, double, double)
+     */
+    void move(double distance, double maxSpeed, boolean recurse, double kP, double a, double b) {
         double distanceSign = Math.signum(distance); //Necessary for moving backwards
-        distance = distanceSign * (45.717 * Math.abs(distance) - 227.17);
+        distance *= ticksRatio;
         int initialHeading = gyro.getIntegratedZValue();
 
         //Change mode because move() uses setTargetPosition()
@@ -246,32 +344,34 @@ abstract class OpModeBase extends LinearOpMode {
 
         while ((motorLeftFront.isBusy() && motorLeftBack.isBusy() && motorRightFront.isBusy() && motorRightBack.isBusy()) && opModeIsActive()) {
             //Only one encoder target must be reached
-            double error = initialHeading - gyro.getIntegratedZValue();
-            double targetError = error * kP * distanceSign;
+            double turnError = initialHeading - gyro.getIntegratedZValue();
+            double headingError = turnError * kP * distanceSign;
+            double leftPower = maxSpeed - headingError;
+            double rightPower = maxSpeed + headingError;
 
-            motorLeftFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftFront.getCurrentPosition() - motorLeftFront.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) - targetError, 0, 1));
-            motorLeftBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorLeftBack.getCurrentPosition() - motorLeftBack.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) - targetError, 0, 1));
-            motorRightFront.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightFront.getCurrentPosition() - motorRightFront.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) + targetError, 0, 1));
-            motorRightBack.setPower(Range.clip(Range.clip(maxSpeed * (Math.abs(motorRightBack.getCurrentPosition() - motorRightBack.getTargetPosition()) / Math.abs(distance)), movementSlowdownMin, maxSpeed) + targetError, 0, 1));
+            double reducedLeftPower = Range.clip(calculateSpeed(leftPower, Math.abs(distance), a, b), .1, 1);
+            double reducedRightPower = Range.clip(calculateSpeed(rightPower, Math.abs(distance), a, b), .1, 1);
 
-            telemetry.addData("Left motor power", motorLeftFront.getPower());
-            telemetry.addData("Right motor power", motorRightFront.getPower());
+            motorLeftFront.setPower(reducedLeftPower);
+            motorLeftBack.setPower(reducedLeftPower);
+            motorRightFront.setPower(reducedRightPower);
+            motorRightBack.setPower(reducedRightPower);
+
+            telemetry.addData("Left motor power", reducedLeftPower);
+            telemetry.addData("Right motor power", reducedRightPower);
             telemetry.addData("Current Heading", gyro.getIntegratedZValue());
-            telemetry.addData("Error", targetError);
+            telemetry.addData("Heading Error", headingError);
+            telemetry.addData("Position", motorLeftFront.getCurrentPosition());
+            telemetry.addData("Target", motorLeftFront.getTargetPosition());
 
-            telemetry.addData("Left front position", motorLeftFront.getCurrentPosition());
-            telemetry.addData("Left back position", motorLeftBack.getCurrentPosition());
-            telemetry.addData("Right front position", motorRightFront.getCurrentPosition());
-            telemetry.addData("Right back position", motorRightBack.getCurrentPosition());
             telemetry.update();
-            idle();
         }
 
         motorLeftFront.setPower(0);
         motorLeftBack.setPower(0);
         motorRightFront.setPower(0);
         motorRightBack.setPower(0);
-        sleep(300);
+        sleep(400);
 
         //Correct if robot turned during movement
         if (Math.abs(gyro.getIntegratedZValue() - initialHeading) > 0 && recurse) {
@@ -279,6 +379,19 @@ abstract class OpModeBase extends LinearOpMode {
         }
     }
 
+    /**
+     * Drives with specified power until the ODS reaches a white line.
+     * Uses raw light detected.
+     * ODS averages detected values.
+     * Does not use PID, the robot instead rides along the wall.
+     *
+     * @param leftPower power for the left side of the robot
+     * @param rightPower power for the right side of the robot
+     * @see OpticalDistanceSensor
+     * @see OpticalDistanceSensor#getRawLightDetected()
+     * @see OpModeBase#odsEdge
+     * @see DcMotor
+     */
     void driveToWhiteLine(double leftPower, double rightPower) {
         motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -302,40 +415,68 @@ abstract class OpModeBase extends LinearOpMode {
         motorLeftBack.setPower(0);
         motorRightFront.setPower(0);
         motorRightBack.setPower(0);
-        sleep(300);
+        sleep(600);
     }
 
+    /**
+     * Determines the name of the color sensed by the ColorSensor.
+     *
+     * @return name of color sensed: Red, Blue, Undefined
+     * @see ColorSensor
+     */
     String getColorName() {
         float[] hsv = {0F, 0F, 0F};
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
 
-        if(hsv[2] < .2) return "Black";
-        if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return "Red";
-        else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return "Blue";
+        if ((hsv[0] < 30 || hsv[0] > 280)) return "Red";
+        else if ((hsv[0] > 150 && hsv[0] < 270) && hsv[1] > .2) return "Blue";
         return "Undefined";
     }
 
+    /**
+     * Shoots two particles.
+     * Uses touch sensor to determine when particle is loaded.
+     * @see DcMotor
+     * @see TouchSensor
+     */
     void shoot() {
         ballStop.setPosition(BALL_STOP_BLOCKED);
         shooter.setPower(1);
-        sleep(200);
-        intake.setPower(1);
-        sleep(900);
-        shooter.setPower(0); //First ball has been shot, second is pushed up
-
-        //Second ball
-        sleep(200);
-        ballStop.setPosition(BALL_STOP_UP);
-        sleep(1500); //Intake still running, second ball being loaded
-        intake.setPower(0);
-        shooter.setPower(1);
         sleep(1000);
         shooter.setPower(0);
+
+        /*
+        while(opModeIsActive() && touchSensorBall.isPressed()) {
+            idle();
+        }
+
+        shooter.setPower(0); //First ball has been shot
+
+        ballStop.setPosition(BALL_STOP_UP);
+        sleep(200);
+
+        intake.setPower(1);
+        //Second ball
+        while(opModeIsActive() && !touchSensorBall.isPressed()) { //While second ball isn't loaded
+            idle();
+        }
+
+        sleep(200);
+        intake.setPower(0);
+        shooter.setPower(1);
+
+        while(opModeIsActive() && touchSensorBall.isPressed()) {
+            idle();
+        }
+        sleep(200);
+        shooter.setPower(0);
+        ballStop.setPosition(BALL_STOP_BLOCKED);
         sleep(300);
+        */
     }
 
     void moveFast(double distance, double maxSpeed) {
-        distance = 48.642 * distance - 267.32;
+        //distance = 48.642 * distance - 267.32;
 
         //Change mode because move() uses setTargetPosition()
         motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -371,5 +512,40 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setPower(0);
         motorRightBack.setPower(0);
         sleep(300);
+    }
+
+    /**
+     * Reduces a given speed using a transformed sigmoid.
+     * Reduction is based upon the distance left to move.
+     * Uses motorFrontLeft to calculate speed reduction
+     * An a value of 0 will return speed
+     * See https://www.desmos.com/calculator/bhutcuv6ea
+     *
+     * @param speed the speed
+     * @param distance the total distance of the movement
+     * @return the speed reduced based on the point in the movement
+     * @see DcMotor
+     * @see DcMotor#getCurrentPosition()
+     * @see DcMotor#getTargetPosition()
+     */
+    private double calculateSpeed(double speed, double distance, double a, double b) {
+        double numerator = -1 * a * speed;
+        double regression = (19.869 / distance) + 0.0029571;
+
+        double x = Math.abs(distance - (Math.abs(motorLeftFront.getTargetPosition() - motorLeftFront.getCurrentPosition())));
+        double shift = .6 * distance;
+        double reduction = x - shift;
+
+        double exponent = -1 * b * regression * reduction;
+        double denominator = 1 + Math.exp(exponent);
+        return (numerator / denominator) + speed;
+    }
+
+    /**
+     * Returns the delay specified in the autonomous SharedPreferences menu.
+     * @return delay
+     */
+    public int getDelay() {
+        return delay;
     }
 }

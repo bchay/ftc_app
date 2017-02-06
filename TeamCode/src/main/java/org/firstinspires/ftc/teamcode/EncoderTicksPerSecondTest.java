@@ -7,14 +7,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Ticks per Second Test", group = "Test Code")
 public class EncoderTicksPerSecondTest extends OpMode {
-    DcMotor motor;
+    private DcMotor motor;
 
-    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-    double previousTime = 0;
-    double previousTicks = 0;
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+    private double previousTime = 0;
+    private double previousTicks = 0;
 
-    double totalValue = 0;
-    double numRecorded = 0;
+    private double totalValue = 0;
+    private double numRecorded = 0;
 
     public void init() {
         motor = hardwareMap.dcMotor.get("motor");
