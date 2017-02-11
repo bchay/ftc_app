@@ -21,7 +21,7 @@ Driver One - Movement - Gamepad 1
     Left Joystick: Left drivetrain motors
 
     B: Toggle slow mode - 50% speed, 100% speed
-    A: Toggle drivetrain direction
+    A: Toggle drivetrain direction - forward, reverse
 
 Driver Two - Operations - Gamepad 2
         Right Trigger: Intake
@@ -37,6 +37,9 @@ Driver Two - Operations - Gamepad 2
 
 */
 
+/**
+ * This is the Teleop code for the robot.
+ */
 @TeleOp(name = "Teleop")
 public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can extend the same base class as autonomous
     boolean previousLeftBumperState = false;

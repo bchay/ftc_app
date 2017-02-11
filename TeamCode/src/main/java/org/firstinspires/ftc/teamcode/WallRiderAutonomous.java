@@ -2,6 +2,12 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+/**
+ * The robot starts at the inside right side of the third tile in the direction of the center vortex.
+ * The robot is placed perpendicular to the wall, facing the beacon.
+ * Two particles are loaded, one into the sweeper and one into the shooting chamber.
+ * * This OpMode shoots two particles into the Center Vortex, hits the Cap Ball, and presses both beacons.
+ */
 @Autonomous(name = "Two balls, two beacons")
 public class WallRiderAutonomous extends OpModeBase {
     public void runOpMode() {
