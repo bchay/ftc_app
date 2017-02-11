@@ -5,15 +5,17 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 @TeleOp(name = "ODS Test", group = "Test Code")
-public class OpticalDistanceSensorTest extends OpMode {
-    public OpticalDistanceSensor ods;
-
-    public void init() {
-        ods = hardwareMap.opticalDistanceSensor.get("ods");
-    }
-
-    public void loop() {
-        telemetry.addData("Raw", ods.getRawLightDetected());
-        telemetry.addData("Light", ods.getLightDetected());
+public class OpticalDistanceSensorTest extends OpModeBase {
+    public void runOpMode() {
+        super.runOpMode();
+        waitForStart();
+        while(opModeIsActive()) {
+            telemetry.addData("Line Raw", odsLine.getRawLightDetected());
+            telemetry.addData("Line Light", odsLine.getLightDetected());
+            telemetry.addData("Ball Raw", odsBall.getRawLightDetected());
+            telemetry.addData("Ball Light", odsBall.getLightDetected());
+            telemetry.addData("Ball Detected", odsBallDetected());
+            telemetry.update();
+        }
     }
 }

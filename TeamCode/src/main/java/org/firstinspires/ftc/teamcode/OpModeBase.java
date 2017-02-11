@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -36,13 +37,13 @@ abstract class OpModeBase extends LinearOpMode {
     //Sensors
     ModernRoboticsI2cGyro gyro;
     private ColorSensor colorSensor;
-    private OpticalDistanceSensor ods;
+    OpticalDistanceSensor odsLine;
+    OpticalDistanceSensor odsBall;
     TouchSensor touchSensorBottom;
-    TouchSensor touchSensorBall;
 
     //Variables
     final double BUTTON_PRESSER_IN = .6;
-    final double BUTTON_PRESSER_OUT = .14;
+    final double BUTTON_PRESSER_OUT = 0;
 
     final double BALL_STOP_UP = 0;
     final double BALL_STOP_BLOCKED = .63;
@@ -57,14 +58,14 @@ abstract class OpModeBase extends LinearOpMode {
 
     //Autonomous Specific Configuration
     double moveSpeed = .65;
-    double movementSlowdownMin = .25;
     double kP = .048; //Set for 2218 ticks
     double ticksRatio = 50.1459;
 
     double turnSpeed = .3;
     private double turnSlowdown = .1;
 
-    private double odsEdge = .24; //ods.getRawLightDetected()
+    private double odsEdge = .24; //odsLine.getRawLightDetected()
+    private double odsBallThreshold = .02; //odsLine.getRawLightDetected()
 
     enum Direction {
         LEFT, RIGHT;
@@ -105,8 +106,8 @@ abstract class OpModeBase extends LinearOpMode {
         //Sensor Declaration
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         colorSensor = hardwareMap.colorSensor.get("color");
-        ods = hardwareMap.opticalDistanceSensor.get("ods");
-        touchSensorBall = hardwareMap.touchSensor.get("touch_ball");
+        odsLine = hardwareMap.opticalDistanceSensor.get("ods_line");
+        odsBall = hardwareMap.opticalDistanceSensor.get("ods_ball");
         touchSensorBottom = hardwareMap.touchSensor.get("touch_bottom");
 
         //*************** Configure hardware devices ***************
@@ -124,10 +125,14 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Autonomous methods that need RUN_TO_POSITION will set the motors, RUN_USING_ENCODER is required for teleop and gyro turn
         motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -360,6 +365,7 @@ abstract class OpModeBase extends LinearOpMode {
             telemetry.addData("Left motor power", reducedLeftPower);
             telemetry.addData("Right motor power", reducedRightPower);
             telemetry.addData("Current Heading", gyro.getIntegratedZValue());
+            telemetry.addData("Target Heading", initialHeading);
             telemetry.addData("Heading Error", headingError);
             telemetry.addData("Position", motorLeftFront.getCurrentPosition());
             telemetry.addData("Target", motorLeftFront.getTargetPosition());
@@ -398,7 +404,7 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        while (ods.getRawLightDetected() < odsEdge && opModeIsActive()) { //ODS averages values
+        while (odsLine.getRawLightDetected() < odsEdge && opModeIsActive()) { //ODS averages values
             motorLeftFront.setPower(leftPower); //No PID, rides along side of wall
             motorLeftBack.setPower(leftPower);
             motorRightFront.setPower(rightPower);
@@ -406,7 +412,7 @@ abstract class OpModeBase extends LinearOpMode {
 
             telemetry.addData("Left Motor Power", motorLeftFront.getPower());
             telemetry.addData("Right Motor Power", motorRightFront.getPower());
-            telemetry.addData("ODS Reading", ods.getRawLightDetected());
+            telemetry.addData("ODS Reading", odsLine.getRawLightDetected());
             telemetry.update();
             idle();
         }
@@ -434,19 +440,29 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     /**
-     * Shoots two particles.
-     * Uses touch sensor to determine when particle is loaded.
+     * Shoots two particles, sets timeout to 5 seconds
+     * Uses ods to determine when particle is loaded.
+     * @see OpModeBase#shoot(int)
      * @see DcMotor
-     * @see TouchSensor
+     * @see OpticalDistanceSensor
      */
-    void shoot() {
+    public void shoot() {
+        shoot(4000);
+    }
+
+    /**
+     * Shoots two particles.
+     * Uses ods to determine when particle is loaded.
+     * @see OpModeBase#shoot()
+     * @see DcMotor
+     * @see OpticalDistanceSensor
+     */
+    void shoot(int timeout) {
         ballStop.setPosition(BALL_STOP_BLOCKED);
         shooter.setPower(1);
-        sleep(1000);
-        shooter.setPower(0);
 
-        /*
-        while(opModeIsActive() && touchSensorBall.isPressed()) {
+        long startTime = System.currentTimeMillis();
+        while(opModeIsActive() && odsBallDetected() && System.currentTimeMillis() - startTime < 2000) { //Shoot first ball, 2 second timeout
             idle();
         }
 
@@ -456,63 +472,40 @@ abstract class OpModeBase extends LinearOpMode {
         sleep(200);
 
         intake.setPower(1);
+
         //Second ball
-        while(opModeIsActive() && !touchSensorBall.isPressed()) { //While second ball isn't loaded
+        startTime = System.currentTimeMillis();
+        while(opModeIsActive() && !odsBallDetected() && System.currentTimeMillis() - startTime < timeout) { //While second ball isn't loaded, times out after specified time
+            telemetry.addData("Time", System.currentTimeMillis() - startTime < timeout);
             idle();
         }
 
-        sleep(200);
         intake.setPower(0);
-        shooter.setPower(1);
 
-        while(opModeIsActive() && touchSensorBall.isPressed()) {
-            idle();
-        }
-        sleep(200);
+        shooter.setPower(1); //Shoot second ball after it is loaded
+        sleep(1300);
+
         shooter.setPower(0);
         ballStop.setPosition(BALL_STOP_BLOCKED);
-        sleep(300);
-        */
-    }
 
-    void moveFast(double distance, double maxSpeed) {
-        //distance = 48.642 * distance - 267.32;
+        int rotations = shooter.getCurrentPosition() / 2500 + 1; //Moves shooter to downward position
 
-        //Change mode because move() uses setTargetPosition()
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        shooter.setTargetPosition(rotations * 2500);
+        shooter.setPower(1);
 
-        motorLeftFront.setTargetPosition((int) (motorLeftFront.getCurrentPosition() + distance));
-        motorLeftBack.setTargetPosition((int) (motorLeftBack.getCurrentPosition() + distance));
-        motorRightFront.setTargetPosition((int) (motorRightFront.getCurrentPosition() + distance));
-        motorRightBack.setTargetPosition((int) (motorRightBack.getCurrentPosition() + distance));
-
-        motorLeftFront.setPower(maxSpeed);
-        motorLeftBack.setPower(maxSpeed);
-        motorRightFront.setPower(maxSpeed);
-        motorRightBack.setPower(maxSpeed);
-
-        while ((motorLeftFront.isBusy() && motorLeftBack.isBusy() && motorRightFront.isBusy() && motorRightBack.isBusy()) && opModeIsActive()) {
-            //Only one encoder target must be reached
-            telemetry.addData("Left motor power", motorLeftFront.getPower());
-            telemetry.addData("Right motor power", motorRightFront.getPower());
-
-            telemetry.addData("Left front position", motorLeftFront.getCurrentPosition());
-            telemetry.addData("Left back position", motorLeftBack.getCurrentPosition());
-            telemetry.addData("Right front position", motorRightFront.getCurrentPosition());
-            telemetry.addData("Right back position", motorRightBack.getCurrentPosition());
+        while(shooter.isBusy() && opModeIsActive()) {
+            telemetry.addData("Position", shooter.getCurrentPosition());
+            telemetry.addData("Target", shooter.getTargetPosition());
+            telemetry.addData("Rotations", rotations);
             telemetry.update();
             idle();
         }
-
-        motorLeftFront.setPower(0);
-        motorLeftBack.setPower(0);
-        motorRightFront.setPower(0);
-        motorRightBack.setPower(0);
-        sleep(300);
+        shooter.setPower(0);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        sleep(200);
     }
+
 
     /**
      * Reduces a given speed using a transformed sigmoid.
@@ -539,6 +532,10 @@ abstract class OpModeBase extends LinearOpMode {
         double exponent = -1 * b * regression * reduction;
         double denominator = 1 + Math.exp(exponent);
         return (numerator / denominator) + speed;
+    }
+
+    boolean odsBallDetected() {
+        return odsBall.getRawLightDetected() > odsBallThreshold;
     }
 
     /**

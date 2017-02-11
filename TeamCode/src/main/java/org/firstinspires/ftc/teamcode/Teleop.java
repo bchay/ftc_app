@@ -20,23 +20,32 @@ Driver One - Movement - Gamepad 1
     Right Joystick: Right drivetrain motors
     Left Joystick: Left drivetrain motors
 
-    A: Enable slow mode
-    B: Disable slow mode
-
-    Right Trigger: Intake
-    Left Trigger: Shooter
-
-    X: Button presser out
-    B: Button presser in
-    A: Ball stop up
-    Y: Ball stop down
+    B: Toggle slow mode - 50% speed, 100% speed
+    A: Toggle drivetrain direction
 
 Driver Two - Operations - Gamepad 2
+        Right Trigger: Intake
+        Left Trigger: Shooter
+        Right Bumper: Intake
+
+        X: Button presser out
+        B: Button presser in
+        A: Ball stop blocked
+        Y: Ball stop up
+
+        Left Bumper: Shoot one rotation
 
 */
 
 @TeleOp(name = "Teleop")
 public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can extend the same base class as autonomous
+    boolean previousLeftBumperState = false;
+
+    boolean previousSpeedToggleState = false;
+
+    boolean previousReverseDrivetrainState = false;
+    boolean reverseDrivetrain = false;
+
     public void runOpMode() {
         super.runOpMode(); //Configure hardware
 
@@ -58,35 +67,62 @@ public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can ex
         while (opModeIsActive()) {
             //Set motor power
 
-            if(gamepad1.b) { //Enables slow mode
-                motorMax = .3;
-            } else if(gamepad1.a) {
-                motorMax = 1;
+            if(!previousSpeedToggleState && gamepad1.b) { //Just became pressed
+                motorMax = motorMax == .5 ? 1 : .5; //Toggle motor max
+                previousSpeedToggleState = true;
+            } else if(!gamepad1.b && previousSpeedToggleState) {
+                previousSpeedToggleState = false;
             }
 
-            if(motorMax == .3) telemetry.addData("Slow mode", "true");
-            else telemetry.addData("Fast mode", "true");
+            if(!previousReverseDrivetrainState && gamepad1.a) { //Just became pressed
+                reverseDrivetrain = !reverseDrivetrain;
+                previousReverseDrivetrainState = true;
+            } else if(previousReverseDrivetrainState && !gamepad1.a) {
+                previousReverseDrivetrainState = false;
+            }
 
-            motorLeftFront.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
-            motorLeftBack.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
-            motorRightFront.setPower(Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
-            motorRightBack.setPower(Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
+            if(!reverseDrivetrain) { //Normal mode
+                motorLeftFront.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
+                motorLeftBack.setPower(Range.clip(gamepad1.left_stick_y, -motorMax, motorMax));
+                motorRightFront.setPower(touchSensorBottom.isPressed() ? 0 : Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
+                motorRightBack.setPower(touchSensorBottom.isPressed() ? 0 : Range.clip(gamepad1.right_stick_y, -motorMax, motorMax));
+            } else {
+                motorLeftFront.setPower(Range.clip(-gamepad1.right_stick_y, -motorMax, motorMax));
+                motorLeftBack.setPower(Range.clip(-gamepad1.right_stick_y, -motorMax, motorMax));
+                motorRightFront.setPower(Range.clip(-gamepad1.left_stick_y, -motorMax, motorMax));
+                motorRightBack.setPower(Range.clip(-gamepad1.left_stick_y, -motorMax, motorMax));
+            }
+
+
+
+
+            //Second gamepad
 
             //Set servo positions based on gamepad input
-            if (gamepad2.b) buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() - .005, BUTTON_PRESSER_OUT, BUTTON_PRESSER_IN));
-            else if (gamepad2.x) buttonPresser.setPosition(Range.clip(buttonPresser.getPosition() + .005, BUTTON_PRESSER_OUT, BUTTON_PRESSER_IN));
+            if (gamepad2.x) buttonPresser.setPosition(BUTTON_PRESSER_OUT);
+            else if (gamepad2.b && !gamepad2.start) buttonPresser.setPosition(BUTTON_PRESSER_IN);
 
             shooter.setPower(gamepad2.left_trigger);
             intake.setPower(gamepad2.right_trigger);
-            if (gamepad2.right_bumper) intake.setPower(-1);
 
-            if(touchSensorBall.isPressed()) ballStop.setPosition(BALL_STOP_BLOCKED);
-            else ballStop.setPosition(BALL_STOP_UP);
+            if(odsBallDetected()) { //Sets blocker to down, a overrides
+                if(gamepad2.y) ballStop.setPosition(BALL_STOP_UP);
+                else ballStop.setPosition(BALL_STOP_BLOCKED);
+            } else { //No ball is loaded, blocker is set to up
+                if(gamepad2.a) {
+                    ballStop.setPosition(BALL_STOP_BLOCKED);
+                } else {
+                    ballStop.setPosition(BALL_STOP_UP);
+                }
+            }
 
             telemetry.addData("Left Motor Power", motorLeftFront.getPower());
             telemetry.addData("Right Motor Power", motorRightFront.getPower());
-            telemetry.addData("Button Presser", buttonPresser.getPosition());
-            telemetry.addData("Ball stop", ballStop.getPosition());
+            telemetry.addData("Button Presser Position", buttonPresser.getPosition());
+            telemetry.addData("Ball stop Position", ballStop.getPosition());
+            telemetry.addData("Slow mode", motorMax != 1);
+            telemetry.addData("Drivetrain forwards", !reverseDrivetrain);
+            telemetry.addData("Shoooter position", shooter.getCurrentPosition());
             telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
             telemetry.update();
         }

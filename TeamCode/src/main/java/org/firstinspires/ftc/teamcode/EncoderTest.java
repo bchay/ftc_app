@@ -11,12 +11,14 @@ public class EncoderTest extends OpMode {
     DcMotor motorLeftBack;
     DcMotor motorRightFront;
     DcMotor motorRightBack;
+    DcMotor shooter;
 
     public void init() {
         motorLeftFront = hardwareMap.dcMotor.get("left_front");
         motorLeftBack = hardwareMap.dcMotor.get("left_back");
         motorRightFront = hardwareMap.dcMotor.get("right_front");
         motorRightBack = hardwareMap.dcMotor.get("right_back");
+        shooter = hardwareMap.dcMotor.get("shooter");
 
         motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -27,6 +29,7 @@ public class EncoderTest extends OpMode {
         motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -42,5 +45,6 @@ public class EncoderTest extends OpMode {
         telemetry.addData("Encoder Position Left Back", motorLeftBack.getCurrentPosition());
         telemetry.addData("Encoder Position Right Front", motorRightFront.getCurrentPosition());
         telemetry.addData("Encoder Position Right Back", motorRightBack.getCurrentPosition());
+        telemetry.addData("Encoder Position Shooter", shooter.getCurrentPosition());
     }
 }
