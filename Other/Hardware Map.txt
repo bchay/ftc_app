@@ -1,0 +1,9 @@
+Hardware Map
+
+A104OVXD - Top Motor 1: Shooter 2: Intake (Reversed) - No encoders for intake
+AL00VUTZ - Second Motor: None connected
+AL00VXR4 - Third Motor 1: Left Side back (REVERSE) 2: Right Side back (FORWARD)
+AH00QJ3D - Fourth Motor 1: Left Side front (FORWARD) 2: Right Side front (Reversed) USING VERSION 1.5 FIRMWARE
+
+AI049KX6 - DIM - ODS port 7
+AL00VDCE - Servo - 1: Button Pusher - Wires must be reversed, 2: Ball stop - 0 is up, 1 is down
