@@ -131,7 +131,6 @@ public class OpenCVBeacon extends LinearOpMode implements CameraBridgeViewBase.C
 
             Imgproc.circle(gray, center, 3, new Scalar(0, 255, 0), -1);
             Imgproc.circle(gray, center, radius, new Scalar(0, 0, 255), 10);
-
         }
 
         return gray;

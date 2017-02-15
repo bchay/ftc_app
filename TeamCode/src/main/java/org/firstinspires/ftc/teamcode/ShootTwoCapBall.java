@@ -16,7 +16,7 @@ public class ShootTwoCapBall extends OpModeBase {
 
         move(33, moveSpeed, true, kP, 1.3, .05);
         shoot(10000); //Shoot with 10 second timeout
-        sleep(10000);
+        sleep(10000); //Wait 10 seconds
         move(25);
     }
 }

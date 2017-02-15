@@ -74,12 +74,12 @@ public class WallRiderAutonomous extends OpModeBase {
             sleep(500);
         } else if(allianceColor.equals("Blue")) {
             turn(45, moveDirection, .2); //Initial turn towards wall
-            move(63, .9, false, .025, 1.3, .05);
+            move(65, .9, false, .025, 1.3, .05);
 
-            turn(23, Direction.LEFT, .4, 0);
-            move(13, moveSpeed, false, 0, 0, .2);
-            turn(15, Direction.LEFT, turnSpeed, 0);
-            move(29, moveSpeed, false, 0, 0, .2); //Move to far beacon
+            turn(18, Direction.LEFT, .4, 0);
+            move(14, moveSpeed, false, 0, 0, .2);
+            turn(14, Direction.LEFT, turnSpeed, 0);
+            move(30, moveSpeed, false, 0, 0, .2); //Move to far beacon
 
             driveToWhiteLine(-.16, -.11);
             move(2, moveSpeed, false, 0, 0, .2);
@@ -116,8 +116,10 @@ public class WallRiderAutonomous extends OpModeBase {
                 buttonPresser.setPosition(BUTTON_PRESSER_OUT);
                 sleep(1100);
                 //move(-3, .4); //Move to hit beacon
-            } else {
+            } else { //First button is alliance color
+                move(-1.5, moveSpeed, false, 0, 0, .2);
                 if (getColorName().equals(allianceColor)) {
+                    move(-1.8, moveSpeed, false, 0, 0, .2);
                     buttonPresser.setPosition(BUTTON_PRESSER_OUT);
                     sleep(900);
                     //move(-3, moveSpeed, false, 0, 0, .2); //Move to hit beacon (button presser is angled)

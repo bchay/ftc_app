@@ -1,5 +1,5 @@
 Logcat:
-	adb pull "/storage/emulated/0/com.qualcomm.ftcrobotcontroller.logcat" "Users/hprobotics/Desktop/logcat-latest.txt"
+	adb pull "/storage/emulated/0/com.qualcomm.ftcrobotcontroller.logcat" "/Users/hprobotics/Desktop/logcat-latest.txt"
 	adb shell
 	adb shell
 		rm -rf "/storage/emulated/0/com.qualcomm.ftcrobotcontroller.logcat"
