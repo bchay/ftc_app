@@ -60,5 +60,4 @@
         android:spinnerMode="dialog"
         android:id="@+id/locationSpinner"
         android:entries="@array/location" />
-
 </RelativeLayout>

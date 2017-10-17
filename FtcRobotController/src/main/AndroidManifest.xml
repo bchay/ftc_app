@@ -44,6 +44,10 @@
       android:name="com.qualcomm.ftccommon.FtcRobotControllerService"
       android:enabled="true" />
 
+    <!-- ADDED CODE -->
+    <activity
+        android:name="org.firstinspires.ftc.robotcontroller.internal.AutonomousConfiguration" />
+
   </application>
 
 </manifest>

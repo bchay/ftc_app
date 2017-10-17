@@ -12,9 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -32,13 +30,15 @@ abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
     //Motors
-    DcMotor motorLeftFront;
-    DcMotor motorLeftBack;
-    DcMotor motorRightFront;
-    DcMotor motorRightBack;
+    DcMotor motorLeft1;
+    DcMotor motorLeft2;
+    DcMotor motorRight1;
+    DcMotor motorRight2;
 
     //Sensors
     BNO055IMU imu;
+    ColorSensor colorSensor;
+    DistanceSensor distanceSensor;
 
     //SharedPreferences
     private SharedPreferences sharedPreferences;
@@ -51,7 +51,7 @@ abstract class OpModeBase extends LinearOpMode {
     //Autonomous Specific Configuration
     double moveSpeed = .65;
     double kP = 0.0;
-    double ticksRatio = 1;
+    double ticksRatio = 1; //Ticks / inch
 
     double turnSpeed = .3;
     private double turnSlowdown = .1;
@@ -78,30 +78,40 @@ abstract class OpModeBase extends LinearOpMode {
         //*************** Map hardware devices ***************
 
         //Drive Motors
-        motorLeftFront = hardwareMap.dcMotor.get("left_front");
-        motorLeftBack = hardwareMap.dcMotor.get("left_back");
-        motorRightFront = hardwareMap.dcMotor.get("right_front");
-        motorRightBack = hardwareMap.dcMotor.get("right_back");
+        motorLeft1 = hardwareMap.dcMotor.get("left 1");
+        motorLeft2 = hardwareMap.dcMotor.get("left 2");
+        motorRight1 = hardwareMap.dcMotor.get("right 1");
+        motorRight2 = hardwareMap.dcMotor.get("right 2");
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        colorSensor = hardwareMap.colorSensor.get("color distance");
+        colorSensor.enableLed(true);
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "color distance");
 
         //*************** Configure hardware devices ***************
 
         //Motors
 
         //Drive motors
-        motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorLeftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeft1.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeft2.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRight1.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRight2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        motorLeftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Autonomous methods that need RUN_TO_POSITION will set the motors, RUN_USING_ENCODER is required for teleop and gyro turn
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Autonomous methods that need RUN_TO_POSITION will set the motors, RUN_USING_ENCODER is required for TeleOp and gyro turn
+        motorLeft2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorLeft1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //Default is float
+        motorLeft2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRight1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRight2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //*************** Configure SharedPreferences ***************
         allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
@@ -120,13 +130,12 @@ abstract class OpModeBase extends LinearOpMode {
         parameters.calibrationDataFile = "BNO055IMUCalibration.json";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         telemetry.addData("Ready to start program", "");
         telemetry.addData("Alliance color", allianceColor);
-        telemetry.addData("Encoders", motorLeftFront.getCurrentPosition() + motorLeftBack.getCurrentPosition() + motorRightFront.getCurrentPosition() + motorRightBack.getCurrentPosition());
+        telemetry.addData("Encoders", motorLeft1.getCurrentPosition() + motorLeft2.getCurrentPosition() + motorRight1.getCurrentPosition() + motorRight2.getCurrentPosition());
         telemetry.update();
     }
 
@@ -183,19 +192,19 @@ abstract class OpModeBase extends LinearOpMode {
         double targetHeading = angles.firstAngle + degrees; //Turns are relative to current position
 
         //Change mode because turn() uses motor power and not motor position
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         if (degrees < 0) {
             while (imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle > targetHeading && opModeIsActive()) {
                 float heading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
 
-                motorLeftFront.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
-                motorLeftBack.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
-                motorRightFront.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
-                motorRightBack.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorLeft1.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorLeft2.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorRight1.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorRight2.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
 
                 telemetry.addData("Distance to turn: ", Math.abs(heading - targetHeading));
                 telemetry.addData("Target", targetHeading);
@@ -207,10 +216,10 @@ abstract class OpModeBase extends LinearOpMode {
             while (imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle < targetHeading && opModeIsActive()) {
                 float heading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
 
-                motorLeftFront.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
-                motorLeftBack.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
-                motorRightFront.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
-                motorRightBack.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorLeft1.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorLeft2.setPower(Range.clip(-maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), -maxSpeed, -turnSlowdown));
+                motorRight1.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
+                motorRight2.setPower(Range.clip(maxSpeed * (Math.abs(heading - targetHeading) / Math.abs(degrees)), turnSlowdown, maxSpeed));
 
                 telemetry.addData("Distance to turn: ", Math.abs(heading - targetHeading));
                 telemetry.addData("Target", targetHeading);
@@ -219,10 +228,10 @@ abstract class OpModeBase extends LinearOpMode {
                 idle();
             }
         }
-        motorLeftFront.setPower(0);
-        motorLeftBack.setPower(0);
-        motorRightFront.setPower(0);
-        motorRightBack.setPower(0);
+        motorLeft1.setPower(0);
+        motorLeft2.setPower(0);
+        motorRight1.setPower(0);
+        motorRight2.setPower(0);
         sleep(200);
 
         telemetry.addData("Distance to turn", Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - targetHeading));
@@ -294,53 +303,63 @@ abstract class OpModeBase extends LinearOpMode {
         float initialHeading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
 
         //Change mode because move() uses setTargetPosition()
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        motorLeftFront.setTargetPosition((int) (motorLeftFront.getCurrentPosition() + distance));
-        motorLeftBack.setTargetPosition((int) (motorLeftBack.getCurrentPosition() + distance));
-        motorRightFront.setTargetPosition((int) (motorRightFront.getCurrentPosition() + distance));
-        motorRightBack.setTargetPosition((int) (motorRightBack.getCurrentPosition() + distance));
+        motorLeft1.setTargetPosition((int) (motorLeft1.getCurrentPosition() + distance));
+        motorLeft2.setTargetPosition((int) (motorLeft2.getCurrentPosition() + distance));
+        motorRight1.setTargetPosition((int) (motorRight1.getCurrentPosition() + distance));
+        motorRight2.setTargetPosition((int) (motorRight2.getCurrentPosition() + distance));
 
-        motorLeftFront.setPower(maxSpeed);
-        motorLeftBack.setPower(maxSpeed);
-        motorRightFront.setPower(maxSpeed);
-        motorRightBack.setPower(maxSpeed);
+        motorLeft1.setPower(maxSpeed);
+        motorLeft2.setPower(maxSpeed);
+        motorRight1.setPower(maxSpeed);
+        motorRight2.setPower(maxSpeed);
 
-        while ((motorLeftFront.isBusy() && motorLeftBack.isBusy() && motorRightFront.isBusy() && motorRightBack.isBusy()) && opModeIsActive()) {
+        while ((motorLeft1.isBusy() && motorLeft2.isBusy() && motorRight1.isBusy() && motorRight2.isBusy()) && opModeIsActive()) {
             //Only one encoder target must be reached
             double turnError = initialHeading - imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
             double headingError = turnError * kP * distanceSign;
             double leftPower = Range.clip(maxSpeed - headingError, .1, 1);
             double rightPower = Range.clip(maxSpeed + headingError, .1, 1);
 
-            motorLeftFront.setPower(leftPower);
-            motorLeftBack.setPower(leftPower);
-            motorRightFront.setPower(rightPower);
-            motorRightBack.setPower(rightPower);
+            motorLeft1.setPower(leftPower);
+            motorLeft2.setPower(leftPower);
+            motorRight1.setPower(rightPower);
+            motorRight2.setPower(rightPower);
 
             telemetry.addData("Left motor power", leftPower);
             telemetry.addData("Right motor power", rightPower);
             telemetry.addData("Current Heading", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
             telemetry.addData("Target Heading", initialHeading);
             telemetry.addData("Heading Error", headingError);
-            telemetry.addData("Position", motorLeftFront.getCurrentPosition());
-            telemetry.addData("Target", motorLeftFront.getTargetPosition());
+            telemetry.addData("Position", motorLeft1.getCurrentPosition());
+            telemetry.addData("Target", motorLeft1.getTargetPosition());
 
             telemetry.update();
         }
 
-        motorLeftFront.setPower(0);
-        motorLeftBack.setPower(0);
-        motorRightFront.setPower(0);
-        motorRightBack.setPower(0);
+        motorLeft1.setPower(0);
+        motorLeft2.setPower(0);
+        motorRight1.setPower(0);
+        motorRight2.setPower(0);
         sleep(400);
 
         //Correct if robot turned during movement
         if (Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - initialHeading) > 0 && recurse) {
             turn(Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - initialHeading), imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle > initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .1);
         }
+    }
+
+    int getColor() {
+        float[] hsv = {0F, 0F, 0F};
+
+        Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsv);
+
+        if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return Color.RED;
+        else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return Color.BLUE;
+        return 0;
     }
 }

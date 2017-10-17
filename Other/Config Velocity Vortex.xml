@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<Robot type="FirstInspires-FTC">
+    <MotorController name="Motor Controller 1" serialNumber="A104OVXD">
+        <Motor name="shooter" port="1" />
+        <Motor name="intake" port="2" />
+    </MotorController>
+    <MotorController name="Motor Controller 3" serialNumber="AH00QJ3D">
+        <Motor name="left_front" port="1" />
+        <Motor name="right_front" port="2" />
+    </MotorController>
+    <ServoController name="Servo Controller 2" serialNumber="AL00VDCE">
+        <Servo name="button_presser" port="1" />
+        <Servo name="ball_stop" port="2" />
+    </ServoController>
+    <DeviceInterfaceModule name="Device Interface Module 3" serialNumber="AI049KX6">
+        <ColorSensor name="color" port="0" />
+        <Gyro name="gyro" port="1" />
+        <OpticalDistanceSensor name="ods_ball" port="3" />
+        <OpticalDistanceSensor name="ods_line" port="7" />
+        <TouchSensor name="touch_bottom" port="0" />
+    </DeviceInterfaceModule>
+    <MotorController name="Motor Controller 4" serialNumber="AL00VXR4">
+        <Motor name="left_back" port="1" />
+        <Motor name="right_back" port="2" />
+    </MotorController>
+</Robot>

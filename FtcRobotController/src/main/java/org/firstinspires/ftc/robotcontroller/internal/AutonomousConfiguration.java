@@ -45,8 +45,6 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
         delay.setMinValue(0);
         delay.setMaxValue(30);
         delay.setValue(savedDelay);
-
-
     }
 
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {

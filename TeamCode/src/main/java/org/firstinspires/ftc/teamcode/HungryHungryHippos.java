@@ -15,6 +15,7 @@ public class HungryHungryHippos extends OpMode {
         motorLeft = hardwareMap.dcMotor.get("left");
         motorRight = hardwareMap.dcMotor.get("right");
         motorRight.setDirection(DcMotor.Direction.REVERSE);
+        motorLeft.setDirection(DcMotor.Direction.REVERSE);
     }
 
     @Override
