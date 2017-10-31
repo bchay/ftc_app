@@ -46,7 +46,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
-@Autonomous(name = "IMU", group = "Sensor")
+@Autonomous(name = "IMU", group = "Test Code")
 public class IMUTest extends LinearOpMode {
     BNO055IMU imu;
     Orientation angles;

@@ -30,7 +30,7 @@ Right Joystick: Right drivetrain motors
 /**
  * This is the MecanumTeleop code for the robot.
  */
-@TeleOp(name = "MecanumTeleop")
+@TeleOp(name = "MecanumTeleop", group = "Test Code")
 public class MecanumTeleop extends LinearOpMode {
     DcMotor motorLeftFront;
     DcMotor motorLeftBack;
