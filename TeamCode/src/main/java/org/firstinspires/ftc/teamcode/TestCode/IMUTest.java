@@ -34,6 +34,7 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -46,10 +47,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
-@Autonomous(name = "IMU", group = "Test Code")
+@TeleOp(name = "IMU", group = "Test Code")
 public class IMUTest extends LinearOpMode {
     BNO055IMU imu;
-    Orientation angles;
+    double previousHeading = 0;
+    double heading = 0;
 
     @Override public void runOpMode() {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -66,9 +68,25 @@ public class IMUTest extends LinearOpMode {
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         while (opModeIsActive()) {
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            telemetry.addData("Heading: ", angles.firstAngle);
+            telemetry.addData("Heading extrinsic", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
+            telemetry.addData("Heading intrinsic", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
+
+            telemetry.addData("Integrated Heading", getIntegratedHeading());
             telemetry.update();
         }
+    }
+
+    public double getIntegratedHeading() {
+        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        double deltaHeading = currentHeading - previousHeading;
+
+        if (deltaHeading < -180) deltaHeading += 360;
+        else if (deltaHeading >= 180) deltaHeading -= 360;
+
+        heading += deltaHeading;
+
+        previousHeading = currentHeading;
+
+        return heading;
     }
 }

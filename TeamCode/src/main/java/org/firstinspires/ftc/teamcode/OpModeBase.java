@@ -19,14 +19,13 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 /**
  * Contains variables and methods used to control the robot.
  */
-@Disabled
+
 abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
@@ -46,14 +45,14 @@ abstract class OpModeBase extends LinearOpMode {
     //Sensors
     private BNO055IMU imu;
     private ColorSensor colorSensor;
-    private DigitalChannel touch;
+    DigitalChannel touch;
 
     //SharedPreferences
     private SharedPreferences sharedPreferences;
     Direction moveDirection;
 
     String allianceColor;
-    private String location;
+    String location;
     private int delay;
 
     //General Constants
@@ -63,20 +62,18 @@ abstract class OpModeBase extends LinearOpMode {
     static final double RIGHT_GLYPH_GRABBR_CLOSED = .65;
 
     static final double BALANCING_STONE_PRESSER_IN = 0;
-    static final double BALANCING_STONE_PRESSER_OUT = 0;
+    static final double BALANCING_STONE_PRESSER_OUT = 1;
 
     static final double ARM_IN = 1;
-    static final double ARM_OUT = .1;
-
-    int[] liftPositions = {0, 500, 1000, 1500, 2000}; //Positions
-    int currentLiftPosition = 0;
+    static final double ARM_OUT = .12;
 
     //Autonomous Specific Configuration
-    private double moveSpeed = .65;
+    private double moveSpeedMin = .15;
+    double moveSpeedMax = .90;
     private double kP = 0.0;
-    private double ticksRatio = 1120 / (2 * Math.PI * 2); //Ticks / inch
+    private double ticksRatio = 3000 / 34.5; //Ticks / inch
 
-    double turnSpeed = .4;
+    double turnSpeed = .4; //Speed is ramped up and down
 
     enum Direction {
         LEFT, RIGHT;
@@ -88,6 +85,10 @@ abstract class OpModeBase extends LinearOpMode {
             return vals[(this.ordinal() + 1) % vals.length];
         }
     }
+
+    //General Variables
+    double previousHeading = 0;
+    double integratedHeading = 0;
 
     /**
      * Configures all parts of the robot.
@@ -135,14 +136,12 @@ abstract class OpModeBase extends LinearOpMode {
         //Other motors
         lift = hardwareMap.dcMotor.get("lift");
 
-        lift.setDirection(DcMotorSimple.Direction.REVERSE);
+        lift.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        /*
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift.setTargetPosition(liftPositions[0]); //Set lift target to 0
-        */
+
 
         //Servos
         leftGlyphGrabber = hardwareMap.servo.get("left grabber");
@@ -171,7 +170,7 @@ abstract class OpModeBase extends LinearOpMode {
         colorSensor.enableLed(true);
 
         touch.setMode(DigitalChannel.Mode.INPUT);
-        if(!touch.getState()) telemetry.addData("Warning", "The lift is not all the way down."); //Warn if lift is not touching touch sensor
+        if(touch.getState()) telemetry.addData("Warning", "The lift is not all the way down."); //Warn if lift is not touching touch sensor
 
         //*************** Configure SharedPreferences ***************
         allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
@@ -186,10 +185,10 @@ abstract class OpModeBase extends LinearOpMode {
 
         telemetry.addData("Ready to start program", "");
         telemetry.addData("Alliance color", allianceColor);
-        telemetry.addData("Delay", delay);
         telemetry.addData("Location", location);
+        telemetry.addData("Delay", delay);
         telemetry.addData("Encoders", motorLeft1.getCurrentPosition() + motorLeft2.getCurrentPosition() + motorRight1.getCurrentPosition() + motorRight2.getCurrentPosition());
-        telemetry.addData("Heading", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
+        telemetry.addData("Heading", getIntegratedHeading());
         telemetry.update();
     }
 
@@ -242,7 +241,7 @@ abstract class OpModeBase extends LinearOpMode {
     void turn(double degrees, OpModeBase.Direction direction, double maxSpeed, int count) {
         if (!opModeIsActive()) return;
         if (direction.equals(OpModeBase.Direction.RIGHT)) degrees *= -1; //Negative degree for turning right
-        double initialHeading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        double initialHeading = getIntegratedHeading();
         double targetHeading = initialHeading + degrees; //Turns are relative to current position
         double robotSpeed = .1;
 
@@ -253,8 +252,8 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //While target has not been reached, stops robot if target is overshot
-        while (((degrees < 0 && imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle > targetHeading) || (degrees > 0 && imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle < targetHeading)) && opModeIsActive()) {
-            float currentHeading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && opModeIsActive()) {
+            double currentHeading = getIntegratedHeading();
 
             if(Math.abs(currentHeading - targetHeading) < 35 && Math.abs(currentHeading - targetHeading) > 15) { //Ramp down motor speed at end of turn, last 15 degrees
                 robotSpeed = Math.max(.1, robotSpeed - .08);
@@ -328,18 +327,18 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight2.setPower(0);
         sleep(200);
 
-        telemetry.addData("Distance to turn", Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - targetHeading));
+        telemetry.addData("Distance to turn", Math.abs(getIntegratedHeading() - targetHeading));
         telemetry.addData("Direction", -1 * (int) Math.signum(degrees));
         telemetry.update();
 
-        if (Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - targetHeading) > 3 && count > 0) { //If the target was significantly overshot
+        if (Math.abs(getIntegratedHeading() - targetHeading) > 3 && count > 0) { //If the target was significantly overshot
             //Recurse to correct turn
-            turn(Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - targetHeading), direction.next(), .1, --count);
+            turn(Math.abs(getIntegratedHeading() - targetHeading), direction.next(), .1, --count);
         }
     }
 
     /**
-     * Calls move with a default of maxSpeed = moveSpeed, recurse = true, PID = true
+     * Calls move with a default of maxSpeed = moveSpeedMin, recurse = true, PID = true
      * a and b tuned for 48 inches
      * @param distance the distance in inches to move
      * @see OpModeBase#move(double, double, boolean)
@@ -347,7 +346,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance) {
-        move(distance, moveSpeed, true, kP);
+        move(distance, moveSpeedMax, true, kP);
     }
 
     /**
@@ -392,9 +391,12 @@ abstract class OpModeBase extends LinearOpMode {
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance, double maxSpeed, boolean recurse, double kP) {
+        distance *= -1; //Necessary to deal with encoder issues
         double distanceSign = Math.signum(distance); //Necessary for moving backwards
         distance *= ticksRatio;
-        float initialHeading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        double motorInitial = motorLeft1.getCurrentPosition();
+
+        double initialHeading = getIntegratedHeading();
 
         //Change mode because move() uses setTargetPosition()
         motorLeft1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -407,23 +409,28 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight1.setTargetPosition((int) (motorRight1.getCurrentPosition() + distance));
         motorRight2.setTargetPosition((int) (motorRight2.getCurrentPosition() + distance));
 
-        motorLeft1.setPower(.05);
-        motorLeft2.setPower(.05);
-        motorRight1.setPower(.05);
-        motorRight2.setPower(.05);
+        double moveSpeed = moveSpeedMin;
+
+        motorLeft1.setPower(moveSpeed);
+        motorLeft2.setPower(moveSpeed);
+        motorRight1.setPower(moveSpeed);
+        motorRight2.setPower(moveSpeed);
 
         while ((motorLeft1.isBusy() && motorLeft2.isBusy() && motorRight1.isBusy() && motorRight2.isBusy()) && opModeIsActive()) {
             //Only one encoder target must be reached
-            double turnError = initialHeading - imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+            double turnError = initialHeading - getIntegratedHeading();
             double headingError = turnError * kP * distanceSign;
 
-            moveSpeed = Math.min(maxSpeed, moveSpeed + .01); //Ramp up motor speed at beginning of move
-            if(Math.abs(motorLeft1.getCurrentPosition() - motorLeft1.getTargetPosition()) < 1000) { //Ramp down motor speed at end of move
-                moveSpeed = Math.max(.1, moveSpeed - .01);
+            if(Math.abs(motorLeft1.getCurrentPosition() - motorInitial) < 1000) {
+                moveSpeed = Math.min(maxSpeed, moveSpeed + .05); //Ramp up motor speed at beginning of move
+                telemetry.addData("Rmap up", moveSpeed);
+            } else if(Math.abs(motorLeft1.getCurrentPosition() - motorLeft1.getTargetPosition()) < 1000) { //Ramp down motor speed at end of move
+                moveSpeed = Math.max(moveSpeedMin, moveSpeed - .05);
+                telemetry.addData("Ramp down", moveSpeed);
             }
 
-            double leftPower = Range.clip(moveSpeed - headingError, .1, 1);
-            double rightPower = Range.clip(moveSpeed + headingError, .1, 1);
+            double leftPower = Range.clip(moveSpeed - headingError, .2, 1);
+            double rightPower = Range.clip(moveSpeed + headingError, .2, 1);
 
             motorLeft1.setPower(leftPower);
             motorLeft2.setPower(leftPower);
@@ -432,11 +439,12 @@ abstract class OpModeBase extends LinearOpMode {
 
             telemetry.addData("Left motor power", leftPower);
             telemetry.addData("Right motor power", rightPower);
-            telemetry.addData("Current Heading", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
+            telemetry.addData("Current Heading", getIntegratedHeading());
             telemetry.addData("Target Heading", initialHeading);
             telemetry.addData("Heading Error", headingError);
             telemetry.addData("Position", motorLeft1.getCurrentPosition());
             telemetry.addData("Target", motorLeft1.getTargetPosition());
+            telemetry.addData("Speed", moveSpeedMin);
             telemetry.update();
         }
 
@@ -447,8 +455,8 @@ abstract class OpModeBase extends LinearOpMode {
         sleep(400);
 
         //Correct if robot turned during movement
-        if (Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - initialHeading) > 0 && recurse) {
-            turn(Math.abs(imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle - initialHeading), imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle > initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .1);
+        if (Math.abs(getIntegratedHeading() - initialHeading) > 5 && recurse) {
+            turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() > initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .2);
         }
     }
 
@@ -465,5 +473,19 @@ abstract class OpModeBase extends LinearOpMode {
         if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) return Color.RED;
         else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) return Color.BLUE;
         return 0;
+    }
+
+    public double getIntegratedHeading() { //https://ftcforum.usfirst.org/forum/ftc-technology/53477-rev-imu-questions?p=53481#post53481
+        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        double deltaHeading = currentHeading - previousHeading;
+
+        if (deltaHeading < -180) deltaHeading += 360;
+        else if (deltaHeading >= 180) deltaHeading -= 360;
+
+        integratedHeading += deltaHeading;
+
+        previousHeading = currentHeading;
+
+        return integratedHeading;
     }
 }
