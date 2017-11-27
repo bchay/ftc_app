@@ -5,13 +5,12 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'com.android.tools.build:gradle:2.2.3'
+		classpath 'com.android.tools.build:gradle:3.0.0'
 	}
 }
 
 android {
 	compileSdkVersion 23
-	buildToolsVersion '25.0.0'
 
 	defaultConfig {
         minSdkVersion 15

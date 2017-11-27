@@ -5,83 +5,90 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 
 @Autonomous(name = "Relic Recovery Autonomous")
 public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a LinearOpMode so it can extend the same base class as autonomous
     VuMarkReader vuMarkReader;
-    ElapsedTime time;
+    private ElapsedTime time; //Used for sensor reading timeout
 
     public void runOpMode() {
-        super.runOpMode();
+        super.runOpMode(RelicRecoveryAutonomous.class);
 
         vuMarkReader = new VuMarkReader(hardwareMap);
         time = new ElapsedTime();
 
-        waitForStart();
+        while(!isStarted() && !isStopRequested()) { //Display distance telemetry for robot alignment
+            telemetry.addData("Ready to start the program.", "");
+            telemetry.addData("Distance", range.getDistance(DistanceUnit.CM));
+            telemetry.addData("Alliance color", allianceColor);
+            telemetry.addData("Location", location);
+            telemetry.addData("Delay", delay);
+            telemetry.addData("Encoders", motorLeft1.getCurrentPosition() + motorLeft2.getCurrentPosition() + motorRight1.getCurrentPosition() + motorRight2.getCurrentPosition());
+            telemetry.addData("Heading", getIntegratedHeading());
+            telemetry.update();
+        }
 
-        lift.setPower(-1);
+        //No need for waitForStart
+
+        //Grab preloaded glyph
+        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
+        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
+        sleep(500);
+        move(1);
+        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED);
+        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
+        sleep(500);
+        glyphLift.setPower(-1); //Move lift up
         sleep(400);
-        lift.setPower(0);
+        glyphLift.setPower(0);
 
-        moveDirection = allianceColor.equals("Blue") ? Direction.RIGHT : Direction.LEFT;
 
-        arm.setPosition(ARM_OUT);
-        sleep(1000);
+        arm.setPosition(COLOR_SENSOR_ARM_OUT);
+        sleep(800);
 
         time.reset();
-        while(getColor() == 0 && opModeIsActive() && time.milliseconds() < 3000) { //Timeout at 1 second
+        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
             telemetry.addData("Color", "Unknown");
             telemetry.update();
         }
 
-        //Color sensor reads right jewel
-        if(getColor() == Color.RED && allianceColor.equals("Red")) {
-            move(4.5);
-            arm.setPosition(ARM_IN);
-            move(-4);
-        } else if(getColor() == Color.RED && allianceColor.equals("Blue")) {
+        //Color sensor reads left jewel
+
+        if(getColor().equals(allianceColor)) {
             move(-4.5);
-            arm.setPosition(ARM_IN);
+            arm.setPosition(COLOR_SENSOR_ARM_IN);
             move(4);
-        } else if(getColor() == Color.BLUE && allianceColor.equals("Blue")) {
+        } else if(!getColor().equals("Unknown")) { //Color is still detected
             move(4.5);
-            arm.setPosition(ARM_IN);
+            arm.setPosition(COLOR_SENSOR_ARM_IN);
             move(-4);
-        } else if(getColor() == Color.BLUE && allianceColor.equals("Red")) {
-            move(-4.5);
-            arm.setPosition(ARM_IN);
-            move(4);
-        } else {
-            arm.setPosition(ARM_IN);
+        } else { //Color could not be detected, move arm in to avoid it hitting the wall
+            arm.setPosition(COLOR_SENSOR_ARM_IN);
             sleep(1000);
         }
 
         RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();
 
         time.reset();
-        while(vuMark.equals(RelicRecoveryVuMark.UNKNOWN) && opModeIsActive() && time.milliseconds() < 3000) { //Loop until VuMark is detected
+        while(vuMark.equals(RelicRecoveryVuMark.UNKNOWN) && opModeIsActive() && time.milliseconds() < 1000) { //Loop until VuMark is detected, timeout after 1 second
             vuMark = vuMarkReader.getVuMark();
             telemetry.addData("Determining VuMark", vuMark);
+            telemetry.update();
         }
-
-        telemetry.addData("VuMark", vuMark);
-        telemetry.update();
-        sleep(300);
 
         if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = RelicRecoveryVuMark.CENTER;
 
-
         if(location.equals("Side")) {
             move((allianceColor.equals("Blue") ? -1 : 1) * 26);
-            turn(90, moveDirection);
+            turn(90, allianceColor.equals("Blue") ? Direction.RIGHT : Direction.LEFT);
 
-            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) move(allianceColor.equals("Blue") ? -17 : 25, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) move(allianceColor.equals("Blue") ? -20 : 20, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) move(allianceColor.equals("Blue") ? -25 : 17, moveSpeedMax, false);
+            //RelicRecoveryVuMark is enum of UNKNOWN, LEFT, CENTER, RIGHT
+            moveUntilCryptoboxRail(allianceColor.equals("Red"), allianceColor.equals("Red") ? vuMark.ordinal() : 4 - vuMark.ordinal());
 
-            turn(90, allianceColor.equals("Blue") ? moveDirection : moveDirection.next());
+            turn(90, Direction.RIGHT);
             move(8, moveSpeedMax, false);
 
             leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
@@ -89,24 +96,23 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
             sleep(1000);
             move(-8, moveSpeedMax, false);
         } else {
-            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) move(allianceColor.equals("Blue") ? -44 : 29, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) move(allianceColor.equals("Blue") ? -37 : 37, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) move(allianceColor.equals("Blue") ? -29 : 44, moveSpeedMax, false);
+            //RelicRecoveryVuMark is enum of UNKNOWN, LEFT, CENTER, RIGHT
+            moveUntilCryptoboxRail(allianceColor.equals("Red"), allianceColor.equals("Blue") ? vuMark.ordinal() : 4 - vuMark.ordinal());
 
-            turn(90, allianceColor.equals("Blue") ? Direction.RIGHT : moveDirection.next());
-            move(8, moveSpeedMax);
+            turn(90, Direction.RIGHT);
+            move(8);
             leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
             rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
             sleep(1000);
 
-            move(-5, moveSpeedMax);
-            move(5.5, moveSpeedMax);
-            move(-8, moveSpeedMax);
+            move(-5);
+            move(5.5);
+            move(-8);
         }
 
-        lift.setPower(1);
+        glyphLift.setPower(1); //Lower glyph lift to deposit glyph into cryptobox
         sleep(400);
-        lift.setPower(0);
+        glyphLift.setPower(0);
     }
 
 }
