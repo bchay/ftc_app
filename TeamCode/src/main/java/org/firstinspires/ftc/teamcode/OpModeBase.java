@@ -9,7 +9,6 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -58,7 +57,7 @@ abstract class OpModeBase extends LinearOpMode {
     int delay;
 
     //General Constants
-    static final double LEFT_GLYPH_GRABBR_OPEN = .43;
+    static final double LEFT_GLYPH_GRABBR_OPEN = .43; //Left and right are defined looking at robot from the back
     static final double LEFT_GLYPH_GRABBR_CLOSED = .07;
     static final double RIGHT_GLYPH_GRABBR_OPEN = .23;
     static final double RIGHT_GLYPH_GRABBR_CLOSED = .77;
@@ -75,12 +74,12 @@ abstract class OpModeBase extends LinearOpMode {
     private double kP = 0.0;
     private double ticksRatio = 3000 / 34.5; //Ticks / inch
 
-    double turnSpeed = .4; //Speed is ramped up and down
+    private double turnSpeed = .4; //Speed is ramped up and down
 
     enum Direction {
         LEFT, RIGHT;
 
-        //Taken from: http://stackoverflow.com/a/17006263
+        //Taken from http://stackoverflow.com/a/17006263
         private static OpModeBase.Direction[] vals = values();
 
         public OpModeBase.Direction next() {
@@ -89,8 +88,8 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     //General Variables
-    double previousHeading = 0;
-    double integratedHeading = 0;
+    private double previousHeading = 0;
+    private double integratedHeading = 0;
 
     /**
      * Configures all parts of the robot.
@@ -134,14 +133,10 @@ abstract class OpModeBase extends LinearOpMode {
         relicLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Servos initialized only during autonomous init period
-        if(className.equals(RelicRecoveryAutonomous.class)) initializeServos();
-
-        //Sensors
-        if(className.equals(RelicRecoveryAutonomous.class)) initializeIMU(); //IMU not needed for teleop
-        colorSensor.enableLed(true);
-
-        //*************** Configure SharedPreferences ***************
         if(className.equals(RelicRecoveryAutonomous.class)) {
+            initializeServos();
+            initializeIMU();
+
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
             allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
             location = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "null");
@@ -174,12 +169,11 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     void initializeServos() {
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED); //Grabbers begin closed to hold the glyph
+        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED);
         rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
 
         relicGrabber.setPosition(RELIC_GRABBER_INITIAL);
         relicRotator.setPosition(RELIC_ROTATOR_INITIAL);
-
 
         arm.setPosition(COLOR_SENSOR_ARM_IN);
     }
@@ -457,13 +451,16 @@ abstract class OpModeBase extends LinearOpMode {
         for(int i = 0; i < railNumber; i++) { //Move until railNumber of cryptobox rails have been detected
             double initialDistance = range.getDistance(DistanceUnit.CM);
 
-            while (Math.abs(range.getDistance(DistanceUnit.CM) - initialDistance) > 10) { //While sensor does not sense a close object (rail)
-                motorLeft1.setPower(.2 * (isForward ? 1 : -1));
-                motorLeft2.setPower(.2 * (isForward ? 1 : -1));
-                motorRight1.setPower(.2 * (isForward ? 1 : -1));
-                motorRight2.setPower(.2 * (isForward ? 1 : -1));
+            while (Math.abs(range.getDistance(DistanceUnit.CM) - initialDistance) > 3) { //While sensor does not sense a close object (rail)
+                motorLeft1.setPower(.3 * (isForward ? 1 : -1));
+                motorLeft2.setPower(.3 * (isForward ? 1 : -1));
+                motorRight1.setPower(.3 * (isForward ? 1 : -1));
+                motorRight2.setPower(.3 * (isForward ? 1 : -1));
             }
-            sleep(300); //Move past rail to "zero" distance sensor initial reading for subsequent rails; position glyph intake for turning
+
+            //Continue moving past rail to "zero" distance sensor initial reading for subsequent rails
+            //Glyph intake is positioned for turning during final iteration of for loop
+            sleep(300);
         }
 
         motorLeft1.setPower(0);

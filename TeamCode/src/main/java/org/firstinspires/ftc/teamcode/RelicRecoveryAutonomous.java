@@ -31,7 +31,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
             telemetry.update();
         }
 
-        //No need for waitForStart
+        //No need for waitForStart because of while(!isStarted()) loop
 
         //Grab preloaded glyph
         leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);

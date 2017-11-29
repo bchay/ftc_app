@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -33,8 +34,9 @@ Driver Two - Operations - Gamepad 2
 /**
  * This is the MecanumTeleop code for the robot.
  */
-@TeleOp(name = "Velocity Vortex MecanumTeleop")
-public class Teleop extends OpModeBase { //MecanumTeleop is a LinearOpMode so it can extend the same base class as autonomous
+@Disabled
+@TeleOp(name = "Velocity Vortex Teleop")
+public class Teleop extends OpModeBase { //Teleop is a LinearOpMode so it can extend the same base class as autonomous
     boolean previousLeftBumperState = false;
 
     boolean previousSpeedToggleState = false;
