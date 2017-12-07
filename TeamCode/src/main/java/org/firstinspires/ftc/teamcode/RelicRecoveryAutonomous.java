@@ -33,15 +33,9 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
 
         //No need for waitForStart because of while(!isStarted()) loop
 
+
         //Grab preloaded glyph
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
-        sleep(500);
-        move(1);
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED);
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
-        sleep(500);
-        glyphLift.setPower(-1); //Move lift up
+        //glyphLift.setPower(-1); //Move lift up
         sleep(400);
         glyphLift.setPower(0);
 
@@ -60,12 +54,12 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         if(getColor().equals(allianceColor)) {
             move(-4.5);
             arm.setPosition(COLOR_SENSOR_ARM_IN);
-            move(4);
+            move(4.5);
         } else if(!getColor().equals("Unknown")) { //Color is still detected
             move(4.5);
             arm.setPosition(COLOR_SENSOR_ARM_IN);
-            move(-4);
-        } else { //Color could not be detected, move arm in to avoid it hitting the wall
+            move(-4.5);
+        } else { //Color could not be detected; move arm in to avoid it hitting the wall
             arm.setPosition(COLOR_SENSOR_ARM_IN);
             sleep(1000);
         }
@@ -79,40 +73,28 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
             telemetry.update();
         }
 
-        if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = RelicRecoveryVuMark.CENTER;
+        //Default to close cryptobox column
+        if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = allianceColor.equals("Red") ? RelicRecoveryVuMark.CENTER : RelicRecoveryVuMark.LEFT;
 
         if(location.equals("Side")) {
             move((allianceColor.equals("Blue") ? -1 : 1) * 26);
             turn(90, allianceColor.equals("Blue") ? Direction.RIGHT : Direction.LEFT);
-
-            //RelicRecoveryVuMark is enum of UNKNOWN, LEFT, CENTER, RIGHT
-            moveUntilCryptoboxRail(allianceColor.equals("Red"), allianceColor.equals("Red") ? vuMark.ordinal() : 4 - vuMark.ordinal());
-
-            turn(90, Direction.RIGHT);
-            move(8, moveSpeedMax, false);
-
-            leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
-            rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
-            sleep(1000);
-            move(-8, moveSpeedMax, false);
-        } else {
-            //RelicRecoveryVuMark is enum of UNKNOWN, LEFT, CENTER, RIGHT
-            moveUntilCryptoboxRail(allianceColor.equals("Red"), allianceColor.equals("Blue") ? vuMark.ordinal() : 4 - vuMark.ordinal());
-
-            turn(90, Direction.RIGHT);
-            move(8);
-            leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
-            rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
-            sleep(1000);
-
-            move(-5);
-            move(5.5);
-            move(-8);
         }
 
-        glyphLift.setPower(1); //Lower glyph lift to deposit glyph into cryptobox
-        sleep(400);
-        glyphLift.setPower(0);
+        move(15 * (allianceColor.equals("Blue") ? -1 : 1)); //Move partially off balancing stone
+
+        //RelicRecoveryVuMark is enum of UNKNOWN, LEFT, CENTER, RIGHT
+        moveUntilCryptoboxRail(allianceColor.equals("Red"), allianceColor.equals("Blue") ? vuMark.ordinal() : 4 - vuMark.ordinal());
+
+        turn(90, Direction.RIGHT);
+        move(8); //Move forward to cryptobox
+        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
+        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
+        sleep(1000);
+
+        move(-5);
+        move(6);
+        move(-5);
     }
 
 }

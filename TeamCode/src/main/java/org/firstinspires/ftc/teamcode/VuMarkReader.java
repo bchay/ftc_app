@@ -65,7 +65,7 @@ public class VuMarkReader {
         relicTemplate = relicTrackables.get(0);
         relicTrackables.activate();
 
-        CameraDevice.getInstance().setFlashTorchMode(true); //Turn on phone flash for better detection
+        //CameraDevice.getInstance().setFlashTorchMode(true); //Turn on phone flash for better detection
     }
 
     public RelicRecoveryVuMark getVuMark() {

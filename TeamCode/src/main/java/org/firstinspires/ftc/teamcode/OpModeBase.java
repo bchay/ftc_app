@@ -57,16 +57,18 @@ abstract class OpModeBase extends LinearOpMode {
     int delay;
 
     //General Constants
-    static final double LEFT_GLYPH_GRABBR_OPEN = .43; //Left and right are defined looking at robot from the back
-    static final double LEFT_GLYPH_GRABBR_CLOSED = .07;
-    static final double RIGHT_GLYPH_GRABBR_OPEN = .23;
-    static final double RIGHT_GLYPH_GRABBR_CLOSED = .77;
+    static final double LEFT_GLYPH_GRABBR_OPEN = .4; //Left and right are defined looking at robot from the back
+    static final double LEFT_GLYPH_GRABBR_CLOSED = .77;
+    static final double RIGHT_GLYPH_GRABBR_OPEN = .43;
+    static final double RIGHT_GLYPH_GRABBR_CLOSED = .07;
 
     static final double COLOR_SENSOR_ARM_IN = 0;
-    static final double COLOR_SENSOR_ARM_OUT = .9;
+    static final double COLOR_SENSOR_ARM_OUT = .85;
 
-    static final double RELIC_GRABBER_INITIAL = .5;
-    static final double RELIC_ROTATOR_INITIAL = .5;
+    static final double RELIC_GRABBER_INITIAL = .9; //.26
+    static final double RELIC_ROTATOR_INITIAL = 0; //0
+
+    static final double RELIC_ROTATOR_PARALLEL = .26;
 
     //Autonomous Specific Configuration
     private double moveSpeedMin = .15;
@@ -100,10 +102,18 @@ abstract class OpModeBase extends LinearOpMode {
         //*************** Configure hardware devices ***************
 
         //Drive motors
-        motorLeft1.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorLeft2.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRight1.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorRight2.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        if(className.equals(RelicRecoveryAutonomous.class)) {
+            motorLeft1.setDirection(DcMotorSimple.Direction.FORWARD);
+            motorLeft2.setDirection(DcMotorSimple.Direction.FORWARD);
+            motorRight1.setDirection(DcMotorSimple.Direction.REVERSE);
+            motorRight2.setDirection(DcMotorSimple.Direction.REVERSE);
+        } else {
+            motorLeft1.setDirection(DcMotorSimple.Direction.REVERSE);
+            motorLeft2.setDirection(DcMotorSimple.Direction.REVERSE);
+            motorRight1.setDirection(DcMotorSimple.Direction.FORWARD);
+            motorRight2.setDirection(DcMotorSimple.Direction.FORWARD);
+        }
 
         motorLeft1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorLeft2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -124,10 +134,10 @@ abstract class OpModeBase extends LinearOpMode {
         //Other motors
         glyphLift.setDirection(DcMotorSimple.Direction.FORWARD);
         glyphLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        glyphLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        glyphLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //Encoder used to judge lift position to move servos in when lift is moving down
         glyphLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        relicLift.setDirection(DcMotorSimple.Direction.FORWARD);
+        relicLift.setDirection(DcMotorSimple.Direction.REVERSE);
         relicLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         relicLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         relicLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -244,7 +254,7 @@ abstract class OpModeBase extends LinearOpMode {
         if (direction.equals(OpModeBase.Direction.RIGHT)) degrees *= -1; //Negative degree for turning right
         double initialHeading = getIntegratedHeading();
         double targetHeading = initialHeading + degrees; //Turns are relative to current position
-        double robotSpeed = .1;
+        double robotSpeed = .3;
 
         //Change mode because turn() uses motor power and not motor position
         motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -257,17 +267,17 @@ abstract class OpModeBase extends LinearOpMode {
             double currentHeading = getIntegratedHeading();
 
             if(Math.abs(currentHeading - targetHeading) < 35 && Math.abs(currentHeading - targetHeading) > 15) { //Ramp down motor speed at end of turn, last 15 degrees
-                robotSpeed = Math.max(.1, robotSpeed - .08);
+                robotSpeed = Math.max(.2, robotSpeed - .08);
             } else if(Math.abs(currentHeading - targetHeading) < 5) { //Ramp down motor speed at end of turn, last 15 degrees
                 robotSpeed = .02;
             } else if(Math.abs(currentHeading - initialHeading) < 15) { //Ramp up motor speed at beginning of turn, 1st 15 degrees
                 robotSpeed = Math.min(maxSpeed, robotSpeed + .04);
             }
 
-            motorLeft1.setPower(degrees < 0 ? -robotSpeed : robotSpeed);
-            motorLeft2.setPower(degrees < 0 ? -robotSpeed : robotSpeed);
-            motorRight1.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
-            motorRight2.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
+            motorLeft1.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
+            motorLeft2.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
+            motorRight1.setPower(degrees < 0 ? -robotSpeed : robotSpeed);
+            motorRight2.setPower(degrees < 0 ? -robotSpeed : robotSpeed);
 
             telemetry.addData("Distance to turn: ", Math.abs(currentHeading - targetHeading));
             telemetry.addData("Target", targetHeading);
@@ -301,7 +311,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance) {
-        move(distance, moveSpeedMax, true, kP);
+        move(distance, moveSpeedMax, false, kP);
     }
 
     /**
@@ -345,7 +355,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance, double maxSpeed, boolean recurse, double kP) {
-        distance *= -1; //Necessary to deal with encoder issues
+        //distance *= -1; //Necessary to deal with encoder issues
         double distanceSign = Math.signum(distance); //Necessary for moving backwards
         distance *= ticksRatio;
         double motorInitial = motorLeft1.getCurrentPosition();
@@ -448,20 +458,44 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        for(int i = 0; i < railNumber; i++) { //Move until railNumber of cryptobox rails have been detected
-            double initialDistance = range.getDistance(DistanceUnit.CM);
+        motorLeft1.setPower(.1 * (isForward ? 1 : -1));
+        motorLeft2.setPower(.1 * (isForward ? 1 : -1));
+        motorRight1.setPower(.1 * (isForward ? 1 : -1));
+        motorRight2.setPower(.1 * (isForward ? 1 : -1));
 
-            while (Math.abs(range.getDistance(DistanceUnit.CM) - initialDistance) > 3) { //While sensor does not sense a close object (rail)
-                motorLeft1.setPower(.3 * (isForward ? 1 : -1));
-                motorLeft2.setPower(.3 * (isForward ? 1 : -1));
-                motorRight1.setPower(.3 * (isForward ? 1 : -1));
-                motorRight2.setPower(.3 * (isForward ? 1 : -1));
+        for(int i = 0; i < railNumber; i++) { //Move until railNumber of cryptobox rails have been detected
+            int initialEncoderPosition = motorLeft1.getCurrentPosition();
+            double previousDistance = range.getDistance(DistanceUnit.CM);
+
+            //Loop while sensor does not sense a close object (rail)
+            //Robot must move at least 500 encoder ticks
+            //Cryptobox rail is 10cm / 4in
+            while ((previousDistance - range.getDistance(DistanceUnit.CM) < 8  || Math.abs(motorLeft1.getCurrentPosition() - initialEncoderPosition) < 500) && opModeIsActive()) {
+                previousDistance = range.getDistance(DistanceUnit.CM);
+                telemetry.addData("Range", range.getDistance(DistanceUnit.CM));
+                telemetry.addData("Starting range", previousDistance);
+                telemetry.addData("Distance travelled", Math.abs(motorLeft1.getCurrentPosition() - initialEncoderPosition));
+                telemetry.addData("Rail", i);
+                telemetry.update();
             }
 
             //Continue moving past rail to "zero" distance sensor initial reading for subsequent rails
-            //Glyph intake is positioned for turning during final iteration of for loop
-            sleep(300);
+            //sleep(200);
+
+/*            motorLeft1.setPower(0);
+            motorLeft2.setPower(0);
+            motorRight1.setPower(0);
+            motorRight2.setPower(0);
+            sleep(5000);
+            motorLeft1.setPower(.15 * (isForward ? 1 : -1));
+            motorLeft2.setPower(.15 * (isForward ? 1 : -1));
+            motorRight1.setPower(.15 * (isForward ? 1 : -1));
+            motorRight2.setPower(.15 * (isForward ? 1 : -1));*/
+
+
         }
+
+        //sleep(850); //Glyph intake is positioned for turning during final iteration of for loop
 
         motorLeft1.setPower(0);
         motorLeft2.setPower(0);

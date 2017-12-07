@@ -46,12 +46,17 @@ public class DrivetrainTest extends LinearOpMode {
             motorLeft1.setPower(gamepad1.left_stick_y);
             motorLeft2.setPower(gamepad1.left_stick_y);
             motorRight1.setPower(gamepad1.right_stick_y);
-            motorLeft2.setPower(gamepad1.right_stick_y);
+            motorRight2.setPower(gamepad1.right_stick_y);
 
             telemetry.addData("Left 1 Current Position", motorLeft1.getCurrentPosition());
             telemetry.addData("Left 2 Current Position", motorLeft2.getCurrentPosition());
             telemetry.addData("Right 1 Current Position", motorRight1.getCurrentPosition());
             telemetry.addData("Right 2 Current Position", motorRight2.getCurrentPosition());
+
+            telemetry.addData("Left 1 Power", motorLeft1.getPower());
+            telemetry.addData("Left 2 Power", motorLeft2.getPower());
+            telemetry.addData("Right 1 Power", motorRight1.getPower());
+            telemetry.addData("Right 2 Power", motorRight2.getPower());
             telemetry.update();
         }
     }
