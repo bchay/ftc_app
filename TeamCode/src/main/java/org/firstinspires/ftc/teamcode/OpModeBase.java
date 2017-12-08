@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -57,7 +58,7 @@ abstract class OpModeBase extends LinearOpMode {
     int delay;
 
     //General Constants
-    static final double LEFT_GLYPH_GRABBR_OPEN = .4; //Left and right are defined looking at robot from the back
+    static final double LEFT_GLYPH_GRABBR_OPEN = .3; //Left and right are defined looking at robot from the back
     static final double LEFT_GLYPH_GRABBR_CLOSED = .77;
     static final double RIGHT_GLYPH_GRABBR_OPEN = .43;
     static final double RIGHT_GLYPH_GRABBR_CLOSED = .07;
@@ -73,10 +74,10 @@ abstract class OpModeBase extends LinearOpMode {
     //Autonomous Specific Configuration
     private double moveSpeedMin = .15;
     double moveSpeedMax = .90;
-    private double kP = 0.0;
+    private double kP = 0.0; //Current robot drives straight without gyrospope intervention
     private double ticksRatio = 3000 / 34.5; //Ticks / inch
 
-    private double turnSpeed = .4; //Speed is ramped up and down
+    double turnSpeed = .4; //Speed is ramped up and down
 
     enum Direction {
         LEFT, RIGHT;
@@ -179,8 +180,8 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     void initializeServos() {
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED);
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
+        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
+        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
 
         relicGrabber.setPosition(RELIC_GRABBER_INITIAL);
         relicRotator.setPosition(RELIC_ROTATOR_INITIAL);
@@ -210,13 +211,13 @@ abstract class OpModeBase extends LinearOpMode {
      *
      * @param degrees number of degrees to turn (positive)
      * @param direction Enum Direction.RIGHT or Direction.LEFT
-     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int)
+     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int, double)
      * @see ModernRoboticsI2cGyro
      * @see DcMotor
      */
     void turn(double degrees, OpModeBase.Direction direction) {
         if (!opModeIsActive()) return;
-        turn(degrees, direction, turnSpeed, 1);
+        turn(degrees, direction, turnSpeed, 1, 10000000);
     }
 
     /**
@@ -227,13 +228,13 @@ abstract class OpModeBase extends LinearOpMode {
      * @param degrees number of degrees to turn (positive)
      * @param direction Enum Direction.RIGHT or Direction.LEFT
      * @param maxSpeed the maximum speed of the robot
-     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int)
+     * @see OpModeBase#turn(double, OpModeBase.Direction, double, int, double)
      * @see ModernRoboticsI2cGyro
      * @see DcMotor
      */
     void turn(double degrees, OpModeBase.Direction direction, double maxSpeed) {
         if(!opModeIsActive()) return;
-        turn(degrees, direction, maxSpeed, 1);
+        turn(degrees, direction, maxSpeed, 1, 10000000);
     }
 
     /**
@@ -249,7 +250,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @see ModernRoboticsI2cGyro
      * @see DcMotor
      */
-    void turn(double degrees, OpModeBase.Direction direction, double maxSpeed, int count) {
+    void turn(double degrees, OpModeBase.Direction direction, double maxSpeed, int count, double timeout) {
         if (!opModeIsActive()) return;
         if (direction.equals(OpModeBase.Direction.RIGHT)) degrees *= -1; //Negative degree for turning right
         double initialHeading = getIntegratedHeading();
@@ -262,14 +263,17 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        ElapsedTime timer = new ElapsedTime();
+        timer.startTime();
+
         //While target has not been reached, stops robot if target is overshot
-        while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && opModeIsActive()) {
+        while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && timer.milliseconds() < timeout && opModeIsActive()) {
             double currentHeading = getIntegratedHeading();
 
             if(Math.abs(currentHeading - targetHeading) < 35 && Math.abs(currentHeading - targetHeading) > 15) { //Ramp down motor speed at end of turn, last 15 degrees
-                robotSpeed = Math.max(.2, robotSpeed - .08);
+                robotSpeed = Math.max(.3, robotSpeed - .08);
             } else if(Math.abs(currentHeading - targetHeading) < 5) { //Ramp down motor speed at end of turn, last 15 degrees
-                robotSpeed = .02;
+                robotSpeed = .1;
             } else if(Math.abs(currentHeading - initialHeading) < 15) { //Ramp up motor speed at beginning of turn, 1st 15 degrees
                 robotSpeed = Math.min(maxSpeed, robotSpeed + .04);
             }
@@ -299,45 +303,44 @@ abstract class OpModeBase extends LinearOpMode {
 
         if (Math.abs(getIntegratedHeading() - targetHeading) > 3 && count > 0) { //If the target was significantly overshot
             //Recurse to correct turn
-            turn(Math.abs(getIntegratedHeading() - targetHeading), direction.next(), .1, --count);
+            turn(Math.abs(getIntegratedHeading() - targetHeading), direction.next(), .2, --count, 2000);
         }
     }
 
     /**
-     * Calls move with a default of maxSpeed = moveSpeedMin, recurse = true, PID = true
+     * Calls move with a default of maxSpeed = moveSpeedMin, recurse = true, PID = true, timeout = 10000000
      * @param distance the distance in inches to move
-     * @see OpModeBase#move(double, double, boolean)
+     * @see OpModeBase#move(double, double, boolean, double, double)
      * @see DcMotor
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance) {
-        move(distance, moveSpeedMax, false, kP);
+        move(distance, moveSpeedMax, false, kP, 10000000);
     }
 
     /**
-     * Calls move with a default of recurse = true, PID = true
+     * Calls move with a default of recurse = true, PID = true, timeout = 10000000
      * @param distance the distance in inches to move
      * @param maxSpeed the maximum speed to run the robot
-     * @see OpModeBase#move(double, double, boolean, double)
+     * @see OpModeBase#move(double, double, boolean, double, double)
      * @see DcMotor
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance, double maxSpeed) {
-        move(distance, moveSpeedMax, true, kP);
+        move(distance, moveSpeedMax, true, kP, 10000000);
     }
 
     /**
-     * Calls move with a default of a = .8, b = .2
-     * a and b tuned for 48 inches
+     * Calls move with a default of maxSpeed = moveSpeedMax, kP = kP, timeout = 10000000
      * @param distance the distance in inches to move
      * @param maxSpeed the maximum speed to run the robot
      * @param recurse whether or not to call turn()
-     * @see OpModeBase#move(double, double, boolean, double)
+     * @see OpModeBase#move(double, double, boolean, double, double)
      * @see DcMotor
      * @see ModernRoboticsI2cGyro
      */
     void move(double distance, double maxSpeed, boolean recurse) {
-        move(distance, moveSpeedMax, recurse, kP);
+        move(distance, moveSpeedMax, recurse, kP, 10000000);
     }
 
     /**
@@ -354,7 +357,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @see DcMotor
      * @see ModernRoboticsI2cGyro
      */
-    void move(double distance, double maxSpeed, boolean recurse, double kP) {
+    void move(double distance, double maxSpeed, boolean recurse, double kP, double timeout) {
         //distance *= -1; //Necessary to deal with encoder issues
         double distanceSign = Math.signum(distance); //Necessary for moving backwards
         distance *= ticksRatio;
@@ -380,7 +383,10 @@ abstract class OpModeBase extends LinearOpMode {
         motorRight1.setPower(moveSpeed);
         motorRight2.setPower(moveSpeed);
 
-        while ((motorLeft1.isBusy() && motorLeft2.isBusy() && motorRight1.isBusy() && motorRight2.isBusy()) && opModeIsActive()) {
+        ElapsedTime timer = new ElapsedTime();
+        timer.startTime();
+
+        while ((motorLeft1.isBusy() && motorLeft2.isBusy() && motorRight1.isBusy() && motorRight2.isBusy()) && timer.milliseconds() < timeout && opModeIsActive()) {
             //Only one encoder target must be reached
             double turnError = initialHeading - getIntegratedHeading();
             double headingError = turnError * kP * distanceSign;
