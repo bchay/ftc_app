@@ -27,7 +27,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
  * Contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBase.
  */
 
-abstract class OpModeBase extends LinearOpMode {
+abstract public class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
     //Motors
@@ -456,5 +456,53 @@ abstract class OpModeBase extends LinearOpMode {
         previousHeading = currentHeading;
 
         return integratedHeading;
+    }
+
+
+    protected void moveUntilCryptoboxRail(boolean isForward, int railNumber) {
+        motorLeft1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeft2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRight2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorLeft1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorLeft2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorRight1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorRight2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        int initialEncoderPosition = motorLeft1.getCurrentPosition();
+
+        for(int i = 0; i < railNumber; i++) { //Move until railNumber of cryptobox rails have been detected
+            if(!opModeIsActive()) break; //For loop cannot have opModeIsActive() check
+            double previousDistance = range.getDistance(DistanceUnit.CM);
+
+            //Loop while sensor does not sense a close object (rail)
+            //Robot must move at least 500 encoder ticks
+            //Cryptobox rail is 10cm / 4in
+            while ((previousDistance - range.getDistance(DistanceUnit.CM)) < 4 && opModeIsActive()) {
+                double currentDistance = range.getDistance(DistanceUnit.CM);
+                telemetry.addData("Range", currentDistance);
+                telemetry.addData("Previous range", previousDistance);
+                telemetry.addData("Difference", (previousDistance - currentDistance));
+                telemetry.addData("Distance travelled", Math.abs(motorLeft1.getCurrentPosition() - initialEncoderPosition));
+                telemetry.addData("Rail", i);
+                telemetry.update();
+
+                System.out.println("Difference: " + (previousDistance - currentDistance));
+                System.out.println("Current: " + currentDistance + ", previous: " + previousDistance);
+                System.out.println("New: " + range.getDistance(DistanceUnit.CM));
+                System.out.println("");
+
+                //previousDistance = range.getDistance(DistanceUnit.CM);
+                //if(currentDistance - previousDistance < 4) previousDistance = currentDistance;
+                previousDistance = currentDistance;
+            }
+
+            telemetry.addData("Rail Reached", "");
+            telemetry.update();
+            sleep(5000);
+
+            if(!opModeIsActive()) break; //For loop cannot have opModeIsActive() check
+        }
     }
 }
