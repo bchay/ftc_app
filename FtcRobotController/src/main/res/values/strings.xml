@@ -67,8 +67,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <string name="packageName">@string/packageNameRobotController</string>
 
-    <!---*******************ADDED CODE*******************-->
+    <!-- ******************* ADDED CODE ******************* -->
     <string name="configure_autonomous_menu_item">Configure Autonomous</string>
+    <string name="alliance_color">Alliance Color</string>
+    <string name="starting_location">Starting Location</string>
+
     <string-array name="alliance_color_options">
         <item>Red</item>
         <item>Blue</item>

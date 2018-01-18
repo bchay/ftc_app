@@ -1,63 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView15"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="22dp"
-        android:layout_marginTop="20dp"
-        android:id="@+id/colorSpinner"
-        android:entries="@array/alliance_color_options"
-        />
-
-    <TextView
-        android:text="Alliance Color"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="42dp"
-        android:id="@+id/textView15"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:text="Delay"
+        <TextView
+            android:text="@string/alliance_color"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/alliance_color_text"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="15dp"
+            android:layout_marginStart="15dp" />
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="22dp"
+            android:layout_marginTop="20dp"
+            android:id="@+id/colorSpinner"
+            android:entries="@array/alliance_color_options"
+            />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="61dp"
-        android:id="@+id/textView16"
-        android:layout_below="@+id/colorSpinner"
-        android:layout_alignParentStart="true" />
+        android:layout_height="wrap_content">
 
-    <NumberPicker
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView16"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="25dp"
-        android:id="@+id/delay"
-        />
+        <TextView
+            android:text="@string/starting_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/alliance_location_text"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="15dp"
+        android:layout_marginStart="15dp" />
 
-    <TextView
-        android:text="Location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView17"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="103dp" />
-
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/textView17"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="28dp"
-        android:spinnerMode="dialog"
-        android:id="@+id/locationSpinner"
-        android:entries="@array/location" />
-</RelativeLayout>
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:spinnerMode="dialog"
+            android:id="@+id/locationSpinner"
+            android:entries="@array/location" />
+    </LinearLayout>
+</LinearLayout>

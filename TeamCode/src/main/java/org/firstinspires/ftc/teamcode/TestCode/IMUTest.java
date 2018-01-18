@@ -50,8 +50,14 @@ import java.util.Locale;
 @TeleOp(name = "IMU", group = "Test Code")
 public class IMUTest extends LinearOpMode {
     BNO055IMU imu;
-    double previousHeading = 0;
-    double heading = 0;
+    double previousHeadingX = 0;
+    double headingX = 0;
+
+    double previousHeadingY = 0;
+    double headingY = 0;
+
+    double previousHeadingZ = 0;
+    double headingZ = 0;
 
     @Override public void runOpMode() {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -60,7 +66,7 @@ public class IMUTest extends LinearOpMode {
         parameters.calibrationDataFile = "BNO055IMUCalibration.json";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu 1");
         imu.initialize(parameters);
 
         waitForStart();
@@ -68,25 +74,52 @@ public class IMUTest extends LinearOpMode {
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         while (opModeIsActive()) {
-            telemetry.addData("Heading extrinsic", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
-            telemetry.addData("Heading intrinsic", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle);
-
-            telemetry.addData("Integrated Heading", getIntegratedHeading());
+            telemetry.addData("Integrated X Heading", getIntegratedXHeading());
+            telemetry.addData("Integrated Y Heading", getIntegratedYHeading());
+            telemetry.addData("Integrated Z Heading", getIntegratedZHeading());
             telemetry.update();
         }
     }
 
-    public double getIntegratedHeading() {
-        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
-        double deltaHeading = currentHeading - previousHeading;
+    public double getIntegratedXHeading() {
+        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).thirdAngle;
+        double deltaHeading = currentHeading - previousHeadingX;
 
         if (deltaHeading < -180) deltaHeading += 360;
         else if (deltaHeading >= 180) deltaHeading -= 360;
 
-        heading += deltaHeading;
+        headingX += deltaHeading;
 
-        previousHeading = currentHeading;
+        previousHeadingX = currentHeading;
 
-        return heading;
+        return headingX;
+    }
+
+    public double getIntegratedYHeading() {
+        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).secondAngle;
+        double deltaHeading = currentHeading - previousHeadingY;
+
+        if (deltaHeading < -180) deltaHeading += 360;
+        else if (deltaHeading >= 180) deltaHeading -= 360;
+
+        headingY += deltaHeading;
+
+        previousHeadingY = currentHeading;
+
+        return headingY;
+    }
+
+    public double getIntegratedZHeading() {
+        double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+        double deltaHeading = currentHeading - previousHeadingZ;
+
+        if (deltaHeading < -180) deltaHeading += 360;
+        else if (deltaHeading >= 180) deltaHeading -= 360;
+
+        headingZ += deltaHeading;
+
+        previousHeadingZ = currentHeading;
+
+        return headingZ;
     }
 }

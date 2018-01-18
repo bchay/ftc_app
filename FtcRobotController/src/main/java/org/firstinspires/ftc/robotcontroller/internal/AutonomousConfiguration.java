@@ -13,12 +13,11 @@ import android.widget.Toast;
 import com.qualcomm.ftcrobotcontroller.R;
 
 
-public class AutonomousConfiguration extends Activity implements NumberPicker.OnValueChangeListener, Spinner.OnItemSelectedListener {
+public class AutonomousConfiguration extends Activity implements Spinner.OnItemSelectedListener {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     Spinner allianceColor;
     Spinner location;
-    NumberPicker delay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,11 +25,9 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
         setContentView(R.layout.autonomous_configuration);
 
         sharedPreferences =  PreferenceManager.getDefaultSharedPreferences(this);
-        editor = sharedPreferences.edit();
 
-        String savedColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
-        String savedLocation = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "null");
-        int savedDelay = sharedPreferences.getInt("com.qualcomm.ftcrobotcontroller.Autonomous.Delay", 0);
+        String savedColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "Red");
+        String savedLocation = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "Center");
 
         allianceColor = (Spinner) findViewById(R.id.colorSpinner);
         allianceColor.setOnItemSelectedListener(this);
@@ -38,31 +35,22 @@ public class AutonomousConfiguration extends Activity implements NumberPicker.On
 
         location = (Spinner) findViewById(R.id.locationSpinner);
         location.setOnItemSelectedListener(this);
-        location.setSelection(savedLocation.equals("Close") ? 0 : 1, true);
-
-        delay = (NumberPicker) findViewById(R.id.delay);
-        delay.setOnValueChangedListener(this);
-        delay.setMinValue(0);
-        delay.setMaxValue(30);
-        delay.setValue(savedDelay);
+        location.setSelection(savedLocation.equals("Center") ? 0 : 1, true);
     }
 
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+        editor = sharedPreferences.edit();
         Spinner spinner = (Spinner) parentView;
+
         if(spinner.getId() == R.id.locationSpinner) {
             editor.putString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", parentView.getItemAtPosition(position).toString());
         } else if(spinner.getId() == R.id.colorSpinner) {
             editor.putString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", parentView.getItemAtPosition(position).toString());
         }
-        editor.commit();
+        editor.apply();
     }
 
+    //Intentionally left empty, necessary to override because class implements Spinner.OnItemSelectedListener
     public void onNothingSelected(AdapterView<?> parentView) {
-
-    }
-
-    public void onValueChange(NumberPicker numberPicker, int oldVal, int newVal) {
-        editor.putInt("com.qualcomm.ftcrobotcontroller.Autonomous.Delay", newVal);
-        editor.commit();
     }
 }

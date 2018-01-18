@@ -21,7 +21,7 @@ public class ColorSensorTest extends LinearOpMode {
 
             Color.RGBToHSV(colorSensor.red() * 255, colorSensor.green() * 255, colorSensor.blue() * 255, hsv);
 
-            if(hsv[2] < 20) telemetry.addData("Color", "Unknown");
+            if(hsv[2] < 10) telemetry.addData("Color", "Unknown");
             else if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) telemetry.addData("Color", "Red");
             else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) telemetry.addData("Color", "Blue");
             else telemetry.addData("Color", "Unknown");
@@ -29,6 +29,10 @@ public class ColorSensorTest extends LinearOpMode {
             telemetry.addData("Hue", hsv[0]);
             telemetry.addData("Saturation", hsv[1]);
             telemetry.addData("Value", hsv[2]);
+
+            telemetry.addData("Red", colorSensor.red());
+            telemetry.addData("Green", colorSensor.blue());
+            telemetry.addData("Blue", colorSensor.green());
 
             telemetry.update();
         }

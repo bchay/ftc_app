@@ -4,12 +4,10 @@ import android.graphics.Color;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-
-import java.nio.channels.ClosedByInterruptException;
 
 @Autonomous(name = "Relic Recovery Autonomous")
 public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a LinearOpMode so it can extend the same base class as autonomous
@@ -24,30 +22,32 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
 
         while(!isStarted() && !isStopRequested()) { //Display distance telemetry for robot alignment
             telemetry.addData("Ready to start the program.", "");
-            telemetry.addData("Distance", range.getDistance(DistanceUnit.CM));
             telemetry.addData("Alliance color", allianceColor);
             telemetry.addData("Location", location);
-            telemetry.addData("Delay", delay);
-            telemetry.addData("Encoders", motorLeft1.getCurrentPosition() + motorLeft2.getCurrentPosition() + motorRight1.getCurrentPosition() + motorRight2.getCurrentPosition());
+            telemetry.addData("Encoders", motorLeftFront.getCurrentPosition() + motorLeftBack.getCurrentPosition() + motorRightFront.getCurrentPosition() + motorRightBack.getCurrentPosition());
             telemetry.addData("Heading", getIntegratedHeading());
             telemetry.addData("VuMark", vuMarkReader.getVuMark());
             telemetry.update();
         }
 
-        //No need for waitForStart because of while(!isStarted()) loop
 
-        //Grab preloaded glyph
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED);
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
-        sleep(800); //Give servos time to move down
-        glyphLift.setPower(-1); //Move lift up
+        colorSensorArm.setPosition(.73); //Vertical
+        sleep(1300);
+        colorSensorRotator.setPosition(.444); //Centered forward
         sleep(500);
-        glyphLift.setPower(0);
-
-
-        arm.setPosition(COLOR_SENSOR_ARM_OUT);
+        colorSensorArm.setPosition(.5); //Move down partially
+        sleep(800);
+        colorSensorRotator.setPosition(.788); //Move to right
+        sleep(1000);
+        colorSensorArm.setPosition(.185); //Move down
+        sleep(1000);
+        colorSensorRotator.setPosition(.47); //Move to be centered between jewels
+        sleep(800);
+        colorSensorArm.setPosition(.08); //Move down so color sensor is facing left jewel
         sleep(800);
 
+
+        //Knock off jewel of opposing alliance color
         time.reset();
         while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
             telemetry.addData("Color", "Unknown");
@@ -55,20 +55,50 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         }
 
         //Color sensor reads left jewel
+        telemetry.addData("Color", getColor());
+        telemetry.update();
 
-        if(getColor().equals(allianceColor)) {
-            move(-4.5);
-            arm.setPosition(COLOR_SENSOR_ARM_IN);
-            move(4.5);
-        } else if(!getColor().equals("Unknown")) { //Color is still detected
-            move(4.5);
-            arm.setPosition(COLOR_SENSOR_ARM_IN);
-            move(-4.5);
-        } else { //Color could not be detected; move arm in to avoid it hitting the wall
-            arm.setPosition(COLOR_SENSOR_ARM_IN);
-            sleep(1000);
+        if(!getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
+            colorSensorRotator.setPosition(.62); //Move to hit left jewel
+            sleep(600);
+
+            //Center rotator back between jewels
+            while(Math.abs(colorSensorRotator.getPosition() - .467) > .05 && opModeIsActive()) {
+                colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .003, .467, 1));
+                sleep(10);
+            }
+
+            colorSensorRotator.setPosition(.467);
+        } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
+            colorSensorRotator.setPosition(0); //Move to hit right jewel
+            sleep(600);
+
+            //Center rotator
+            while(Math.abs(colorSensorRotator.getPosition() - .467) > .05 && opModeIsActive()) {
+                colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .003, 0, .467));
+                sleep(10);
+            }
+
+            colorSensorRotator.setPosition(.467);
         }
 
+
+        sleep(500);
+        colorSensorArm.setPosition(.185); //Move arm up slightly
+        sleep(500);
+        colorSensorRotator.setPosition(.788); //Move arm right
+        sleep(500);
+        colorSensorArm.setPosition(.467); //Move arm up
+        sleep(500);
+        colorSensorRotator.setPosition(.444); //Centered forward
+        sleep(500);
+        colorSensorArm.setPosition(.73); //Move arm vertical
+        sleep(500);
+
+
+
+
+        //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();
 
         time.reset();
@@ -78,46 +108,224 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
             telemetry.update();
         }
 
-        //Default to close cryptobox column
+        //Default to close cryptobox column if VuMark is not detected
         if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = allianceColor.equals("Blue") ? RelicRecoveryVuMark.LEFT : RelicRecoveryVuMark.RIGHT;
 
-        if(location.equals("Side")) {
-            move((allianceColor.equals("Blue") ? -1 : 1) * 26);
-            turn(90, allianceColor.equals("Blue") ? Direction.RIGHT : Direction.LEFT);
+        if(location.equals("Side") && allianceColor.equals("Red")) {
+            move(28, Direction.FORWARD);
+            turn(180, Direction.LEFT, .95); //Reverse robot
 
-            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) move(allianceColor.equals("Blue") ? -17 : 3, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) move(allianceColor.equals("Blue") ? -11 : 11, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) move(allianceColor.equals("Blue") ? -3 : 20, moveSpeedMax, false);
+            if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+                move(19.5, Direction.RIGHT); //Strafe to left column
+                move(1, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox so that glyph can fall in
 
-            turn(90, allianceColor.equals("Blue") ? Direction.RIGHT : Direction.LEFT);
-        } else {
-            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) move(allianceColor.equals("Blue") ? -46 : 30, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) move(allianceColor.equals("Blue") ? -37.5 : 37.5, moveSpeedMax, false);
-            else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) move(allianceColor.equals("Blue") ? -30 : 46, moveSpeedMax, false);
 
-            turn(90, Direction.RIGHT, turnSpeed - .1, 0, 5000);
+                turn(25, Direction.LEFT);
+                move(2, Direction.FORWARD, moveSpeedMax, false, 1000); //Move backward
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+                move(9, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again to push it into the cryptobox
+                turn(10, vuMark.equals(RelicRecoveryVuMark.LEFT) ? Direction.RIGHT : Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
+                move(11.5, Direction.RIGHT);
+                move(1, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox so that glyph can fall in
+
+                turn(25, Direction.LEFT);
+                move(2, Direction.FORWARD, moveSpeedMax, false, 1000); //Move backward
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+                move(9, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again to push it into the cryptobox
+                turn(10, Direction.RIGHT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+
+            } else if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+                move(2, Direction.RIGHT, moveSpeedMax, false, 1000); //Strafe towards cryptobox
+                move(1.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Strafe towards center of cryptobox
+
+                turn(23, Direction.LEFT);
+                move(2, Direction.FORWARD, moveSpeedMax, false, 1000); //Move backward
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            }
+        } else if(location.equals("Side") && allianceColor.equals("Blue")) {
+            move(31, Direction.BACKWARD);
+
+            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+                move(14, Direction.LEFT);
+
+
+                turn(25, Direction.RIGHT);
+                move(1, Direction.FORWARD, moveSpeedMax, false, 1000); //Back away from cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, vuMark.equals(RelicRecoveryVuMark.LEFT) ? Direction.RIGHT : Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
+                move(6, Direction.LEFT);
+
+
+                turn(25, Direction.RIGHT);
+                move(1, Direction.FORWARD, moveSpeedMax, false, 1000); //Back away from cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, vuMark.equals(RelicRecoveryVuMark.LEFT) ? Direction.RIGHT : Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+                turn(25, Direction.RIGHT);
+                move(2.5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back away from cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            }
+        } else if(location.equals("Center") && allianceColor.equals("Red")) {
+            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+                move(24, Direction.FORWARD);
+
+                turn(105, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+                move(2, Direction.BACKWARD, moveSpeedMax, false, 1000);
+
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.RIGHT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
+                move(26, Direction.FORWARD);
+
+                turn(120, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+                move(2, Direction.BACKWARD, moveSpeedMax, false, 1000);
+
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.RIGHT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+                move(32.5, Direction.FORWARD);
+
+                turn(125, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+                move(4, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move closer to cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.RIGHT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            }
+
+        } else if(location.equals("Center") && allianceColor.equals("Blue")) {
+            if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+                move(35, Direction.BACKWARD);
+
+                turn(45, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+//              move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+//              move(8, Direction.FORWARD, moveSpeedMax, false, 1000);
+
+            } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
+                move(23, Direction.BACKWARD);
+
+                turn(45, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+                move(4, Direction.BACKWARD, moveSpeedMax, false, 1000);
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.LEFT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+                //move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.FORWARD, moveSpeedMax, false, 1000);
+
+            } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+                move(35, Direction.BACKWARD);
+                turn(115, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+
+                //Deposit glyph
+                glyphStopper.setPosition(GLYPH_STOPPER_UP);
+                sleep(500);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                sleep(1000);
+                move(2, Direction.FORWARD, moveSpeedMax, false, 1000);
+                move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                turn(15, Direction.RIGHT, turnSpeed, 0, 1000);
+                move(5, Direction.FORWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.BACKWARD, moveSpeedMax, false, 1000);
+                //move(8, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up to avoid touching the glyph
+            }
         }
 
-        move(8, moveSpeedMax, false, 0, 2000); //Move forward into cryptobox
-
-        glyphLift.setPower(1); //Move lift down
-        sleep(400);
-        glyphLift.setPower(0);
-
-        sleep(200);
-
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_OPEN);
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_OPEN);
-        sleep(1200);
-
-        move(-5, moveSpeedMax);
-
-        leftGlyphGrabber.setPosition(LEFT_GLYPH_GRABBR_CLOSED); //Move servos into closed position before driving into glyph
-        rightGlyphGrabber.setPosition(RIGHT_GLYPH_GRABBR_CLOSED);
+        glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
         sleep(1000);
+        glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
+        sleep(500);
 
-        move(7, moveSpeedMax, false, 0, 2000); //Timeout because robot may hit crptobox
-        move(-8, moveSpeedMax);
     }
-
 }
