@@ -31,20 +31,12 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         }
 
 
-        colorSensorArm.setPosition(.73); //Vertical
-        sleep(1300);
-        colorSensorRotator.setPosition(.444); //Centered forward
+        colorSensorArm.setPosition(.197); //Slightly down
         sleep(500);
-        colorSensorArm.setPosition(.5); //Move down partially
-        sleep(800);
-        colorSensorRotator.setPosition(.788); //Move to right
-        sleep(1000);
-        colorSensorArm.setPosition(.185); //Move down
-        sleep(1000);
-        colorSensorRotator.setPosition(.47); //Move to be centered between jewels
-        sleep(800);
-        colorSensorArm.setPosition(.08); //Move down so color sensor is facing left jewel
-        sleep(800);
+        colorSensorRotator.setPosition(.511); //Centered forward
+        sleep(500);
+        colorSensorArm.setPosition(.118); //Move down next to right jewel
+        sleep(500);
 
 
         //Knock off jewel of opposing alliance color
@@ -59,45 +51,22 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         telemetry.update();
 
         if(!getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
-            colorSensorRotator.setPosition(.62); //Move to hit left jewel
-            sleep(600);
-
-            //Center rotator back between jewels
-            while(Math.abs(colorSensorRotator.getPosition() - .467) > .05 && opModeIsActive()) {
-                colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .003, .467, 1));
-                sleep(10);
-            }
-
-            colorSensorRotator.setPosition(.467);
+            colorSensorRotator.setPosition(.806); //Move to hit left jewel
+            sleep(500);
         } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
-            colorSensorRotator.setPosition(0); //Move to hit right jewel
-            sleep(600);
-
-            //Center rotator
-            while(Math.abs(colorSensorRotator.getPosition() - .467) > .05 && opModeIsActive()) {
-                colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .003, 0, .467));
-                sleep(10);
-            }
-
-            colorSensorRotator.setPosition(.467);
+            colorSensorRotator.setPosition(.139); //Move to hit right jewel
+            sleep(500);
         }
 
-
+        colorSensorArm.setPosition(.197); //Move arm up slightly
         sleep(500);
-        colorSensorArm.setPosition(.185); //Move arm up slightly
+        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL); //Move arm right
         sleep(500);
-        colorSensorRotator.setPosition(.788); //Move arm right
-        sleep(500);
-        colorSensorArm.setPosition(.467); //Move arm up
-        sleep(500);
-        colorSensorRotator.setPosition(.444); //Centered forward
-        sleep(500);
-        colorSensorArm.setPosition(.73); //Move arm vertical
-        sleep(500);
+        colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL); //Move arm up
+        sleep(500); //No delay, time will be spent reading the VuMark
 
 
-
-
+        /*
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();
 
@@ -326,6 +295,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         sleep(1000);
         glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
         sleep(500);
+        */
 
     }
 }

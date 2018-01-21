@@ -59,18 +59,20 @@ abstract public class OpModeBase extends LinearOpMode {
     String location;
 
     //General Constants
-    static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .73; //.75
-    static final double COLOR_ROTATOR_INITIAL_TELEOP = .444; //.94
+    static final double COLOR_SENSOR_ARM_INITIAL = .758;
+    static final double COLOR_ROTATOR_INITIAL = .906;
+    static final double COLOR_ROTATOR_INITIAL_TELEOP = .480;
 
-    static final double GLYPH_FLIPPER_FLAT = .134;
-    static final double GLYPH_FLIPPER_PARTIALLY_UP = .4;
-    static final double GLYPH_FLIPPER_VERTICAL = 1;
+    static final double GLYPH_FLIPPER_FLAT = .29;
+    static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
+    static final double GLYPH_FLIPPER_VERTICAL = .73;
 
     static final double GLYPH_STOPPER_DOWN = 1;
     static final double GLYPH_STOPPER_UP = .536;
 
-    static final double GLYPH_LEVER_DOWN = .3;
-    static final double GLYPH_LEVER_UP = .85;
+    static final double GLYPH_LEVER_DOWN_FLIPPER = 1;
+    static final double GLYPH_LEVER_UP = .608;
+    static final double GLYPH_LEVER_DOWN_INTAKE = .065;
 
     //Autonomous Specific Configuration
     private double moveSpeedMin = .2;
@@ -173,14 +175,16 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     void initializeServos(Class<?> className) {
+        colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
+
+        if(className.equals(RelicRecoveryTeleop.class)) colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
+        else colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+
         glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
         glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
-        glyphLever.setPosition(GLYPH_LEVER_DOWN);
+        glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
 
-        if (className.equals(RelicRecoveryTeleop.class)) {
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
-        }
+
     }
 
     private void initializeIMU() {
