@@ -174,7 +174,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(25, Direction.FORWARD);
 
                 turn(105, Direction.LEFT); //Turn so that back of robot is facing cryptobox
-                move(3, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
+                move(2, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
 
 
                 //Deposit glyph
@@ -188,78 +188,21 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(29, Direction.FORWARD);
 
                 turn(120, Direction.LEFT, .8); //Turn so that back of robot is facing cryptobox
-                move(2.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox
+                move(3.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox
 
                 //Deposit glyph
                 glyphStopper.setPosition(GLYPH_STOPPER_UP);
                 sleep(400);
                 glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
                 sleep(600);
+
                 move(4.5, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
-
-                glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT); //Move flipper up
-                sleep(500);
-                glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
-
-                colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
-                colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
-                sleep(500);
-
-                turn(20, Direction.RIGHT, .8); //Turn so that intake is facing glyph pit
-
-                moveIntake.setPower(-1); //Move intake down
-                sleep(1500);
-                moveIntake.setPower(0);
-
-                leftIntake.setPower(1); //Suck in glyphs
-                rightIntake.setPower(-1);
-                move(23, Direction.FORWARD, moveSpeedMax, false); //Move towards glyph pile
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for(int i = 0; i < 2; i++) {
-                            //Bounce glyph to align it with the cryptobox
-                            glyphLever.setPosition(GLYPH_LEVER_UP);
-                            glyphFlipper.setPosition(GLYPH_FLIPPER_PARTIALLY_UP);
-                            sleep(300);
-                            glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
-                            glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
-                            sleep(300);
-
-                            glyphLever.setPosition(GLYPH_LEVER_UP);
-                            sleep(500);
-                            glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
-                            sleep(500);
-                        }
-                    }
-                }).start();
-
-                //Deposit extra glyphs into cryptobox
-                move(25, Direction.BACKWARD);
-
-                leftIntake.setPower(0);
-                rightIntake.setPower(0);
-
-                sleep(500);
-
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
-                sleep(800);
-                move(7, Direction.FORWARD); //Move away from glyphs
-
-                glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
-                sleep(800);
-
-                move(12, Direction.BACKWARD, 1); //Push extra glyphs into cryptobox
-                move(2, Direction.FORWARD, 1); //Move away from glyphs
             } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
                 sleep(1000);
                 move(34.5, Direction.FORWARD);
 
                 turn(125, Direction.LEFT); //Turn so that back of robot is facing cryptobox
-                move(4, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move closer to cryptobox
+                move(5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move closer to cryptobox
 
                 //Deposit glyph
                 glyphStopper.setPosition(GLYPH_STOPPER_UP);
