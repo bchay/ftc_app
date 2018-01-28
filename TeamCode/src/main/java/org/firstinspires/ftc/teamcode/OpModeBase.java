@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -50,7 +51,7 @@ abstract public class OpModeBase extends LinearOpMode {
 
     //Sensors
     private BNO055IMU imu;
-    ColorSensor colorSensor; //Color sensor is on right side of the arm facing down towards the jewel
+    ColorSensor colorSensor; //Color sensor is pointing towards right jewel
 
     //SharedPreferences
     private SharedPreferences sharedPreferences;
@@ -67,12 +68,12 @@ abstract public class OpModeBase extends LinearOpMode {
     static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
     static final double GLYPH_FLIPPER_VERTICAL = .73;
 
-    static final double GLYPH_STOPPER_DOWN = 1;
-    static final double GLYPH_STOPPER_UP = .536;
+    static final double GLYPH_STOPPER_DOWN = .365;
+    static final double GLYPH_STOPPER_UP = .584;
 
     static final double GLYPH_LEVER_DOWN_FLIPPER = 1;
     static final double GLYPH_LEVER_UP = .608;
-    static final double GLYPH_LEVER_DOWN_INTAKE = .065;
+    static final double GLYPH_LEVER_DOWN_INTAKE = .075;
 
     //Autonomous Specific Configuration
     private double moveSpeedMin = .2;
@@ -177,14 +178,17 @@ abstract public class OpModeBase extends LinearOpMode {
     void initializeServos(Class<?> className) {
         colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
 
-        if(className.equals(RelicRecoveryTeleop.class)) colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
-        else colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        if(className.equals(RelicRecoveryTeleop.class)) {
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
+            sleep(300);
+            colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
+        } else {
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        }
 
         glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
         glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
         glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
-
-
     }
 
     private void initializeIMU() {
@@ -264,7 +268,7 @@ abstract public class OpModeBase extends LinearOpMode {
         timer.startTime();
 
         //While target has not been reached, stops robot if target is overshot
-        while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && timer.milliseconds() < timeout && opModeIsActive()) {
+        while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && (timer.milliseconds() < timeout) && opModeIsActive()) {
             double currentHeading = getIntegratedHeading();
 
             double robotSpeed = Range.clip(maxSpeed * (Math.abs(targetHeading - getIntegratedHeading()) / Math.abs(degrees)), .2, maxSpeed);
@@ -340,7 +344,7 @@ abstract public class OpModeBase extends LinearOpMode {
 
     /**
      * Moves the robot a specified number of inches.
-     * The speed of the robot decreases in a sigmoid fashion as the target is approached.
+     * The speed of the robot is defined using a trapazoidal motion profile.
      * It uses the gyroscope to keep the movement straight.
      * It will call turn() at the end to correct heading error.
      *
@@ -430,6 +434,7 @@ abstract public class OpModeBase extends LinearOpMode {
 
     /**
      * Determines the color read by the color sensor.
+     * This method converts the RGB values returned from the REV Color / Distance sensor to the HSV color space.
      *
      * @return color: "Red", "Blue", "Unknown"
      */
@@ -449,10 +454,19 @@ abstract public class OpModeBase extends LinearOpMode {
         double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).secondAngle;
         double deltaHeading = currentHeading - previousHeading;
 
+        Log.i("HEADING", "Initial Heading: " + currentHeading);
+        Log.i("HEADING", "Previous Heading: " + previousHeading);
+        Log.i("HEADING", "deltaHeading Heading: " + deltaHeading);
+
         if (deltaHeading < -180) deltaHeading += 360;
         else if (deltaHeading >= 180) deltaHeading -= 360;
 
         integratedHeading += deltaHeading;
+
+        Log.i("HEADING", "Second deltaHeading Heading: " + deltaHeading);
+        Log.i("HEADING", "Integrated Heading: " + integratedHeading);
+        Log.i("HEADING", "---------------------");
+
         previousHeading = currentHeading;
 
         return integratedHeading;

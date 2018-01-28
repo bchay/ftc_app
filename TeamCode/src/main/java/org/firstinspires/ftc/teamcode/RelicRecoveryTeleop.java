@@ -17,7 +17,6 @@ Gamepad 1:
     Right Joystick: Left and right turns robot about Z axis
 
     Y: Toggle drivetrain reverse
-    X: Press and hold for slow mode
 
     Right Trigger: Moves glyph stopper to up position. After 1 second delay, moves flipper up
         If not pressed, glyph flipper moves down. After 1 second, glyph stopper moves down as well.
@@ -48,20 +47,10 @@ public class RelicRecoveryTeleop extends OpModeBase {
 
     private ArrayList<TaskData> pendingTasks = new ArrayList<>();
 
-    /*
-    Necessary so that a TaskData object can be added to pendingTasks within the runTask() method.
-    runTask() is called within a loop, so you cannot append an element to the end of pendingTasks within the while loop.
-    Instead, the contents of tasksToAdd are appended to the pendingTasks arrayList after the iteration is finished.
-    Then, the tasksToAdd list is cleared.
-    */
-    private ArrayList<TaskData> tasksToAdd = new ArrayList<>();
-
     public void runOpMode() {
         super.runOpMode(RelicRecoveryTeleop.class);
 
-        previousLoopValues.put("gamepad1.b", false);
         previousLoopValues.put("gamepad1.y", false);
-        previousLoopValues.put("gamepad1.x", false);
         previousLoopValues.put("gamepad1.right_trigger", false);
 
         telemetry.addData("Ready to start program", "");
@@ -101,27 +90,35 @@ public class RelicRecoveryTeleop extends OpModeBase {
             if(gamepad1.right_trigger > .5 && !previousLoopValues.get("gamepad1.right_trigger")) { //First time trigger is pressed
                 glyphStopper.setPosition(GLYPH_STOPPER_UP); //Move stopper up
 
+                //Add task
                 pendingTasks.add(new TaskData(500, new ThreadTaskInterface() {
                     @Override
                     public void runTask() {
                         if(gamepad1.right_trigger > .5) {
                             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
-
-                            tasksToAdd.add(new TaskData(800, new ThreadTaskInterface() {
-                                @Override
-                                public void runTask() {
-                                    //Stop glyph from getting stuck below glyph flipper
-                                    if(gamepad1.right_trigger > .5) glyphLever.setPosition(GLYPH_LEVER_DOWN_FLIPPER);
-                                }
-                            }));
                         }
+                    }
+                }));
+
+                //Glyph lever moves up after the flipper does to stop glyphs from becoming stuck underneath the flipper.
+                pendingTasks.add(new TaskData(1300, new ThreadTaskInterface() {
+                    @Override
+                    public void runTask() {
+                        //Stop glyph from getting stuck below glyph flipper
+                        if(gamepad1.right_trigger > .5) glyphLever.setPosition(GLYPH_LEVER_DOWN_FLIPPER);
                     }
                 }));
             } else if(gamepad1.right_trigger < .5 && previousLoopValues.get("gamepad1.right_trigger")) { //First time trigger is not pressed
                 glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
 
-                pendingTasks.add(new TaskData(800, new ThreadTaskInterface() {
+                pendingTasks.add(new TaskData(500, new ThreadTaskInterface() {
+                    @Override
+                    public void runTask() {
+                        if(gamepad1.right_trigger < .5) glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
+                    }
+                }));
+
+                pendingTasks.add(new TaskData(900, new ThreadTaskInterface() {
                     @Override
                     public void runTask() {
                         if(gamepad1.right_trigger < .5) glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
@@ -146,7 +143,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
             if (gamepad2.left_bumper) {
                 glyphFlipper.setPosition(GLYPH_FLIPPER_PARTIALLY_UP);
             } else if(gamepad1.right_trigger < .5 && !gamepad1.right_bumper) { //Do not override gamepad 1 flipper movement
-                glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
+                glyphFlipper.setPosition(Range.clip(glyphFlipper.getPosition() - .01, 0, GLYPH_FLIPPER_FLAT));
             }
 
             /*
@@ -164,12 +161,11 @@ public class RelicRecoveryTeleop extends OpModeBase {
             else glyphLift.setPower(0);
 
             //Y, A control moveIntake
-            if(gamepad2.y) moveIntake.setPower(1);
-            else if(gamepad2.a) moveIntake.setPower(-1);
+            if(gamepad2.y) moveIntake.setPower(1); //Move intake up
+            else if(gamepad2.a) moveIntake.setPower(-1); //Move intake down
             else moveIntake.setPower(0);
 
             //Add gamepad values to HashMap - Used for toggles
-
             previousLoopValues.put("gamepad1.y", gamepad1.y);
             previousLoopValues.put("gamepad1.right_trigger", (gamepad1.right_trigger > .5));
 
@@ -187,6 +183,9 @@ public class RelicRecoveryTeleop extends OpModeBase {
             telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
             telemetry.update();
         }
+
+        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        sleep(500);
     }
 
     private class TaskData {
@@ -216,8 +215,5 @@ public class RelicRecoveryTeleop extends OpModeBase {
                 iterator.remove();
             }
         }
-
-        pendingTasks.addAll(tasksToAdd);
-        tasksToAdd.clear();
     }
 }
