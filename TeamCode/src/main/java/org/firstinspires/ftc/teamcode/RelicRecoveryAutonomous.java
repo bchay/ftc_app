@@ -31,11 +31,11 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         }
 
 
-        colorSensorArm.setPosition(.197); //Slightly down
+        colorSensorArm.setPosition(.25); //Slightly down
         sleep(500);
-        colorSensorRotator.setPosition(.474); //Center arm between jewels
+        colorSensorRotator.setPosition(.532); //Center arm between jewels
         sleep(500);
-        colorSensorArm.setPosition(.108); //Move down next to right jewel
+        colorSensorArm.setPosition(.115); //Move down next to right jewel
         sleep(500);
 
 
@@ -64,12 +64,10 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         }
 
         //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-        colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL); //Move arm up
-        sleep(700);
-        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move arm forward
-        sleep(2000);
+        colorSensorArm.setPosition(1); //Move arm up
+        sleep(3500);
         colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
-        sleep(200);
+        sleep(500);
 
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();

@@ -169,6 +169,13 @@ public class RelicRecoveryTeleop extends OpModeBase {
             previousLoopValues.put("gamepad1.y", gamepad1.y);
             previousLoopValues.put("gamepad1.right_trigger", (gamepad1.right_trigger > .5));
 
+            //Control color sensor arm
+            if(gamepad2.dpad_up) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() + .03, 0, 1));
+            if(gamepad2.dpad_down) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() - .03, 0, 1));
+
+            if(gamepad2.dpad_left) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .03, 0, 1));
+            if(gamepad2.dpad_right) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .03, 0, 1));
+
             executeThreads();
 
             //Telemetry statements
@@ -180,6 +187,8 @@ public class RelicRecoveryTeleop extends OpModeBase {
             telemetry.addData("Max speed - X", maxSpeed);
             telemetry.addData("Drivetrain direction - Y", drivetrainReverse ? "Reverse" : "Forward");
             telemetry.addData("Glyph Lift Position", glyphLift.getCurrentPosition());
+            telemetry.addData("Color Sensor Arm", colorSensorArm.getPosition());
+            telemetry.addData("Color Sensor Rotator", colorSensorRotator.getPosition());
             telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
             telemetry.update();
         }
