@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
@@ -38,7 +39,7 @@ Gamepad 2:
     Y: Move intake down
     A: Move intake up
  */
-
+@Disabled
 @TeleOp(name = "Relic Recovery Teleop")
 public class RelicRecoveryTeleop extends OpModeBase {
     private HashMap<String, Boolean> previousLoopValues = new HashMap<>();

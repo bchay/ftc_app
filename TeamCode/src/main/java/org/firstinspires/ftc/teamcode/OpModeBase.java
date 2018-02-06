@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -454,18 +453,10 @@ abstract public class OpModeBase extends LinearOpMode {
         double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).secondAngle;
         double deltaHeading = currentHeading - previousHeading;
 
-        Log.i("HEADING", "Initial Heading: " + currentHeading);
-        Log.i("HEADING", "Previous Heading: " + previousHeading);
-        Log.i("HEADING", "deltaHeading Heading: " + deltaHeading);
-
         if (deltaHeading < -180) deltaHeading += 360;
         else if (deltaHeading >= 180) deltaHeading -= 360;
 
         integratedHeading += deltaHeading;
-
-        Log.i("HEADING", "Second deltaHeading Heading: " + deltaHeading);
-        Log.i("HEADING", "Integrated Heading: " + integratedHeading);
-        Log.i("HEADING", "---------------------");
 
         previousHeading = currentHeading;
 
