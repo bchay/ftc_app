@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -20,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 /**
@@ -48,21 +47,14 @@ abstract public class OpModeBase extends LinearOpMode {
     Servo glyphStopper;
     Servo glyphLever;
 
-
     //Sensors
     private BNO055IMU imu;
-    ColorSensor colorSensor; //Color sensor is pointing towards right jewel
-
-    //SharedPreferences
-    private SharedPreferences sharedPreferences;
-
-    String allianceColor;
-    String location;
+    private ColorSensor colorSensor; //Color sensor is pointing towards right jewel
 
     //General Constants
-    static final double COLOR_SENSOR_ARM_INITIAL = .758;
-    static final double COLOR_ROTATOR_INITIAL = .906;
-    static final double COLOR_ROTATOR_INITIAL_TELEOP = .480;
+    private static final double COLOR_SENSOR_ARM_INITIAL = .758;
+    private static final double COLOR_ROTATOR_INITIAL = .906;
+    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .480;
 
     static final double GLYPH_FLIPPER_FLAT = .29;
     static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
@@ -94,6 +86,14 @@ abstract public class OpModeBase extends LinearOpMode {
         }
     }
 
+    public static enum OpModeType {
+        AUTONOMOUS, TELEOP;
+    }
+
+    //Autonomous instance variables
+    VuMarkReader vuMarkReader;
+    ElapsedTime time; //Used for sensor reading timeout
+
     //General Variables
     private double previousHeading = 0;
     private double integratedHeading = 0;
@@ -101,7 +101,7 @@ abstract public class OpModeBase extends LinearOpMode {
     /**
      * Configures all parts of the robot.
      */
-    public void runOpMode(Class<?> className) {
+    public void runOpMode(OpModeType opModeType) {
         mapHardware();
 
         //*************** Configure hardware devices ***************
@@ -109,7 +109,7 @@ abstract public class OpModeBase extends LinearOpMode {
         //Drive motors
 
         //Motors are flipped for teleop
-        if (className.equals(RelicRecoveryAutonomous.class)) {
+        if (opModeType.equals(OpModeType.AUTONOMOUS)) {
             motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
             motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
             motorRightFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -137,13 +137,14 @@ abstract public class OpModeBase extends LinearOpMode {
         motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Servos initialized only during autonomous init period
-        if (className.equals(RelicRecoveryAutonomous.class)) {
-            initializeServos(className);
+        //Initialize autonomous specific variables
+        if (opModeType.equals(OpModeType.AUTONOMOUS)) {
+            initializeServos(OpModeType.AUTONOMOUS);
             initializeIMU();
 
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
-            allianceColor = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Color", "null");
-            location = sharedPreferences.getString("com.qualcomm.ftcrobotcontroller.Autonomous.Location", "null");
+            vuMarkReader = new VuMarkReader(hardwareMap);
+            time = new ElapsedTime();
+            displayInitialTelemetry();
         }
     }
 
@@ -175,10 +176,10 @@ abstract public class OpModeBase extends LinearOpMode {
         glyphLever = hardwareMap.servo.get("glyph lever");
     }
 
-    void initializeServos(Class<?> className) {
+    void initializeServos(OpModeType opModeType) {
         colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
 
-        if(className.equals(RelicRecoveryTeleop.class)) {
+        if(opModeType.equals(OpModeType.TELEOP)) {
             colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
             sleep(300);
             colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
@@ -205,6 +206,73 @@ abstract public class OpModeBase extends LinearOpMode {
 
     //*************** Autonomous Methods ***************
 
+    private void displayInitialTelemetry() {
+        while(!isStarted() && !isStopRequested()) { //Display distance telemetry for robot alignment
+            telemetry.addData("Ready to start the program.", "");
+            telemetry.addData("Encoders", motorLeftFront.getCurrentPosition() + motorLeftBack.getCurrentPosition() + motorRightFront.getCurrentPosition() + motorRightBack.getCurrentPosition());
+            telemetry.addData("Heading", getIntegratedHeading());
+            telemetry.addData("VuMark", vuMarkReader.getVuMark());
+            telemetry.update();
+        }
+    }
+
+    void hitJewel(String allianceColor) {
+        colorSensorArm.setPosition(.25); //Slightly down
+        sleep(500);
+        colorSensorRotator.setPosition(.532); //Center arm between jewels
+        sleep(500);
+        colorSensorArm.setPosition(.115); //Move down next to right jewel
+        sleep(500);
+
+
+        //Knock off jewel of opposing alliance color
+        time.reset();
+        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
+            telemetry.addData("Color", "Unknown");
+            telemetry.update();
+        }
+
+        //Color sensor reads left jewel
+        telemetry.addData("Color", getColor());
+        telemetry.update();
+
+        if(!getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
+            colorSensorRotator.setPosition(.139); //Move to hit left jewel
+            sleep(500);
+        } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
+            colorSensorRotator.setPosition(.806); //Move to hit right jewel
+            sleep(500);
+        } else { //Color not detected, move arm up and right
+            colorSensorArm.setPosition(.25);
+            sleep(500);
+            colorSensorRotator.setPosition(.806);
+            sleep(500);
+        }
+
+        //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+        colorSensorArm.setPosition(1); //Move arm up
+        sleep(3500);
+        colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
+        sleep(500);
+    }
+
+    RelicRecoveryVuMark readVuMark(String allianceColor) {
+        //Read VuMark to determine cryptobox key
+        RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();
+
+        time.reset();
+        while(vuMark.equals(RelicRecoveryVuMark.UNKNOWN) && opModeIsActive() && time.milliseconds() < 1000) { //Loop until VuMark is detected, timeout after 1 second
+            vuMark = vuMarkReader.getVuMark();
+            telemetry.addData("Determining VuMark", vuMark);
+            telemetry.update();
+        }
+
+
+        //Default to close cryptobox column if VuMark is not detected
+        if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = allianceColor.equals("Blue") ? RelicRecoveryVuMark.LEFT : RelicRecoveryVuMark.RIGHT;
+
+        return vuMark;
+    }
 
     /**
      * Calls turn() with a default of recurse = 1, maxSpeed = turnSpeed
@@ -316,33 +384,6 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     /**
-     * Calls move with a default of recurse = true, PID = true, timeout = 10000000
-     *
-     * @param distance the distance in inches to move
-     * @param maxSpeed the maximum speed to run the robot
-     * @see OpModeBase#move(double, Direction, double, boolean, double)
-     * @see DcMotor
-     * @see ModernRoboticsI2cGyro
-     */
-    void move(double distance, Direction direction, double maxSpeed) {
-        move(distance, direction, moveSpeedMax, true, 10000);
-    }
-
-    /**
-     * Calls move with a default of maxSpeed = moveSpeedMax, kP = kP, timeout = 10000000
-     *
-     * @param distance the distance in inches to move
-     * @param maxSpeed the maximum speed to run the robot
-     * @param recurse  whether or not to call turn()
-     * @see OpModeBase#move(double, Direction, double, boolean, double)
-     * @see DcMotor
-     * @see ModernRoboticsI2cGyro
-     */
-    void move(double distance, Direction direction, double maxSpeed, boolean recurse) {
-        move(distance, direction, maxSpeed, recurse, 10000);
-    }
-
-    /**
      * Moves the robot a specified number of inches.
      * The speed of the robot is defined using a trapazoidal motion profile.
      * It uses the gyroscope to keep the movement straight.
@@ -449,7 +490,7 @@ abstract public class OpModeBase extends LinearOpMode {
         return "Unknown";
     }
 
-    double getIntegratedHeading() { //https://ftcforum.usfirst.org/forum/ftc-technology/53477-rev-imu-questions?p=53481#post53481
+    private double getIntegratedHeading() { //https://ftcforum.usfirst.org/forum/ftc-technology/53477-rev-imu-questions?p=53481#post53481
         //IMU is mounted vertically, so the Y axis is used for turning
         double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).secondAngle;
         double deltaHeading = currentHeading - previousHeading;
@@ -462,10 +503,6 @@ abstract public class OpModeBase extends LinearOpMode {
         else if (deltaHeading >= 180) deltaHeading -= 360;
 
         integratedHeading += deltaHeading;
-
-        Log.i("HEADING", "Second deltaHeading Heading: " + deltaHeading);
-        Log.i("HEADING", "Integrated Heading: " + integratedHeading);
-        Log.i("HEADING", "---------------------");
 
         previousHeading = currentHeading;
 

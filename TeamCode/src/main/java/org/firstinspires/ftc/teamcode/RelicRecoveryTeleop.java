@@ -39,7 +39,6 @@ Gamepad 2:
     Y: Move intake down
     A: Move intake up
  */
-@Disabled
 @TeleOp(name = "Relic Recovery Teleop")
 public class RelicRecoveryTeleop extends OpModeBase {
     private HashMap<String, Boolean> previousLoopValues = new HashMap<>();
@@ -49,7 +48,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
     private ArrayList<TaskData> pendingTasks = new ArrayList<>();
 
     public void runOpMode() {
-        super.runOpMode(RelicRecoveryTeleop.class);
+        super.runOpMode(OpModeType.TELEOP);
 
         previousLoopValues.put("gamepad1.y", false);
         previousLoopValues.put("gamepad1.right_trigger", false);
@@ -58,7 +57,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
         telemetry.update();
 
         waitForStart();
-        initializeServos(RelicRecoveryTeleop.class); //Servos cannot be initialized during teleop init, only after start
+        initializeServos(OpModeType.TELEOP); //Servos cannot be initialized during teleop init, only after start
 
         while (opModeIsActive()) {
             //********** Gamepad 1 - Start + A **********
@@ -196,22 +195,6 @@ public class RelicRecoveryTeleop extends OpModeBase {
 
         colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
         sleep(500);
-    }
-
-    private class TaskData {
-        private long startTime;
-        private int delay;
-        private ThreadTaskInterface task;
-
-        TaskData(int delay, ThreadTaskInterface task) {
-            this.startTime = new Date().getTime();
-            this.delay = delay;
-            this.task = task;
-        }
-    }
-
-    private interface ThreadTaskInterface {
-        void runTask();
     }
 
     private void executeThreads() {
