@@ -87,9 +87,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(2, Direction.BACKWARD);
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -99,9 +97,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 turn(153, Direction.RIGHT, .95); //Reverse robot
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -112,9 +108,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(2, Direction.RIGHT);
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -129,9 +123,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(2, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -142,9 +134,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(1.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -155,9 +145,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(1, Direction.FORWARD); //Back up before dumping glyph
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -171,9 +159,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
 
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -184,9 +170,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(3.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(400);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(600);
 
                 move(4.5, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
@@ -198,9 +182,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move closer to cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -213,9 +195,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(5.5, Direction.BACKWARD); //Move towards cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -226,9 +206,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(6.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox before dumping glyph
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -239,9 +217,7 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
                 move(4, Direction.BACKWARD); //Move towards cryptobox
 
                 //Deposit glyph
-                glyphStopper.setPosition(GLYPH_STOPPER_UP);
-                sleep(500);
-                glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
+                glyphFlipperLeft.setPosition(GLYPH_FLIPPER_VERTICAL_LEFT);
                 sleep(1000);
 
                 move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
@@ -249,3 +225,9 @@ public class RelicRecoveryAutonomous extends OpModeBase { //MecanumTeleop is a L
         }
     }
 }
+
+/*
+2 - Lift, reverse
+3 - Left intake, reverse
+
+ */

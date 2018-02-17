@@ -9,16 +9,16 @@ import com.qualcomm.robotcore.util.Range;
 public class ServoTest extends OpMode {
     private Servo colorSensorArm;
     private Servo colorSensorRotator;
-    private Servo glyphFlipper;
+    private Servo glyphFlipperLeft;
+    private Servo glyphFlipperRight;
     private Servo glyphLever;
-    private Servo glyphStopper;
 
     public void init() {
         colorSensorArm = hardwareMap.servo.get("color arm");
         colorSensorRotator = hardwareMap.servo.get("color rotator");
-        glyphFlipper = hardwareMap.servo.get("glyph flipper");
+        glyphFlipperLeft = hardwareMap.servo.get("glyph flipper left");
+        glyphFlipperRight = hardwareMap.servo.get("glyph flipper right");
         glyphLever = hardwareMap.servo.get("glyph lever");
-        glyphStopper = hardwareMap.servo.get("glyph stopper");
     }
 
     public void loop() {
@@ -28,21 +28,20 @@ public class ServoTest extends OpMode {
         if(gamepad1.b) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .003, 0, 1));
         if(gamepad1.x) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .003, 0, 1));
 
-        if(gamepad1.left_bumper) glyphFlipper.setPosition(Range.clip(glyphFlipper.getPosition() + .003, 0, 1));
-        if(gamepad1.right_bumper) glyphFlipper.setPosition(Range.clip(glyphFlipper.getPosition() - .003, 0, 1));
+        if(gamepad1.dpad_up) glyphFlipperLeft.setPosition(Range.clip(glyphFlipperLeft.getPosition() + .003, 0, 1));
+        if(gamepad1.dpad_down) glyphFlipperLeft.setPosition(Range.clip(glyphFlipperLeft.getPosition() - .003, 0, 1));
+
+        if(gamepad1.left_bumper) glyphFlipperRight.setPosition(Range.clip(glyphFlipperRight.getPosition() + .003, 0, 1));
+        if(gamepad1.right_bumper) glyphFlipperRight.setPosition(Range.clip(glyphFlipperRight.getPosition() - .003, 0, 1));
 
         if(gamepad1.dpad_left) glyphLever.setPosition(Range.clip(glyphLever.getPosition() + .003, 0, 1));
         if(gamepad1.dpad_right) glyphLever.setPosition(Range.clip(glyphLever.getPosition() - .003, 0, 1));
 
-        if(gamepad1.dpad_up) glyphStopper.setPosition(Range.clip(glyphStopper.getPosition() + .003, 0, 1));
-        if(gamepad1.dpad_down) glyphStopper.setPosition(Range.clip(glyphStopper.getPosition() - .003, 0, 1));
-
-
-        telemetry.addData("Arm Position", colorSensorArm.getPosition());
-        telemetry.addData("Rotator Position", colorSensorRotator.getPosition());
-        telemetry.addData("Glyph Stop Position", glyphStopper.getPosition());
-        telemetry.addData("Glyph Lever Position", glyphLever.getPosition());
-        telemetry.addData("Glyph Flipper Position", glyphFlipper.getPosition());
+        telemetry.addData("Jewel Arm - Y/A", colorSensorArm.getPosition());
+        telemetry.addData("Rotator - B/X", colorSensorRotator.getPosition());
+        telemetry.addData("Glyph Lever - dpad up / down", glyphLever.getPosition());
+        telemetry.addData("Left Glyph Flipper - Left trigger / bumper", glyphFlipperLeft.getPosition());
+        telemetry.addData("Right Glyph Flipper - Right trigger / bumper", glyphFlipperRight.getPosition());
         telemetry.update();
     }
 }

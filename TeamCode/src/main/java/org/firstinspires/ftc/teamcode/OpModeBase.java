@@ -25,7 +25,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
  * Contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBase.
  */
 
-abstract public class OpModeBase extends LinearOpMode {
+abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
     //Motors
@@ -43,8 +43,8 @@ abstract public class OpModeBase extends LinearOpMode {
     Servo colorSensorArm; //Arm is on right side of robot looking at robot from back
     Servo colorSensorRotator;
 
-    Servo glyphFlipper;
-    Servo glyphStopper;
+    Servo glyphFlipperLeft;
+    Servo glyphFlipperRight;
     Servo glyphLever;
 
 
@@ -63,16 +63,16 @@ abstract public class OpModeBase extends LinearOpMode {
     static final double COLOR_ROTATOR_INITIAL = .906;
     static final double COLOR_ROTATOR_INITIAL_TELEOP = .480;
 
-    static final double GLYPH_FLIPPER_FLAT = .29;
-    static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
-    static final double GLYPH_FLIPPER_VERTICAL = .73;
+    static final double GLYPH_FLIPPER_FLAT_LEFT = 0;
+    static final double GLYPH_FLIPPER_PARTIALLY_UP_LEFT = .56; //TODO: Change
+    static final double GLYPH_FLIPPER_VERTICAL_LEFT = .56;
 
-    static final double GLYPH_STOPPER_DOWN = .365;
-    static final double GLYPH_STOPPER_UP = .584;
+    static final double GLYPH_FLIPPER_FLAT_RIGHT = .13;
+    static final double GLYPH_FLIPPER_PARTIALLY_UP_RIGHT = .80; //TODO: Change
+    static final double GLYPH_FLIPPER_VERTICAL_RIGHT = .80;
 
-    static final double GLYPH_LEVER_DOWN_FLIPPER = 1;
     static final double GLYPH_LEVER_UP = .608;
-    static final double GLYPH_LEVER_DOWN_INTAKE = .075;
+    static final double GLYPH_LEVER_DOWN = 1;
 
     //Autonomous Specific Configuration
     private double moveSpeedMin = .2;
@@ -154,12 +154,22 @@ abstract public class OpModeBase extends LinearOpMode {
         motorRightBack = hardwareMap.dcMotor.get("right back");
 
         leftIntake = hardwareMap.dcMotor.get("left intake");
+        leftIntake.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftIntake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftIntake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftIntake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         rightIntake = hardwareMap.dcMotor.get("right intake");
+        rightIntake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightIntake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightIntake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         moveIntake = hardwareMap.dcMotor.get("move intake");
 
         glyphLift = hardwareMap.dcMotor.get("glyph lift");
         glyphLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         glyphLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        glyphLift.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //Sensors
         imu = hardwareMap.get(BNO055IMU.class, "imu 1");
@@ -169,8 +179,9 @@ abstract public class OpModeBase extends LinearOpMode {
         colorSensorArm = hardwareMap.servo.get("color arm");
         colorSensorRotator = hardwareMap.servo.get("color rotator");
 
-        glyphFlipper = hardwareMap.servo.get("glyph flipper");
-        glyphStopper = hardwareMap.servo.get("glyph stopper");
+        glyphFlipperLeft = hardwareMap.servo.get("glyph flipper left");
+        glyphFlipperRight = hardwareMap.servo.get("glyph flipper right");
+
         glyphLever = hardwareMap.servo.get("glyph lever");
     }
 
@@ -185,9 +196,10 @@ abstract public class OpModeBase extends LinearOpMode {
             colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
         }
 
-        glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
-        glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
-        glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
+        glyphFlipperLeft.setPosition(GLYPH_FLIPPER_FLAT_LEFT);
+        glyphFlipperRight.setPosition(GLYPH_FLIPPER_FLAT_RIGHT);
+
+        glyphLever.setPosition(GLYPH_LEVER_DOWN);
     }
 
     private void initializeIMU() {
