@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.RelicRecovery;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-@Autonomous(name = "Blue Side", group = "Autonomous")
+//@Autonomous(name = "Blue Side", group = "Autonomous")
 public class BlueSideAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);

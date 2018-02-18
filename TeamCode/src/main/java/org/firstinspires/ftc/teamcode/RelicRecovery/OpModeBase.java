@@ -97,8 +97,8 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     //Autonomous instance variables
-    VuMarkReader vuMarkReader;
-    ElapsedTime time; //Used for sensor reading timeout
+    private VuMarkReader vuMarkReader;
+    private ElapsedTime time; //Used for sensor reading timeout
 
     //General Variables
     private double previousHeading = 0;

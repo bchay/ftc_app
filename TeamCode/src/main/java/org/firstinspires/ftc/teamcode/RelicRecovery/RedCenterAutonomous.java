@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.RelicRecovery;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Center", group = "Autonomous")
+//@Autonomous(name = "Red Center", group = "Autonomous")
 public class RedCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);

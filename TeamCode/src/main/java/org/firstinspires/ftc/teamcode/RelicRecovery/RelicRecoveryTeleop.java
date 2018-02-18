@@ -163,10 +163,6 @@ public class RelicRecoveryTeleop extends OpModeBase {
             else if(gamepad2.a) moveIntake.setPower(-1); //Move intake down
             else moveIntake.setPower(0);
 
-            //Add gamepad values to HashMap - Used for toggles
-            previousLoopValues.put("gamepad1.y", gamepad1.y);
-            previousLoopValues.put("gamepad1.right_trigger", (gamepad1.right_trigger > .5));
-
             //Control color sensor arm
             if(gamepad2.dpad_up) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() + .03, 0, 1));
             if(gamepad2.dpad_down) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() - .03, 0, 1));
@@ -175,6 +171,10 @@ public class RelicRecoveryTeleop extends OpModeBase {
             if(gamepad2.dpad_right) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .03, 0, 1));
 
             executeThreads();
+
+            //Add gamepad values to HashMap - Used for toggles
+            previousLoopValues.put("gamepad1.y", gamepad1.y);
+            previousLoopValues.put("gamepad1.right_trigger", (gamepad1.right_trigger > .5));
 
             //Telemetry statements
             telemetry.addData("Glyph Lever Position", glyphLever.getPosition());
@@ -190,9 +190,6 @@ public class RelicRecoveryTeleop extends OpModeBase {
             telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
             telemetry.update();
         }
-
-        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_AUTONOMOUS);
-        sleep(500);
     }
 
     private void executeThreads() {
