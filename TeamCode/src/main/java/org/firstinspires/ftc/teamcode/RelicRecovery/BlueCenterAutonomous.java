@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-@Autonomous(name = "Blue Side", group = "Autonomous")
-public class BlueSideAutonomous extends OpModeBase {
+@Autonomous(name = "Blue Center", group = "Autonomous")
+public class BlueCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
         hitJewel("Blue");
@@ -15,13 +15,11 @@ public class BlueSideAutonomous extends OpModeBase {
 
 
         //Autonomous movement code
-        move(31, Direction.BACKWARD);
-
         if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
-            move(17, Direction.LEFT); //Strafe toward right column
+            move(34.5, Direction.BACKWARD);
+            turn(56, Direction.LEFT); //Turn so that back of robot is facing cryptobox
 
-            turn(23, Direction.RIGHT);
-            move(2, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox
+            move(5.5, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -29,12 +27,12 @@ public class BlueSideAutonomous extends OpModeBase {
             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
             sleep(1000);
 
-            move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
-            move(7.5, Direction.LEFT);
+            move(22, Direction.BACKWARD);
 
-            turn(25, Direction.RIGHT);
-            move(1.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox
+            turn(48, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+            move(6.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox before dumping glyph
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -44,10 +42,10 @@ public class BlueSideAutonomous extends OpModeBase {
 
             move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
-            move(2.5, Direction.LEFT);
+            move(35, Direction.BACKWARD);
+            turn(118, Direction.LEFT); //Turn so that back of robot is facing cryptobox
 
-            turn(19, Direction.RIGHT);
-            move(1, Direction.FORWARD); //Back up before dumping glyph
+            move(4, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -55,7 +53,7 @@ public class BlueSideAutonomous extends OpModeBase {
             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
             sleep(1000);
 
-            move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         }
     }
 }
