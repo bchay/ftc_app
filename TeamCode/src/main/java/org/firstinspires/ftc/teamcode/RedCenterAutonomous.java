@@ -1,12 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
+@Autonomous(name = "Red Center", group = "Autonomous")
 public class RedCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
         hitJewel("Red");
 
+        /*
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = readVuMark("Red");
 
@@ -52,5 +56,6 @@ public class RedCenterAutonomous extends OpModeBase {
 
             move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         }
+    */
     }
 }

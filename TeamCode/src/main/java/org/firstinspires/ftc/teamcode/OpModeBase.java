@@ -9,7 +9,6 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -20,6 +19,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
+import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 
 /**
  * Contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBase.
@@ -52,9 +58,10 @@ abstract public class OpModeBase extends LinearOpMode {
     private ColorSensor colorSensor; //Color sensor is pointing towards right jewel
 
     //General Constants
-    private static final double COLOR_SENSOR_ARM_INITIAL = .758;
-    private static final double COLOR_ROTATOR_INITIAL = .906;
-    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .480;
+    private static final double COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS = 1;
+    static final double COLOR_ROTATOR_INITIAL_AUTONOMOUS = .453;
+    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .646;
+    private static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .646;
 
     static final double GLYPH_FLIPPER_FLAT = .29;
     static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
@@ -86,7 +93,7 @@ abstract public class OpModeBase extends LinearOpMode {
         }
     }
 
-    public static enum OpModeType {
+    public enum OpModeType {
         AUTONOMOUS, TELEOP;
     }
 
@@ -104,37 +111,42 @@ abstract public class OpModeBase extends LinearOpMode {
     public void runOpMode(OpModeType opModeType) {
         mapHardware();
 
-        //*************** Configure hardware devices ***************
-
         //Drive motors
 
         //Motors are flipped for teleop
         if (opModeType.equals(OpModeType.AUTONOMOUS)) {
-            motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-            motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
-            motorRightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-            motorRightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            motorLeftFront.setDirection(FORWARD);
+            motorLeftBack.setDirection(FORWARD);
+            motorRightFront.setDirection(REVERSE);
+            motorRightBack.setDirection(REVERSE);
         } else {
-            motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-            motorLeftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-            motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+            motorLeftFront.setDirection(REVERSE);
+            motorLeftBack.setDirection(REVERSE);
+            motorRightFront.setDirection(FORWARD);
+            motorRightBack.setDirection(FORWARD);
         }
 
-        motorLeftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeftFront.setMode(STOP_AND_RESET_ENCODER);
+        motorLeftBack.setMode(STOP_AND_RESET_ENCODER);
+        motorRightFront.setMode(STOP_AND_RESET_ENCODER);
+        motorRightBack.setMode(STOP_AND_RESET_ENCODER);
 
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); //Autonomous methods that need a different mode will set it, RUN_WITHOUT_ENCODER used for teleop
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorLeftFront.setMode(RUN_USING_ENCODER); //Autonomous methods that need a different mode will set it, RUN_WITHOUT_ENCODER used for teleop
+        motorLeftBack.setMode(RUN_USING_ENCODER);
+        motorRightFront.setMode(RUN_USING_ENCODER);
+        motorRightBack.setMode(RUN_USING_ENCODER);
 
-        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //Default is float
-        motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftFront.setZeroPowerBehavior(BRAKE); //Default is FLOAT
+        motorLeftBack.setZeroPowerBehavior(BRAKE);
+        motorRightFront.setZeroPowerBehavior(BRAKE);
+        motorRightBack.setZeroPowerBehavior(BRAKE);
+
+        glyphLift.setMode(STOP_AND_RESET_ENCODER);
+        glyphLift.setMode(RUN_USING_ENCODER);
+        glyphLift.setZeroPowerBehavior(BRAKE);
+
+        leftIntake.setZeroPowerBehavior(BRAKE);
+        rightIntake.setZeroPowerBehavior(BRAKE);
 
         //Servos initialized only during autonomous init period
         //Initialize autonomous specific variables
@@ -160,8 +172,6 @@ abstract public class OpModeBase extends LinearOpMode {
         moveIntake = hardwareMap.dcMotor.get("move intake");
 
         glyphLift = hardwareMap.dcMotor.get("glyph lift");
-        glyphLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        glyphLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Sensors
         imu = hardwareMap.get(BNO055IMU.class, "imu 1");
@@ -177,14 +187,12 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     void initializeServos(OpModeType opModeType) {
-        colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
-
         if(opModeType.equals(OpModeType.TELEOP)) {
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP);
             colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
-            sleep(300);
-            colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
         } else {
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_AUTONOMOUS);
         }
 
         glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
@@ -217,13 +225,12 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     void hitJewel(String allianceColor) {
-        colorSensorArm.setPosition(.25); //Slightly down
+        colorSensorArm.setPosition(.198); //Move forward
+        sleep(1000);
+        colorSensorRotator.setPosition(.72); //Center arm between jewels
         sleep(500);
-        colorSensorRotator.setPosition(.532); //Center arm between jewels
+        colorSensorArm.setPosition(.141); //Move down next to right jewel
         sleep(500);
-        colorSensorArm.setPosition(.115); //Move down next to right jewel
-        sleep(500);
-
 
         //Knock off jewel of opposing alliance color
         time.reset();
@@ -236,11 +243,11 @@ abstract public class OpModeBase extends LinearOpMode {
         telemetry.addData("Color", getColor());
         telemetry.update();
 
-        if(!getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
-            colorSensorRotator.setPosition(.139); //Move to hit left jewel
+        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
+            colorSensorRotator.setPosition(1); //Move to hit left jewel
             sleep(500);
         } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
-            colorSensorRotator.setPosition(.806); //Move to hit right jewel
+            colorSensorRotator.setPosition(.376); //Move to hit right jewel
             sleep(500);
         } else { //Color not detected, move arm up and right
             colorSensorArm.setPosition(.25);
@@ -250,9 +257,9 @@ abstract public class OpModeBase extends LinearOpMode {
         }
 
         //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-        colorSensorArm.setPosition(1); //Move arm up
-        sleep(3500);
-        colorSensorRotator.setPosition(.372); //Move rotator behind metal piece to stop it from falling after teleop ends
+        colorSensorArm.setPosition(.646); //Move arm up
+        sleep(1000);
+        colorSensorRotator.setPosition(.329); //Move rotator behind metal piece to stop it from falling after teleop ends
         sleep(500);
     }
 
@@ -327,10 +334,10 @@ abstract public class OpModeBase extends LinearOpMode {
         double targetHeading = initialHeading + degrees; //Turns are relative to current position
 
         //Change mode because turn() uses motor power PID and not motor position
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeftFront.setMode(RUN_USING_ENCODER);
+        motorLeftBack.setMode(RUN_USING_ENCODER);
+        motorRightFront.setMode(RUN_USING_ENCODER);
+        motorRightBack.setMode(RUN_USING_ENCODER);
 
         ElapsedTime timer = new ElapsedTime();
         timer.startTime();
@@ -401,10 +408,10 @@ abstract public class OpModeBase extends LinearOpMode {
         double initialHeading = getIntegratedHeading();
 
         //Change mode because move() uses setTargetPosition()
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLeftFront.setMode(RUN_TO_POSITION);
+        motorLeftBack.setMode(RUN_TO_POSITION);
+        motorRightFront.setMode(RUN_TO_POSITION);
+        motorRightBack.setMode(RUN_TO_POSITION);
 
         if (direction == Direction.FORWARD) {
             distance *= ticksRatioForward;
@@ -495,15 +502,10 @@ abstract public class OpModeBase extends LinearOpMode {
         double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).secondAngle;
         double deltaHeading = currentHeading - previousHeading;
 
-        Log.i("HEADING", "Initial Heading: " + currentHeading);
-        Log.i("HEADING", "Previous Heading: " + previousHeading);
-        Log.i("HEADING", "deltaHeading Heading: " + deltaHeading);
-
         if (deltaHeading < -180) deltaHeading += 360;
         else if (deltaHeading >= 180) deltaHeading -= 360;
 
         integratedHeading += deltaHeading;
-
         previousHeading = currentHeading;
 
         return integratedHeading;

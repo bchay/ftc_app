@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
@@ -8,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-
 
 /*
 Gamepad Mappings:
@@ -193,7 +191,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
             telemetry.update();
         }
 
-        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_AUTONOMOUS);
         sleep(500);
     }
 
