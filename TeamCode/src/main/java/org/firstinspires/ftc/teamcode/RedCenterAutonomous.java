@@ -1,23 +1,22 @@
-package org.firstinspires.ftc.teamcode.RelicRecovery;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-//@Autonomous(name = "Red Center", group = "Autonomous")
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+
+@Autonomous(name = "Red Center", group = "Autonomous")
 public class RedCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
         hitJewel("Red");
 
-        /*
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = readVuMark("Red");
 
         if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
-            move(25, Direction.FORWARD);
-
-            turn(105, Direction.LEFT); //Turn so that back of robot is facing cryptobox
-            move(2, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
-
+            move(39.66, Direction.FORWARD);
+            turn(55, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+            move(7.5, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -27,10 +26,10 @@ public class RedCenterAutonomous extends OpModeBase {
 
             move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
-            move(29, Direction.FORWARD);
+            move(24, Direction.FORWARD);
 
-            turn(120, Direction.LEFT, .8); //Turn so that back of robot is facing cryptobox
-            move(3.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox
+            turn(130, Direction.LEFT, .8); //Turn so that back of robot is facing cryptobox
+            move(5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox before dumping glyph
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -40,20 +39,18 @@ public class RedCenterAutonomous extends OpModeBase {
 
             move(4.5, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
         } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
-            sleep(1000);
-            move(34.5, Direction.FORWARD);
+            move(30.5, Direction.FORWARD);
 
-            turn(125, Direction.LEFT); //Turn so that back of robot is facing cryptobox
-            move(5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move closer to cryptobox
+            turn(130, Direction.LEFT, .8); //Turn so that back of robot is facing cryptobox
+            move(6, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox before dumping glyph
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
-            sleep(500);
+            sleep(400);
             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
-            sleep(1000);
+            sleep(600);
 
-            move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            move(4.5, Direction.FORWARD, moveSpeedMax, false, 1000); //Move away from cryptobox
         }
-    */
     }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.RelicRecovery;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
@@ -64,7 +64,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
             }
 
             if(gamepad1.x) maxSpeed = .5;
-            else maxSpeed = 1;
+            else if(!(gamepad1.right_bumper && gamepad1.right_trigger < .5)) maxSpeed = 1; //Don't override right bumper - glyph at angle and slow mode
 
             if(drivetrainReverse) {
                 motorLeftFront.setPower(Range.clip(-gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x, -maxSpeed, maxSpeed));
@@ -79,9 +79,11 @@ public class RelicRecoveryTeleop extends OpModeBase {
             }
 
             if(gamepad1.right_bumper && gamepad1.right_trigger < .5) {
-                glyphFlipper.setPosition(GLYPH_FLIPPER_PARTIALLY_UP);
+                glyphFlipper.setPosition(GLYPH_FLIPPER_PARTIALLY_UP + .1); //Slightly farther than partially up
+                maxSpeed = .5;
             } else if(!gamepad1.right_bumper && gamepad1.right_trigger < .5 && !gamepad2.left_bumper) {
                 glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
+                maxSpeed = 1;
             }
 
             //Glyph flipper
@@ -125,10 +127,10 @@ public class RelicRecoveryTeleop extends OpModeBase {
             }
 
             //Intakes
-            if(gamepad1.left_bumper) { //Suck glyphs in
+            if(gamepad1.left_bumper) {
                 leftIntake.setPower(-.95);
                 rightIntake.setPower(.95);
-            } else if(gamepad1.left_trigger > .5) {
+            } else if(gamepad1.left_trigger > .5) {  //Suck glyphs in
                 leftIntake.setPower(.85);
                 rightIntake.setPower(-.85);
             } else {
@@ -138,7 +140,7 @@ public class RelicRecoveryTeleop extends OpModeBase {
 
             //********** Gamepad 2 - Start + B ***********
 
-            if (gamepad2.left_bumper) {
+            if (gamepad2.left_bumper && gamepad1.right_trigger < .5) {
                 glyphFlipper.setPosition(GLYPH_FLIPPER_PARTIALLY_UP);
             } else if(gamepad1.right_trigger < .5 && !gamepad1.right_bumper) { //Do not override gamepad 1 flipper movement
                 glyphFlipper.setPosition(Range.clip(glyphFlipper.getPosition() - .01, 0, GLYPH_FLIPPER_FLAT));
@@ -151,7 +153,6 @@ public class RelicRecoveryTeleop extends OpModeBase {
             */
             if(gamepad2.right_bumper) glyphLever.setPosition(GLYPH_LEVER_UP);
             else if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_UP) < .1) glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
-            //else if(gamepad1.right_trigger < .5) glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
 
             //Glyph lift controlled by triggers
             if(gamepad2.right_trigger > .1) glyphLift.setPower(-gamepad2.right_trigger);

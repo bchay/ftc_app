@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode.RelicRecovery;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-//@Autonomous(name = "Red Side", group = "Autonomous")
+@Autonomous(name = "Red Side", group = "Autonomous")
 public class RedSideAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
@@ -17,11 +17,8 @@ public class RedSideAutonomous extends OpModeBase {
         //Autonomous movement code
         if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
             move(28, Direction.FORWARD);
-            move(15.5, Direction.LEFT); //Strafe to left column
-
-            turn(150, Direction.RIGHT, .95, 2, 10000); //Reverse robot
-
-            move(2, Direction.BACKWARD);
+            move(11, Direction.LEFT); //Strafe to align with column
+            turn(135, Direction.RIGHT, 1); //Reverse robot
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -29,11 +26,11 @@ public class RedSideAutonomous extends OpModeBase {
             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
             sleep(1000);
 
-            move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
             move(28, Direction.FORWARD);
-            move(9, Direction.LEFT); //Strafe to align with column
-            turn(153, Direction.RIGHT, .95); //Reverse robot
+            move(5.5, Direction.LEFT); //Strafe to align with column
+            turn(135, Direction.RIGHT, 1); //Reverse robot
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -41,12 +38,13 @@ public class RedSideAutonomous extends OpModeBase {
             glyphFlipper.setPosition(GLYPH_FLIPPER_VERTICAL);
             sleep(1000);
 
-            move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+            move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
             move(28, Direction.FORWARD);
-            turn(150, Direction.RIGHT); //Reverse robot
+            move(2.5, Direction.RIGHT); //Strafe to align with column
+            turn(135, Direction.RIGHT, 1); //Reverse robot
 
-            move(2, Direction.RIGHT);
+            move(1.5, Direction.BACKWARD); //Move toward cryptobox before dumping glyph
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);

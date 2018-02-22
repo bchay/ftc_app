@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.RelicRecovery;
+package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Color;
 
@@ -57,10 +57,10 @@ abstract public class OpModeBase extends LinearOpMode {
     private ColorSensor colorSensor; //Color sensor is pointing towards right jewel
 
     //General Constants
-    private static final double COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS = 1;
-    static final double COLOR_ROTATOR_INITIAL_AUTONOMOUS = .453;
-    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .646;
-    private static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .646;
+    private static final double COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS = .794;
+    static final double COLOR_ROTATOR_INITIAL_AUTONOMOUS = .753;
+    private static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .666;
+    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .132;
 
     static final double GLYPH_FLIPPER_FLAT = .29;
     static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
@@ -80,6 +80,7 @@ abstract public class OpModeBase extends LinearOpMode {
     private double ticksRatioStrafe = 5000 / 45;
 
     double turnSpeed = .5; //Speed is ramped down as turn proceeds
+    double turnSpeedMin = .2;
 
     enum Direction {
         FORWARD, BACKWARD, LEFT, RIGHT;
@@ -224,12 +225,12 @@ abstract public class OpModeBase extends LinearOpMode {
     }
 
     void hitJewel(String allianceColor) {
-        colorSensorArm.setPosition(.198); //Move forward
-        sleep(1000);
-        colorSensorRotator.setPosition(.72); //Center arm between jewels
+        colorSensorArm.setPosition(.143); //Move forward
+        sleep(800);
+        colorSensorRotator.setPosition(.25); //Center rotator between jewels
         sleep(500);
-        colorSensorArm.setPosition(.141); //Move down next to right jewel
-        sleep(500);
+        colorSensorArm.setPosition(.086); //Move arm lower to move color sensor behind right jewel
+        sleep(400);
 
         //Knock off jewel of opposing alliance color
         time.reset();
@@ -242,25 +243,111 @@ abstract public class OpModeBase extends LinearOpMode {
         telemetry.addData("Color", getColor());
         telemetry.update();
 
-        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
-            colorSensorRotator.setPosition(1); //Move to hit left jewel
+        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) { //Hit left jewel
+            colorSensorRotator.setPosition(.728);
             sleep(500);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS); //Move arm up to initial autonomous position
+            sleep(1300);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+            sleep(500);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
         } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
-            colorSensorRotator.setPosition(.376); //Move to hit right jewel
+            colorSensorRotator.setPosition(0); //Hit right jewel
             sleep(500);
-        } else { //Color not detected, move arm up and right
-            colorSensorArm.setPosition(.25);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(.499); //Move arm up
+            sleep(300);
+            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
+            sleep(300);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
+            sleep(300);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+        } else { //Color not detected, move arm up and right to avoid hitting either jewel
+            colorSensorArm.setPosition(.143);
             sleep(500);
-            colorSensorRotator.setPosition(.806);
+            colorSensorRotator.setPosition(0);
             sleep(500);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(.499); //Move arm up
+            sleep(300);
+            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
+            sleep(300);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
+            sleep(300);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+        }
+    }
+
+
+
+    void hitJewelFast(String allianceColor) {
+        colorSensorArm.setPosition(.143); //Move forward
+        sleep(600);
+        colorSensorRotator.setPosition(.25); //Center rotator between jewels
+        sleep(500);
+        colorSensorArm.setPosition(.086); //Move arm lower to move color sensor behind right jewel
+        sleep(400);
+
+        //Knock off jewel of opposing alliance color
+        time.reset();
+        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
+            telemetry.addData("Color", "Unknown");
+            telemetry.update();
         }
 
-        //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-        colorSensorArm.setPosition(.646); //Move arm up
-        sleep(1000);
-        colorSensorRotator.setPosition(.329); //Move rotator behind metal piece to stop it from falling after teleop ends
-        sleep(500);
+        //Color sensor reads left jewel
+        telemetry.addData("Color", getColor());
+        telemetry.update();
+
+        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) { //Hit left jewel
+            colorSensorRotator.setPosition(.728);
+            sleep(500);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS); //Move arm up to initial autonomous position
+            sleep(600);
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+                    sleep(400);
+                    colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+                }
+            }).start();
+        } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
+            colorSensorRotator.setPosition(0); //Hit right jewel
+            sleep(400);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(.499); //Move arm up
+            sleep(300);
+            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
+            sleep(300);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
+            sleep(300);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+        } else { //Color not detected, move arm up and right to avoid hitting either jewel
+            colorSensorArm.setPosition(.143);
+            sleep(400);
+            colorSensorRotator.setPosition(0);
+            sleep(400);
+
+            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
+            colorSensorArm.setPosition(.499); //Move arm up
+            sleep(300);
+            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
+            sleep(300);
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
+            sleep(300);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+        }
     }
+
 
     RelicRecoveryVuMark readVuMark(String allianceColor) {
         //Read VuMark to determine cryptobox key
@@ -345,7 +432,7 @@ abstract public class OpModeBase extends LinearOpMode {
         while (((degrees < 0 && getIntegratedHeading() > targetHeading) || (degrees > 0 && getIntegratedHeading() < targetHeading)) && (timer.milliseconds() < timeout) && opModeIsActive()) {
             double currentHeading = getIntegratedHeading();
 
-            double robotSpeed = Range.clip(maxSpeed * (Math.abs(targetHeading - getIntegratedHeading()) / Math.abs(degrees)), .2, maxSpeed);
+            double robotSpeed = Range.clip(maxSpeed * (Math.abs(targetHeading - getIntegratedHeading()) / Math.abs(degrees)), turnSpeedMin, maxSpeed);
 
             motorLeftFront.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
             motorLeftBack.setPower(degrees < 0 ? robotSpeed : -robotSpeed);
@@ -477,6 +564,30 @@ abstract public class OpModeBase extends LinearOpMode {
         if (Math.abs(getIntegratedHeading() - initialHeading) > 5 && recurse) {
             turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() < initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .2);
         }
+    }
+
+    public void shimmy() {
+        motorLeftFront.setMode(RUN_USING_ENCODER);
+        motorLeftBack.setMode(RUN_USING_ENCODER);
+        motorRightFront.setMode(RUN_USING_ENCODER);
+        motorRightBack.setMode(RUN_USING_ENCODER);
+
+        motorLeftFront.setPower(.5);
+        motorLeftBack.setPower(.5);
+        leftIntake.setPower(1);
+        rightIntake.setPower(-.85);
+
+        sleep(400);
+        motorLeftFront.setPower(0);
+        motorLeftBack.setPower(0);
+
+        motorRightFront.setPower(.5);
+        motorRightBack.setPower(.5);
+        leftIntake.setPower(.85);
+        rightIntake.setPower(-1);
+        sleep(800);
+        motorRightFront.setPower(0);
+        motorRightBack.setPower(0);
     }
 
     /**
