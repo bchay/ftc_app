@@ -32,9 +32,11 @@ public class BlueSideAutonomous extends OpModeBase {
             move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
             move(27.7, Direction.BACKWARD); //Drive off balancing stone toward cryptobox
-            move(19.5, Direction.LEFT); //Strafe toward right side of the cryptobox
+            move(22.25, Direction.LEFT); //Strafe toward right side of the cryptobox
 
             turn(35, Direction.LEFT);
+
+            move(3, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move toward cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);

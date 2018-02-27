@@ -13,7 +13,7 @@ public class RedCenterMultipleGlyphsAutonomous extends OpModeBase {
         moveSpeedMax = 1;
         turnSpeedMin = .45;
 
-        hitJewel("Red");
+        hitJewelFast("Red");
 
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = readVuMark("Red");

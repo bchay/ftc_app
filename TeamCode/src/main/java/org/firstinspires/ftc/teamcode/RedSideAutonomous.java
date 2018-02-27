@@ -17,7 +17,7 @@ public class RedSideAutonomous extends OpModeBase {
         //Autonomous movement code
         if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
             move(28, Direction.FORWARD);
-            move(11, Direction.LEFT); //Strafe to align with column
+            move(13, Direction.LEFT); //Strafe to align with column
             turn(135, Direction.RIGHT, 1); //Reverse robot
 
             //Deposit glyph
@@ -43,8 +43,6 @@ public class RedSideAutonomous extends OpModeBase {
             move(28, Direction.FORWARD);
             move(2.5, Direction.RIGHT); //Strafe to align with column
             turn(135, Direction.RIGHT, 1); //Reverse robot
-
-            move(1.5, Direction.BACKWARD); //Move toward cryptobox before dumping glyph
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
