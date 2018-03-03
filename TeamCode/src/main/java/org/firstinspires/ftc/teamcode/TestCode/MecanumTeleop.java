@@ -30,7 +30,7 @@ Right Joystick: Right drivetrain motors
 /**
  * This is the MecanumTeleop code for the robot.
  */
-@Disabled
+
 @TeleOp(name = "Mecanum Teleop", group = "Test Code")
 public class MecanumTeleop extends LinearOpMode {
     DcMotor motorLeftFront;
@@ -39,10 +39,10 @@ public class MecanumTeleop extends LinearOpMode {
     DcMotor motorRightBack;
 
     public void runOpMode() {
-        motorLeftFront = hardwareMap.dcMotor.get("left_front");
-        motorLeftBack = hardwareMap.dcMotor.get("left_back");
-        motorRightFront = hardwareMap.dcMotor.get("right_front");
-        motorRightBack = hardwareMap.dcMotor.get("right_back");
+        motorLeftFront = hardwareMap.dcMotor.get("left front");
+        motorLeftBack = hardwareMap.dcMotor.get("left back");
+        motorRightFront = hardwareMap.dcMotor.get("right front");
+        motorRightBack = hardwareMap.dcMotor.get("right back");
 
         motorLeftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //Autonomous methods that need RUN_TO_POSITION will set the motors, RUN_USING_ENCODER is required for teleop and gyro turn
         motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
