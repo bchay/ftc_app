@@ -1,35 +1,9 @@
 package org.firstinspires.ftc.teamcode.TestCode;
 
-import android.content.SharedPreferences;
-import android.graphics.Color;
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-/*
-GAMEPAD MAPPINGS:
-
-Driver One - Movement - Gamepad 1
-----------------------------------
-
-Left Joystick: Left drivetrain motors
-Right Joystick: Right drivetrain motors
-
-*/
-
-/**
- * This is the MecanumTeleop code for the robot.
- */
 
 @TeleOp(name = "Mecanum Teleop", group = "Test Code")
 public class MecanumTeleop extends LinearOpMode {
@@ -67,10 +41,10 @@ public class MecanumTeleop extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            motorLeftFront.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x);
-            motorLeftBack.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x);
-            motorRightFront.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x);
-            motorRightBack.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x);
+            motorLeftFront.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x);
+            motorLeftBack.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x);
+            motorRightFront.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x);
+            motorRightBack.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x);
 
             telemetry.addData("Left Front Motor Power", motorLeftFront.getPower());
             telemetry.addData("Left Back Motor Power", motorRightFront.getPower());
@@ -82,7 +56,7 @@ public class MecanumTeleop extends LinearOpMode {
             telemetry.addData("Right Front Encoder", motorRightFront.getCurrentPosition());
             telemetry.addData("Right Back Encoder", motorRightBack.getCurrentPosition());
 
-            telemetry.addData("Voltage: ", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
+            telemetry.addData("Voltage", this.hardwareMap.voltageSensor.iterator().next().getVoltage());
 
             telemetry.update();
         }
