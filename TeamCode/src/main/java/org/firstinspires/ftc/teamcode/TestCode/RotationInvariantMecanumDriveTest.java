@@ -31,6 +31,7 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
     private BNO055IMU imu;
 
     private double desiredHeading = 0;
+    private double strafeAngle = 0;
 
     public void runOpMode() {
         motorLeftFront = hardwareMap.dcMotor.get("left front");
@@ -75,12 +76,74 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         while(opModeIsActive()) {
+            Orientation orientation = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+            double robotHeading = (orientation.thirdAngle + 360) % 360;
+
+            if(Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y) >= 1) {
+                desiredHeading = (((Math.toDegrees(Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x)) + 360) % 360) + 90) % 360;
+            }
+
+            if(Math.abs(gamepad1.left_stick_x + gamepad1.left_stick_y) > 0) {
+                strafeAngle = (((Math.toDegrees(Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x)) + 360) % 360)) - 45;
+                strafeAngle += robotHeading;
+                strafeAngle = strafeAngle % 360;
+
+                double r = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
+
+                motorLeftFront.setPower(r * Math.cos(Math.toRadians(strafeAngle)));
+                motorRightFront.setPower(r * Math.sin(Math.toRadians(strafeAngle)));
+                motorLeftBack.setPower(r * Math.sin(Math.toRadians(strafeAngle)));
+                motorRightBack.setPower(r * Math.cos(Math.toRadians(strafeAngle)));
+            } else if(gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0) {
+                if (Math.abs(robotHeading - desiredHeading) > 180) {
+                    if (robotHeading < desiredHeading) {
+                        //Turn right
+                        motorLeftFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorLeftBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorRightFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorRightBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                    } else {
+                        //Turn left
+                        motorLeftFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorLeftBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorRightFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorRightBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                    }
+                } else if (Math.abs(robotHeading - desiredHeading) > 3) { //Robot not within acceptable margin of error from desired heading
+                    if (robotHeading < desiredHeading) {
+                        //Turn left
+                        motorLeftFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorLeftBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorRightFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorRightBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                    } else {
+                        //Turn Right
+                        motorLeftFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorLeftBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorRightFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorRightBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                    }
+                } else {
+                    //Currently at desired heading
+                    motorLeftFront.setPower(0);
+                    motorLeftBack.setPower(0);
+                    motorRightFront.setPower(0);
+                    motorRightBack.setPower(0);
+                }
+            }
+
+            telemetry.addData("Strafe Angle", strafeAngle);
+            telemetry.addData("Robot Heading", robotHeading);
+            telemetry.addData("Desired heading", desiredHeading);
+            telemetry.addData("Motor Power", Math.abs(motorLeftFront.getPower()));
+            telemetry.update();
+
+            /*
             //Assumes IMU initialization is forward from driver perspective
-            if(Math.pow(gamepad1.left_stick_y, 2) + Math.pow(gamepad1.left_stick_x, 2) >= 1) {
+            if(Math.hypot(gamepad1.left_stick_y, gamepad1.left_stick_x) >= 1) {
                 desiredHeading = (((Math.toDegrees(Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x)) + 360) % 360) + 90) % 360;
             }
 
-            Orientation orientation = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
             double robotHeading = (orientation.thirdAngle + 360) % 360;
 
             //Robot and desired headings are on opposite sides of the 0/360 discontinuity
@@ -124,8 +187,9 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
             telemetry.addData("Robot Heading Final", robotHeading);
             telemetry.addData("Turn Direction", Math.abs(motorLeftFront.getPower() - 1) < .01 ? "Right" : "Left");
             telemetry.addData("Left Power", motorLeftFront.getPower());
-            telemetry.addData("Square", Math.pow(gamepad1.left_stick_y, 2) + Math.pow(gamepad1.left_stick_x, 2));
+            telemetry.addData("Hypotenuse", Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y));
             telemetry.update();
+            */
         }
     }
 }
