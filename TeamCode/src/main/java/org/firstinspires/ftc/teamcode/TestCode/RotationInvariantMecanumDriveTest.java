@@ -17,12 +17,41 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
+import java.util.HashMap;
+
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 
+/**
+<p>
+ * This program is a standalone opmode that is used as a demonstration of the rotation invariant mecanum drive system.
+ * It uses the REV Expansion Hub IMU to determine the heading of the joystick, and will automatically apply transformations
+ * to the joysticks to ensure that the robot moves from the driver's perspective. Additionally, the robot will automatically
+ * correct itself so that it maintains the target heading.
+ </p>
+
+ <p>
+  * The left joystick is used to strafe the robot in the XY plane from the perspective of the driver. This means that, regardless
+ * of the robot's orientation, pushing the left joystick forward will cause the robot to move forward from the driver's perspective.
+ * The left joystick changes the robot's target heading, and the robot will automatically take the shortest path to turn to
+ * the new target.
+ </p>
+
+
+ <p>
+ * If the robot is jostled in the middle of a match, it will autocorrect to the target heading. The X button can be used to reset
+ * the zero position, which will help to counteract any gyroscope drift.
+ </p>
+
+ <p>
+ * Finally, there is an optional autonomous correction factor that will allow the robot to have its initial target zero positon
+ * be set to forward from the perspective of the driver, rather than defining the forward position to be from the zero
+ * orientation of the robot's starting position at the end of autonomous.
+ </p>
+ */
 @TeleOp(name = "IMU Mecanum", group = "Test Code")
 public class RotationInvariantMecanumDriveTest extends LinearOpMode {
     private DcMotor motorLeftFront;
@@ -34,14 +63,17 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
 
     private double desiredHeading = 0;
     private double strafeAngle = 0;
-    private double offset;
+    private double autonomousOffset;
+    private double resetOffset = 0;
     private double correction = 0;
+
+    private HashMap<String, Boolean> previousLoopValues = new HashMap<>();
 
     public void runOpMode() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        offset = (sharedPreferences.getFloat("org.firstinspires.ftc.teamcode.AutonomousHeading", 0) + 360) % 360; //Use base gyro value
+        autonomousOffset = (-90 + sharedPreferences.getFloat("org.firstinspires.ftc.teamcode.AutonomousHeading", 0) + 360) % 360; //Use base gyro value
+        desiredHeading = autonomousOffset;
 
         motorLeftFront = hardwareMap.dcMotor.get("left front");
         motorLeftBack = hardwareMap.dcMotor.get("left back");
@@ -78,6 +110,8 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
         imu = hardwareMap.get(BNO055IMU.class, "imu 1");
         imu.initialize(parameters);
 
+        previousLoopValues.put("gamepad1.x", false);
+
         telemetry.addData("Please press start.", "");
         telemetry.update();
         waitForStart();
@@ -86,7 +120,15 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
 
         while(opModeIsActive()) {
             Orientation orientation = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-            double robotHeading = (orientation.thirdAngle + offset + 360) % 360;
+
+            if(gamepad1.x && !previousLoopValues.get("gamepad1.x")) {
+                resetOffset = (orientation.thirdAngle + 360) % 360; //Transform to interval [0, 360)
+                autonomousOffset = 0;
+                desiredHeading = 0;
+            }
+
+            double robotHeading = (orientation.thirdAngle + autonomousOffset + 360) % 360 - resetOffset;
+            if(robotHeading < 0) robotHeading += 360;
 
             if(Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y) >= 1) {
                 desiredHeading = (((Math.toDegrees(Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x)) + 360) % 360) + 90) % 360;
@@ -146,30 +188,30 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
                 if (Math.abs(robotHeading - desiredHeading) > 180) {
                     if(robotHeading < desiredHeading) {
                         //Turn right
-                        motorLeftFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorLeftBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorRightFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorRightBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorLeftFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorLeftBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorRightFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorRightBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
                     } else {
                         //Turn left
-                        motorLeftFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorLeftBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorRightFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
-                        motorRightBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .4, 1));
+                        motorLeftFront.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorLeftBack.setPower(-Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorRightFront.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
+                        motorRightBack.setPower(Range.clip(Math.abs((robotHeading + desiredHeading - 360)) / 90, .3, 1));
                     }
                 } else if (Math.abs(robotHeading - desiredHeading) > 2) { //Robot not within acceptable margin of error from desired heading
                     if (robotHeading < desiredHeading) {
                         //Turn left
-                        motorLeftFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorLeftBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorRightFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorRightBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorLeftFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorLeftBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorRightFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorRightBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
                     } else {
                         //Turn Right
-                        motorLeftFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorLeftBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorRightFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
-                        motorRightBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .4, 1));
+                        motorLeftFront.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorLeftBack.setPower(Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorRightFront.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
+                        motorRightBack.setPower(-Range.clip(Math.abs(robotHeading - desiredHeading) / 90, .3, 1));
                     }
                 } else {
                     //Currently at desired heading
@@ -180,6 +222,10 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
                 }
             }
 
+            previousLoopValues.put("gamepad1.x", gamepad1.x);
+
+            telemetry.addData("Autonomous Offset", autonomousOffset);
+            telemetry.addData("Reset Offset", resetOffset);
             telemetry.addData("Strafe Angle", strafeAngle);
             telemetry.addData("Robot Heading", robotHeading);
             telemetry.addData("Original IMU heading", orientation.thirdAngle);

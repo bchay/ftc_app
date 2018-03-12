@@ -13,10 +13,12 @@ public class RedCenterMultipleGlyphsAutonomous extends OpModeBase {
         moveSpeedMax = 1;
         turnSpeedMin = .45;
 
-        hitJewelFast("Red");
+        //hitJewelFast("Red");
 
         //Read VuMark to determine cryptobox key
-        RelicRecoveryVuMark vuMark = readVuMark("Red");
+        //RelicRecoveryVuMark vuMark = readVuMark("Red");
+
+        RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.CENTER;
 
         if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
             move(39.66, Direction.FORWARD);
