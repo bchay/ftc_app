@@ -1,24 +1,25 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.State;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-@Autonomous(name = "Red Side", group = "Autonomous")
-public class RedSideAutonomous extends OpModeBase {
+@Autonomous(name = "Blue Center State", group = "State")
+public class BlueCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
-        hitJewel("Red");
+        hitJewel("Blue");
 
         //Read VuMark to determine cryptobox key
-        RelicRecoveryVuMark vuMark = readVuMark("Red");
+        RelicRecoveryVuMark vuMark = readVuMark("Blue");
 
 
         //Autonomous movement code
-        if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
-            move(28, Direction.FORWARD);
-            move(13, Direction.LEFT); //Strafe to align with column
-            turn(135, Direction.RIGHT, 1); //Reverse robot
+        if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+            move(30, Direction.BACKWARD);
+            turn(50, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+
+            move(6.33, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -28,9 +29,10 @@ public class RedSideAutonomous extends OpModeBase {
 
             move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
-            move(28, Direction.FORWARD);
-            move(5.5, Direction.LEFT); //Strafe to align with column
-            turn(135, Direction.RIGHT, 1); //Reverse robot
+            move(45.5, Direction.BACKWARD);
+            turn(125, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+
+            move(5.5, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);
@@ -39,10 +41,11 @@ public class RedSideAutonomous extends OpModeBase {
             sleep(1000);
 
             move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
-        } else if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
-            move(28, Direction.FORWARD);
-            move(2.5, Direction.RIGHT); //Strafe to align with column
-            turn(135, Direction.RIGHT, 1); //Reverse robot
+        } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+            move(38, Direction.BACKWARD);
+            turn(125, Direction.LEFT); //Turn so that back of robot is facing cryptobox
+
+            move(5.5, Direction.BACKWARD); //Move towards cryptobox
 
             //Deposit glyph
             glyphStopper.setPosition(GLYPH_STOPPER_UP);

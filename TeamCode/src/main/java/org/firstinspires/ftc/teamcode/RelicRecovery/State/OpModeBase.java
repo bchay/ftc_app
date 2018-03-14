@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.State;
 
 import android.graphics.Color;
 
@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.teamcode.VuMarkReader;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
@@ -27,11 +28,10 @@ import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 
 /**
- * This class contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBaseNSR.
- * This class is for the North Super Regional robot for the 2017 - 2018 Relic Recovery FTC season. This class is abstract, and so all
- * implementations must be subclasses of it, rather than an instance of this class.
+ * Contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBase.
  */
-abstract public class OpModeBaseNSR extends LinearOpMode {
+
+abstract class OpModeBase extends LinearOpMode {
     //*************** Declare Hardware Devices ***************
 
     //Motors
@@ -43,15 +43,14 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
     DcMotor glyphLift;
     DcMotor leftIntake;
     DcMotor rightIntake;
-    DcMotor led;
+    DcMotor moveIntake;
 
     //Servos
     Servo colorSensorArm; //Arm is on right side of robot looking at robot from back
     Servo colorSensorRotator;
 
-    Servo leftFlipper;
-    Servo rightFlipper;
-
+    Servo glyphFlipper;
+    Servo glyphStopper;
     Servo glyphLever;
 
     //Sensors
@@ -64,27 +63,23 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
     private static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .666;
     private static final double COLOR_ROTATOR_INITIAL_TELEOP = .132;
 
-    static final double GLYPH_LEVER_DOWN = .911;
-    static final double GLYPH_LEVER_UP = .400;
-    static final double GLYPH_LEVER_BACK = .1;
+    static final double GLYPH_FLIPPER_FLAT = .29;
+    static final double GLYPH_FLIPPER_PARTIALLY_UP = .416;
+    static final double GLYPH_FLIPPER_VERTICAL = .73;
 
-    double LEFT_FLIPPER_UP = .832;
-    double LEFT_FLIPPER_PARTIALLY_UP = .547; //Do not need corresponding right partially up
-    double LEFT_FLIPPER_FLAT = .507;
-    double LEFT_FLIPPER_DOWN = .457;
+    static final double GLYPH_STOPPER_DOWN = .365;
+    static final double GLYPH_STOPPER_UP = .584;
 
-    double RIGHT_FLIPPER_UP = .547;
-    double RIGHT_FLIPPER_FLAT = .888;
-    double RIGHT_FLIPPER_DOWN = .938;
+    static final double GLYPH_LEVER_DOWN_FLIPPER = 1;
+    static final double GLYPH_LEVER_UP = .608;
+    static final double GLYPH_LEVER_DOWN_INTAKE = .075;
 
     //Autonomous Specific Configuration
     private double moveSpeedMin = .2;
     double moveSpeedMax = .95;
     private double ticksRatioForward = 5000 / 56; //Ticks / inch
-
     private double ticksRatioStrafe = 5000 / 45;
 
-    //Values are changed by multiple glyph autonomous programs, these are the initial, default values
     double turnSpeed = .5; //Speed is ramped down as turn proceeds
     double turnSpeedMin = .2;
 
@@ -92,9 +87,9 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
         FORWARD, BACKWARD, LEFT, RIGHT;
 
         //Taken from http://stackoverflow.com/a/17006263
-        private static OpModeBaseNSR.Direction[] vals = values();
+        private static OpModeBase.Direction[] vals = values();
 
-        public OpModeBaseNSR.Direction next() {
+        public OpModeBase.Direction next() {
             return vals[(this.ordinal() + 1) % vals.length];
         }
     }
@@ -147,14 +142,11 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
         motorRightFront.setZeroPowerBehavior(BRAKE);
         motorRightBack.setZeroPowerBehavior(BRAKE);
 
-        //Other motors
-
         glyphLift.setMode(STOP_AND_RESET_ENCODER);
         glyphLift.setMode(RUN_USING_ENCODER);
         glyphLift.setZeroPowerBehavior(BRAKE);
 
         leftIntake.setZeroPowerBehavior(BRAKE);
-        leftIntake.setDirection(REVERSE);
         rightIntake.setZeroPowerBehavior(BRAKE);
 
         //Servos initialized only during autonomous init period
@@ -178,10 +170,9 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
 
         leftIntake = hardwareMap.dcMotor.get("left intake");
         rightIntake = hardwareMap.dcMotor.get("right intake");
+        moveIntake = hardwareMap.dcMotor.get("move intake");
 
         glyphLift = hardwareMap.dcMotor.get("glyph lift");
-
-        led = hardwareMap.dcMotor.get("led");
 
         //Sensors
         imu = hardwareMap.get(BNO055IMU.class, "imu 1");
@@ -191,9 +182,8 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
         colorSensorArm = hardwareMap.servo.get("color arm");
         colorSensorRotator = hardwareMap.servo.get("color rotator");
 
-        leftFlipper = hardwareMap.servo.get("left flipper");
-        rightFlipper = hardwareMap.servo.get("right flipper");
-
+        glyphFlipper = hardwareMap.servo.get("glyph flipper");
+        glyphStopper = hardwareMap.servo.get("glyph stopper");
         glyphLever = hardwareMap.servo.get("glyph lever");
     }
 
@@ -206,10 +196,9 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
             colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_AUTONOMOUS);
         }
 
-        leftFlipper.setPosition(LEFT_FLIPPER_DOWN);
-        rightFlipper.setPosition(RIGHT_FLIPPER_DOWN);
-
-        glyphLever.setPosition(GLYPH_LEVER_DOWN);
+        glyphFlipper.setPosition(GLYPH_FLIPPER_FLAT);
+        glyphStopper.setPosition(GLYPH_STOPPER_DOWN);
+        glyphLever.setPosition(GLYPH_LEVER_DOWN_INTAKE);
     }
 
     private void initializeIMU() {
@@ -294,6 +283,8 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
         }
     }
 
+
+
     void hitJewelFast(String allianceColor) {
         colorSensorArm.setPosition(.143); //Move forward
         sleep(600);
@@ -345,7 +336,7 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
             colorSensorArm.setPosition(.143);
             sleep(400);
             colorSensorRotator.setPosition(0);
-            sleep(400);
+            sleep(500);
 
             //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
             colorSensorArm.setPosition(.499); //Move arm up
@@ -478,7 +469,7 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
      * Calls move with a default of maxSpeed = moveSpeedMin, recurse = true, PID = true, timeout = 10000000
      *
      * @param distance the distance in inches to move
-     * @see OpModeBaseNSR#move(double, Direction, double, boolean, double)
+     * @see OpModeBase#move(double, Direction, double, boolean, double)
      * @see DcMotor
      * @see ModernRoboticsI2cGyro
      */
@@ -574,6 +565,30 @@ abstract public class OpModeBaseNSR extends LinearOpMode {
         if (Math.abs(getIntegratedHeading() - initialHeading) > 5 && recurse) {
             turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() < initialHeading ? OpModeBase.Direction.RIGHT : OpModeBase.Direction.LEFT, .2);
         }
+    }
+
+    public void shimmy() {
+        motorLeftFront.setMode(RUN_USING_ENCODER);
+        motorLeftBack.setMode(RUN_USING_ENCODER);
+        motorRightFront.setMode(RUN_USING_ENCODER);
+        motorRightBack.setMode(RUN_USING_ENCODER);
+
+        motorLeftFront.setPower(.5);
+        motorLeftBack.setPower(.5);
+        leftIntake.setPower(1);
+        rightIntake.setPower(-.85);
+
+        sleep(400);
+        motorLeftFront.setPower(0);
+        motorLeftBack.setPower(0);
+
+        motorRightFront.setPower(.5);
+        motorRightBack.setPower(.5);
+        leftIntake.setPower(.85);
+        rightIntake.setPower(-1);
+        sleep(800);
+        motorRightFront.setPower(0);
+        motorRightBack.setPower(0);
     }
 
     /**

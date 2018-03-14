@@ -1,7 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.State;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.TaskData;
+import org.firstinspires.ftc.teamcode.ThreadTaskInterface;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,7 +40,7 @@ Gamepad 2:
     Y: Move intake down
     A: Move intake up
  */
-@TeleOp(name = "Relic Recovery Teleop")
+@TeleOp(name = "Relic Recovery Teleop State", group = "State")
 public class RelicRecoveryTeleop extends OpModeBase {
     private HashMap<String, Boolean> previousLoopValues = new HashMap<>();
     private boolean drivetrainReverse = false;

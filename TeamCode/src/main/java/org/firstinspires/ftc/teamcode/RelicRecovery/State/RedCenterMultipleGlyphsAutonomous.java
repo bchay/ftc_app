@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.State;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-@Autonomous(name = "Red Center - Multiple Glyphs", group = "Autonomous")
+@Autonomous(name = "Red Center State - Multiple Glyphs", group = "State")
 public class RedCenterMultipleGlyphsAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);

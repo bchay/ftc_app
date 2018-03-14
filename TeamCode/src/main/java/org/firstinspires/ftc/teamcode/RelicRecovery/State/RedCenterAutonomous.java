@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.State;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
-@Autonomous(name = "Red Center", group = "Autonomous")
+@Autonomous(name = "Red Center State", group = "State")
 public class RedCenterAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);

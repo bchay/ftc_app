@@ -1,7 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.RelicRecovery.NSR;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.TaskData;
+import org.firstinspires.ftc.teamcode.ThreadTaskInterface;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,8 +44,8 @@ Gamepad 2:
  * This is the code for the teleop program for the robot built for the North Super Regional competition.
  *
  */
-@TeleOp(name = "Relic Recovery Teleop NSR")
-public class RelicRecoveryTeleopNSR extends OpModeBaseNSR {
+@TeleOp(name = "Relic Recovery Teleop NSR", group = "NSR")
+public class RelicRecoveryTeleopNSR extends OpModeBase {
     private HashMap<String, Boolean> previousLoopValues = new HashMap<>();
     private double maxSpeed = 1;
     private ArrayList<TaskData> pendingTasks = new ArrayList<>();
@@ -114,7 +117,7 @@ public class RelicRecoveryTeleopNSR extends OpModeBaseNSR {
 
             if(gamepad1.b) led.setPower(1); //Red
             else if(gamepad1.x) led.setPower(-1); //Blue
-            else led.setPower(0);
+            //No else, setPower(0) is located later
 
             //********** Gamepad 2 - Start + B ***********
             if(gamepad2.left_bumper && gamepad1.right_trigger < .5 && !gamepad1.right_bumper) { //Do not override gamepad1 flipper movement
@@ -138,6 +141,9 @@ public class RelicRecoveryTeleopNSR extends OpModeBaseNSR {
 
             if(gamepad2.dpad_left) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .03, 0, 1));
             if(gamepad2.dpad_right) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .03, 0, 1));
+
+            if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_DOWN) > .2) led.setPower(-1);
+            else led.setPower(0);
 
             executeThreads();
 

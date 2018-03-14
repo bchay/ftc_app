@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-interface ThreadTaskInterface {
-    void runTask();
+public interface ThreadTaskInterface {
+    public void runTask();
 }
