@@ -13,7 +13,6 @@ public class RedCenterAutonomous extends OpModeBase {
         hitJewel("Red");
 
         //Read VuMark to determine cryptobox key
-
         RelicRecoveryVuMark vuMark = readVuMark("Red");
 
         if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
@@ -30,23 +29,6 @@ public class RedCenterAutonomous extends OpModeBase {
             move(10.5, Direction.BACKWARD, moveSpeedMax, false, 1000); //Move towards cryptobox before dumping glyph
         }
 
-        //Move intake down by spinning wheels
-        leftIntake.setPower(1);
-        rightIntake.setPower(-1);
-        sleep(800);
-
-        leftIntake.setPower(0);
-        rightIntake.setPower(0);
-
-        //Slowly move flipper up tp deposit glyph into cryptobox
-        while(opModeIsActive() && Math.abs(leftFlipper.getPosition() - LEFT_FLIPPER_UP) > .01) {
-            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .008, 0, LEFT_FLIPPER_UP));
-            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .008, RIGHT_FLIPPER_UP, 1));
-        }
-
-        leftFlipper.setPosition(LEFT_FLIPPER_UP);
-        rightFlipper.setPosition(RIGHT_FLIPPER_UP);
-
-        move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+        flipGlyph();
     }
 }

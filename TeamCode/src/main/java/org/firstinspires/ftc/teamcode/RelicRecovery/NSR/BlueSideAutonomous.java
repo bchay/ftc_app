@@ -33,30 +33,6 @@ public class BlueSideAutonomous extends OpModeBase {
         }
 
 
-        //Move intake down by spinning wheels
-        leftIntake.setPower(1);
-        rightIntake.setPower(-1);
-        sleep(800);
-
-        leftIntake.setPower(0);
-        rightIntake.setPower(0);
-
-        //Slowly move flipper up tp deposit glyph into cryptobox
-        while(opModeIsActive() && Math.abs(leftFlipper.getPosition() - LEFT_FLIPPER_UP) > .01) {
-            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .008, 0, LEFT_FLIPPER_UP));
-            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .008, RIGHT_FLIPPER_UP, 1));
-        }
-        leftFlipper.setPosition(LEFT_FLIPPER_UP); //Ensure that flipper is fully up because of Math.abs threshold
-        rightFlipper.setPosition(RIGHT_FLIPPER_UP);
-        led.setPower(-1);
-
-        move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
-
-        leftFlipper.setPosition(LEFT_FLIPPER_DOWN); //Move flipper into robot before ramming back into glyph
-        rightFlipper.setPosition(RIGHT_FLIPPER_DOWN);
-        sleep(500);
-
-        move(7, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again, pushing it into cryptobox
-        move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+       flipGlyph();
     }
 }

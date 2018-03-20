@@ -30,23 +30,6 @@ public class BlueCenterAutonomous extends OpModeBase {
             move(7.5, Direction.BACKWARD); //Move towards cryptobox
         }
 
-        //Move intake down by spinning wheels
-        leftIntake.setPower(1);
-        rightIntake.setPower(-1);
-        sleep(800);
-
-        leftIntake.setPower(0);
-        rightIntake.setPower(0);
-
-        //Slowly move flipper up tp deposit glyph into cryptobox
-        while(opModeIsActive() && Math.abs(leftFlipper.getPosition() - LEFT_FLIPPER_UP) > .01) {
-            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .008, 0, LEFT_FLIPPER_UP));
-            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .008, RIGHT_FLIPPER_UP, 1));
-        }
-
-        leftFlipper.setPosition(LEFT_FLIPPER_UP);
-        rightFlipper.setPosition(RIGHT_FLIPPER_UP);
-
-        move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+        flipGlyph();
     }
 }

@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 @TeleOp(name = "Intake Align Test", group = "Test Code")
-public class IntakeAutoAlignTest extends OpMode {
+public class IntakeAutoAlign extends OpMode {
     private DcMotor leftIntake;
     private DcMotor rightIntake;
 
@@ -20,7 +20,7 @@ public class IntakeAutoAlignTest extends OpMode {
 
     private boolean checkMotors = true;
 
-    private ArrayList<IntakeAutoAlignTest.TaskData> pendingTasks = new ArrayList<>();
+    private ArrayList<IntakeAutoAlign.TaskData> pendingTasks = new ArrayList<>();
 
     public void init() {
         leftIntake = hardwareMap.dcMotor.get("left intake");
@@ -73,9 +73,9 @@ public class IntakeAutoAlignTest extends OpMode {
     private class TaskData {
         private long startTime;
         private int delay;
-        private IntakeAutoAlignTest.ThreadTaskInterface task;
+        private IntakeAutoAlign.ThreadTaskInterface task;
 
-        TaskData(int delay, IntakeAutoAlignTest.ThreadTaskInterface task) {
+        TaskData(int delay, IntakeAutoAlign.ThreadTaskInterface task) {
             this.startTime = new Date().getTime();
             this.delay = delay;
             this.task = task;
@@ -87,9 +87,9 @@ public class IntakeAutoAlignTest extends OpMode {
     }
 
     private void executeThreads() {
-        Iterator<IntakeAutoAlignTest.TaskData> iterator = pendingTasks.iterator();
+        Iterator<IntakeAutoAlign.TaskData> iterator = pendingTasks.iterator();
         while (iterator.hasNext()) {
-            IntakeAutoAlignTest.TaskData task = iterator.next();
+            IntakeAutoAlign.TaskData task = iterator.next();
 
             if(new Date().getTime() - task.startTime > task.delay) {
                 task.task.runTask();

@@ -60,10 +60,10 @@ abstract class OpModeBase extends LinearOpMode {
     private ColorSensor colorSensor; //Color sensor is pointing towards right jewel
 
     //General Constants
-    private static final double COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS = .794;
-    static final double COLOR_ROTATOR_INITIAL_AUTONOMOUS = .753;
-    private static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .85;
-    private static final double COLOR_ROTATOR_INITIAL_TELEOP = .132;
+    static final double COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS = .938;
+    static final double COLOR_SENSOR_ARM_INITIAL_TELEOP = .8;
+
+    static final double COLOR_ROTATOR_INITIAL = 1;
 
     static final double GLYPH_LEVER_DOWN = .911;
     static final double GLYPH_LEVER_UP = .400;
@@ -113,7 +113,10 @@ abstract class OpModeBase extends LinearOpMode {
     private double integratedHeading = 0;
 
     /**
-     * Configures all parts of the robot.
+     * Configures all parts of the robot. This method is called by the subclasses of OpModeBase, which allows all of the various OpModes
+     * to run using a single base hardware class.
+     * @param opModeType An enum of either AUTONOMOUS or TELEOP that specifies the type of opmode.
+     * This is used because configuration is slightly different for each type of opmode.
      */
     public void runOpMode(OpModeType opModeType) {
         mapHardware();
@@ -170,6 +173,9 @@ abstract class OpModeBase extends LinearOpMode {
         }
     }
 
+    /**
+     * This method maps all of the robot hardware.
+     */
     private void mapHardware() {
         //Drive Motors
         motorLeftFront = hardwareMap.dcMotor.get("left front");
@@ -185,7 +191,7 @@ abstract class OpModeBase extends LinearOpMode {
         led = hardwareMap.dcMotor.get("led");
 
         //Sensors
-        imu = hardwareMap.get(BNO055IMU.class, "imu 1");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
         colorSensor = hardwareMap.colorSensor.get("color");
 
         //Servos
@@ -198,13 +204,18 @@ abstract class OpModeBase extends LinearOpMode {
         glyphLever = hardwareMap.servo.get("glyph lever");
     }
 
+    /**
+     * This method initializes all of the servos.
+     * It takes a parameter of the type of opmode, as the initialization is slightly different for autonomous and teleop.
+     * @param opModeType An enum representing the type of OpMode.
+     */
     void initializeServos(OpModeType opModeType) {
-        if(opModeType.equals(OpModeType.TELEOP)) {
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP);
-        } else {
+        if(opModeType.equals(OpModeType.AUTONOMOUS)) {
             colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_AUTONOMOUS);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        } else {
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
         }
 
         leftFlipper.setPosition(LEFT_FLIPPER_DOWN);
@@ -213,6 +224,9 @@ abstract class OpModeBase extends LinearOpMode {
         glyphLever.setPosition(GLYPH_LEVER_DOWN);
     }
 
+    /**
+     * This method initializes the BNO055 IMU that is built into the REV Expansion Hub.
+     */
     private void initializeIMU() {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -227,6 +241,10 @@ abstract class OpModeBase extends LinearOpMode {
 
     //*************** Autonomous Methods ***************
 
+    /**
+     * This method displays telemetry until the opmode begins to run.
+     * If the opmode is stopped during initialization, the method gracefully exits.
+     */
     private void displayInitialTelemetry() {
         while(!isStarted() && !isStopRequested()) { //Display distance telemetry for robot alignment
             telemetry.addData("Ready to start the program.", "");
@@ -237,17 +255,25 @@ abstract class OpModeBase extends LinearOpMode {
         }
     }
 
+    /**
+     * This method hits off the jewel matching the opposing alliance's color.
+     * This method has longer delays and slower movements, and is thus more accurate than the faster version.
+     * @param allianceColor  A string corresponding to the alliance color.
+     * This must be equal to either "Blue" or "Red".
+     */
     void hitJewel(String allianceColor) {
-        colorSensorArm.setPosition(.143); //Move forward
-        sleep(800);
-        colorSensorRotator.setPosition(.25); //Center rotator between jewels
-        sleep(500);
-        colorSensorArm.setPosition(.086); //Move arm lower to move color sensor behind right jewel
-        sleep(400);
+        colorSensorArm.setPosition(.495); //Move arm down slightly
+        sleep(1300);
+
+        colorSensorRotator.setPosition(.2); //Move rotator to center between jewels
+        sleep(2000);
+
+        colorSensorArm.setPosition(0); //Move arm down between jewels
+        sleep(1200);
 
         //Knock off jewel of opposing alliance color
         time.reset();
-        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
+        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 5000) { //Timeout at 5 second
             telemetry.addData("Color", "Unknown");
             telemetry.update();
         }
@@ -256,110 +282,30 @@ abstract class OpModeBase extends LinearOpMode {
         telemetry.addData("Color", getColor());
         telemetry.update();
 
-        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) { //Hit left jewel
-            colorSensorRotator.setPosition(.728);
-            sleep(500);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS); //Move arm up to initial autonomous position
-            sleep(1300);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-            sleep(500);
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+        //Color sensor is facing right jewel
+        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
+             colorSensorRotator.setPosition(.7); //Hit left jewel
+            sleep(1000);
         } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
             colorSensorRotator.setPosition(0); //Hit right jewel
-            sleep(500);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(.499); //Move arm up
-            sleep(300);
-            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
-            sleep(300);
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
-            sleep(300);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-        } else { //Color not detected, move arm up and right to avoid hitting either jewel
-            colorSensorArm.setPosition(.143);
-            sleep(500);
-            colorSensorRotator.setPosition(0);
-            sleep(500);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(.499); //Move arm up
-            sleep(300);
-            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
-            sleep(300);
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
-            sleep(300);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
+            sleep(1000);
         }
+
+        colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS);
+        sleep(1000);
+
+        colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+        sleep(1000);
     }
 
-    void hitJewelFast(String allianceColor) {
-        colorSensorArm.setPosition(.143); //Move forward
-        sleep(600);
-        colorSensorRotator.setPosition(.25); //Center rotator between jewels
-        sleep(500);
-        colorSensorArm.setPosition(.086); //Move arm lower to move color sensor behind right jewel
-        sleep(400);
-
-        //Knock off jewel of opposing alliance color
-        time.reset();
-        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 1000) { //Timeout at 1 second
-            telemetry.addData("Color", "Unknown");
-            telemetry.update();
-        }
-
-        //Color sensor reads left jewel
-        telemetry.addData("Color", getColor());
-        telemetry.update();
-
-        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) { //Hit left jewel
-            colorSensorRotator.setPosition(.728);
-            sleep(500);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_AUTONOMOUS); //Move arm up to initial autonomous position
-            sleep(600);
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-                    sleep(400);
-                    colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-                }
-            }).start();
-        } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
-            colorSensorRotator.setPosition(0); //Hit right jewel
-            sleep(400);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(.499); //Move arm up
-            sleep(300);
-            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
-            sleep(300);
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
-            sleep(300);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-        } else { //Color not detected, move arm up and right to avoid hitting either jewel
-            colorSensorArm.setPosition(.143);
-            sleep(400);
-            colorSensorRotator.setPosition(0);
-            sleep(400);
-
-            //Return jewel arm to upright position so that it does not get in the way of the remainder of the autonomous
-            colorSensorArm.setPosition(.499); //Move arm up
-            sleep(300);
-            colorSensorRotator.setPosition(.485); //Move rotator so that the arm can move to position rotator in locked position
-            sleep(300);
-            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP); //Move arm up fully
-            sleep(300);
-            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL_TELEOP); //Move rotator behind metal piece to stop it from falling after teleop ends
-        }
-    }
-
-
+    /**
+     * This method reads the VuMark using Vuforia and the phone's camera.
+     * This method times out after one second. If the VuMark has not been determined, it defaults to the close cryptobox column.
+     * @param allianceColor The alliance color of the robot. This must be either "Blue" or "Red".
+     * @return The RelicRecoveryVuMark corresponding to the read VuMark.
+     * If the VuMark cannot be determined, it defaults to the closest column for the alliance color.
+     * @see RelicRecoveryVuMark
+     */
     RelicRecoveryVuMark readVuMark(String allianceColor) {
         //Read VuMark to determine cryptobox key
         RelicRecoveryVuMark vuMark = vuMarkReader.getVuMark();
@@ -376,6 +322,37 @@ abstract class OpModeBase extends LinearOpMode {
         if(vuMark.equals(RelicRecoveryVuMark.UNKNOWN)) vuMark = allianceColor.equals("Blue") ? RelicRecoveryVuMark.LEFT : RelicRecoveryVuMark.RIGHT;
 
         return vuMark;
+    }
+
+    void flipGlyph() {
+        //Move intake down by spinning wheels
+        colorSensorArm.setPosition(.515); //Move arm down slightly so that the intake can move down
+        sleep(1000);
+
+        leftIntake.setPower(1);
+        rightIntake.setPower(-1);
+        sleep(1200);
+
+        leftIntake.setPower(0);
+        rightIntake.setPower(0);
+
+        //Slowly move flipper up tp deposit glyph into cryptobox
+        while(opModeIsActive() && Math.abs(leftFlipper.getPosition() - LEFT_FLIPPER_UP) > .01) {
+            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .008, 0, LEFT_FLIPPER_UP));
+            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .008, RIGHT_FLIPPER_UP, 1));
+        }
+        leftFlipper.setPosition(LEFT_FLIPPER_UP); //Ensure that flipper is fully up because of Math.abs threshold
+        rightFlipper.setPosition(RIGHT_FLIPPER_UP);
+        led.setPower(-1);
+
+        move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+
+        leftFlipper.setPosition(LEFT_FLIPPER_DOWN); //Move flipper into robot before ramming back into glyph
+        rightFlipper.setPosition(RIGHT_FLIPPER_DOWN);
+        sleep(500);
+
+        move(7, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again, pushing it into cryptobox
+        move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
     }
 
     /**
@@ -594,7 +571,13 @@ abstract class OpModeBase extends LinearOpMode {
         return "Unknown";
     }
 
-    private double getIntegratedHeading() { //https://ftcforum.usfirst.org/forum/ftc-technology/53477-rev-imu-questions?p=53481#post53481
+    /**
+     * This method returns a value of the Z axis of the REV Expansion Hub IMU.
+     * It transforms the value from (-180, 180) to (-inf, inf).
+     * This code was taken and modified slightly from https://ftcforum.usfirst.org/forum/ftc-technology/53477-rev-imu-questions?p=53481#post53481.
+     * @return The integrated heading on the interval (-inf, inf).
+     */
+    private double getIntegratedHeading() {
         //IMU is mounted vertically, so the Y axis is used for turning
         double currentHeading = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).thirdAngle;
         double deltaHeading = currentHeading - previousHeading;

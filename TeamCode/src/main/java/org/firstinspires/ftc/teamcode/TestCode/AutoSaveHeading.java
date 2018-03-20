@@ -15,6 +15,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
+/**
+ * This program is an example of using the Android SharedPreferences API to save the robot heading after the autonomous period.
+ * It is to be used with the rotation invariant mechanum drive code, which requires the initial heading at the beginning the teleop period.
+ * This creates a Thread to write to the SharedPreferences file without slowing down the loop, and to ensure that the code is correctly saved even if the OpMode stops.
+ * 
+ */
 @Autonomous(name = "Save Autonomous Heading", group = "Test Code")
 public class AutoSaveHeading extends LinearOpMode {
     private BNO055IMU imu;

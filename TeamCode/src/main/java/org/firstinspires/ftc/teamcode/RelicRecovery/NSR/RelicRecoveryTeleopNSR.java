@@ -126,7 +126,8 @@ public class RelicRecoveryTeleopNSR extends OpModeBase {
             }
 
             if(gamepad2.right_bumper && gamepad1.right_trigger < .5) {
-                if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_UP) < .35) glyphLever.setPosition(Range.clip(glyphLever.getPosition() - .001, 0, GLYPH_LEVER_UP));
+                //Move lever medium speed until it nears the upward position, then move it slowly to be fully up
+                if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_UP) < .20) glyphLever.setPosition(Range.clip(glyphLever.getPosition() - .001, 0, GLYPH_LEVER_UP));
                 else glyphLever.setPosition(Range.clip(glyphLever.getPosition() - .01, 0, GLYPH_LEVER_UP));
             } else if(gamepad1.right_trigger < .5) glyphLever.setPosition(GLYPH_LEVER_DOWN);
 
@@ -136,14 +137,22 @@ public class RelicRecoveryTeleopNSR extends OpModeBase {
             else glyphLift.setPower(0);
 
             //Control color sensor arm
-            if(gamepad2.dpad_up) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() + .03, 0, 1));
-            if(gamepad2.dpad_down) colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() - .03, 0, 1));
-
-            if(gamepad2.dpad_left) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .03, 0, 1));
-            if(gamepad2.dpad_right) colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .03, 0, 1));
+            if(gamepad2.a) {
+                colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL_TELEOP);
+                colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+            } else {
+                if (gamepad2.dpad_up)
+                    colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() + .03, 0, 1));
+                if (gamepad2.dpad_down)
+                    colorSensorArm.setPosition(Range.clip(colorSensorArm.getPosition() - .03, 0, 1));
+                if (gamepad2.dpad_left)
+                    colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() + .03, 0, 1));
+                if (gamepad2.dpad_right)
+                    colorSensorRotator.setPosition(Range.clip(colorSensorRotator.getPosition() - .03, 0, 1));
+            }
 
             if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_DOWN) > .2) led.setPower(-1);
-            else led.setPower(0);
+            else if(!gamepad1.b && !gamepad1.x) led.setPower(0);
 
             executeThreads();
 

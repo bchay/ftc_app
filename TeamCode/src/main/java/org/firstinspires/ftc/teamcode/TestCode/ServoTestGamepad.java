@@ -23,7 +23,7 @@ public class ServoTestGamepad extends OpMode {
 
 
     public void init() {
-        s1 = hardwareMap.servo.get("1");
+        s1 = hardwareMap.servo.get("1"); //Color Rotator, gamepad1.dpad_left
         s2 = hardwareMap.servo.get("2");
         s3 = hardwareMap.servo.get("3");
         s4 = hardwareMap.servo.get("4");

@@ -53,7 +53,7 @@ import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
  </p>
  */
 @TeleOp(name = "IMU Mecanum", group = "Test Code")
-public class RotationInvariantMecanumDriveTest extends LinearOpMode {
+public class RotationInvariantMecanumDrive extends LinearOpMode {
     private DcMotor motorLeftFront;
     private DcMotor motorLeftBack;
     private DcMotor motorRightFront;
@@ -72,7 +72,7 @@ public class RotationInvariantMecanumDriveTest extends LinearOpMode {
     public void runOpMode() {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(hardwareMap.appContext);
 
-        autonomousOffset = (-90 + sharedPreferences.getFloat("org.firstinspires.ftc.teamcode.AutonomousHeading", 0) + 360) % 360; //Use base gyro value
+        autonomousOffset = 0; //(-90 + sharedPreferences.getFloat("org.firstinspires.ftc.teamcode.AutonomousHeading", 0) + 360) % 360; //Use base gyro value
         desiredHeading = autonomousOffset;
 
         motorLeftFront = hardwareMap.dcMotor.get("left front");

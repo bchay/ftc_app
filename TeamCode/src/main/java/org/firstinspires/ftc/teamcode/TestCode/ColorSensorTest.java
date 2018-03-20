@@ -23,7 +23,7 @@ public class ColorSensorTest extends LinearOpMode {
 
             if(hsv[2] < 10) telemetry.addData("Color", "Unknown");
             else if ((hsv[0] < 30 || hsv[0] > 340) && hsv[1] > .2) telemetry.addData("Color", "Red");
-            else if ((hsv[0] > 170 && hsv[0] < 260) && hsv[1] > .2) telemetry.addData("Color", "Blue");
+            else if ((hsv[0] > 140 && hsv[0] < 280) && hsv[1] > .2) telemetry.addData("Color", "Blue");
             else telemetry.addData("Color", "Unknown");
 
             telemetry.addData("Hue", hsv[0]);
