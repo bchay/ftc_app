@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode.TestCode;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name = "Servo Test", group = "Test Code")
-public class ServoTest extends OpMode {
+public class ServoTest extends LinearOpMode {
     Servo s1;
     Servo s2;
     Servo s3;
@@ -22,7 +23,7 @@ public class ServoTest extends OpMode {
 
 
 
-    public void init() {
+    public void runOpMode() {
         s1 = hardwareMap.servo.get("1");
         s2 = hardwareMap.servo.get("2");
         s3 = hardwareMap.servo.get("3");
@@ -35,34 +36,39 @@ public class ServoTest extends OpMode {
         s10 = hardwareMap.servo.get("10");
         s11 = hardwareMap.servo.get("11");
         s12 = hardwareMap.servo.get("12");
-    }
 
-    public void loop() {
-        s1.setPosition(.5);
-        s2.setPosition(.5);
-        s3.setPosition(.5);
-        s4.setPosition(.5);
-        s5.setPosition(.5);
-        s6.setPosition(.5);
-        s7.setPosition(.5);
-        s8.setPosition(.5);
-        s9.setPosition(.5);
-        s10.setPosition(.5);
-        s11.setPosition(.5);
-        s12.setPosition(.5);
+        waitForStart();
 
-        telemetry.addData("s1", s1.getPosition());
-        telemetry.addData("s2", s2.getPosition());
-        telemetry.addData("s3", s3.getPosition());
-        telemetry.addData("s4", s4.getPosition());
-        telemetry.addData("s5", s5.getPosition());
-        telemetry.addData("s6", s6.getPosition());
-        telemetry.addData("s7", s7.getPosition());
-        telemetry.addData("s8", s8.getPosition());
-        telemetry.addData("s9", s9.getPosition());
-        telemetry.addData("s10", s10.getPosition());
-        telemetry.addData("s11", s11.getPosition());
-        telemetry.addData("s12", s12.getPosition());
-        telemetry.update();
+        while(opModeIsActive()) {
+            s1.setPosition(.5);
+            s2.setPosition(.5);
+            s3.setPosition(.5);
+            s4.setPosition(.5);
+            s5.setPosition(.5);
+            s6.setPosition(.5);
+            s7.setPosition(.5);
+            s8.setPosition(.5);
+            s9.setPosition(.5);
+            s10.setPosition(.5);
+            s11.setPosition(.5);
+            s12.setPosition(.5);
+
+            sleep(2000);
+
+            s1.setPosition(.1);
+            s2.setPosition(0);
+            s3.setPosition(0);
+            s4.setPosition(0);
+            s5.setPosition(0);
+            s6.setPosition(0);
+            s7.setPosition(0);
+            s8.setPosition(0);
+            s9.setPosition(0);
+            s10.setPosition(0);
+            s11.setPosition(0);
+            s12.setPosition(0);
+
+            sleep(2000);
+        }
     }
 }

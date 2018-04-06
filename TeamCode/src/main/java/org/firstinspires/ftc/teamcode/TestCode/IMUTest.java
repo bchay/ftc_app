@@ -52,22 +52,27 @@ public class IMUTest extends LinearOpMode {
     BNO055IMU imu;
 
     @Override public void runOpMode() {
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu 1");
         imu.initialize(parameters);
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        parameters.mode = BNO055IMU.SensorMode.IMU;
+
         telemetry.addData("Please Press Start", "");
         waitForStart();
 
         while (opModeIsActive()) {
-            telemetry.addData("X Heading", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).firstAngle);
-            telemetry.addData("Y Heading", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).secondAngle);
-            telemetry.addData("Z Heading", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).thirdAngle);
+            Orientation orientation = imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+
+            telemetry.addData("X Heading", orientation.firstAngle);
+            telemetry.addData("Y Heading", orientation.secondAngle);
+            telemetry.addData("Z Heading", orientation.thirdAngle);
             telemetry.update();
         }
     }
