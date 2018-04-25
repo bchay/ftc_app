@@ -27,13 +27,13 @@ public class ServoTestGamepad extends OpMode {
         s2 = hardwareMap.servo.get("2");
         s3 = hardwareMap.servo.get("3"); //A, Y - Jewel rotator - .082
         s4 = hardwareMap.servo.get("4");
-        s5 = hardwareMap.servo.get("5"); //Grabber
+        s5 = hardwareMap.servo.get("5"); //Grabber 1.right trigger
         s6 = hardwareMap.servo.get("6");
         s7 = hardwareMap.servo.get("7");
-        s8 = hardwareMap.servo.get("8"); //Left flipper
-        s9 = hardwareMap.servo.get("9");
+        s8 = hardwareMap.servo.get("8"); //Left flipper, dpad up, down
+        s9 = hardwareMap.servo.get("9"); //Right flipper, gamepad2 a, y
         s10 = hardwareMap.servo.get("10"); //Glyph lever - .931
-        s11 = hardwareMap.servo.get("11"); //Right flipper
+        s11 = hardwareMap.servo.get("11");
         s12 = hardwareMap.servo.get("12");
     }
 

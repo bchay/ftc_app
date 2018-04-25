@@ -16,6 +16,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -49,10 +50,7 @@ public class JewelDetection extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            if(gamepad1.a) {
-                processImage();
-                sleep(5000);
-            }
+            processImage();
         }
     }
 
@@ -81,33 +79,34 @@ public class JewelDetection extends LinearOpMode {
         }
     }
 
-    void jewel(Bitmap bitmap) {
+    private void jewel(Bitmap bitmap) {
         Mat mat = new Mat();
         Mat rotated = new Mat();
-        Mat processed = new Mat();
+        Mat processed;
         Mat blue = new Mat();
         Mat red = new Mat();
         Mat red1 = new Mat();
         Mat red2 = new Mat();
 
         Utils.bitmapToMat(bitmap, mat);
-        Core.rotate(mat, rotated, Core.ROTATE_90_CLOCKWISE);
-        Imgproc.blur(rotated, processed, new Size(10, 10));
+        Core.rotate(mat, rotated, Core.ROTATE_90_COUNTERCLOCKWISE);
+
+        //Crop image to bottom right corner
+        //New image has width of 200px and height of 400px
+        processed = new Mat(rotated, new Rect(rotated.width() - 200, rotated.height() -  300, 150, 200));
+
+        Bitmap bm = Bitmap.createBitmap(processed.width(), processed.height(), Bitmap.Config.RGB_565);
+        Utils.matToBitmap(processed, bm);
+        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
+
+        Imgproc.blur(processed, processed, new Size(10, 10));
         Imgproc.cvtColor(processed, processed, Imgproc.COLOR_RGB2HSV);
 
-        Core.inRange(processed, new Scalar(84, 177, 89), new Scalar(126, 255, 255), blue);
+        Core.inRange(processed, new Scalar(84, 177, 89), new Scalar(126, 255, 255), blue); //Detect blue HSV values
 
-        Core.inRange(processed, new Scalar(0, 117, 115), new Scalar(6, 255, 255), red1);
+        Core.inRange(processed, new Scalar(0, 117, 115), new Scalar(6, 255, 255), red1); //Detect red HSV values
         Core.inRange(processed, new Scalar(114, 209, 106), new Scalar(180, 255, 230), red2);
         Core.bitwise_or(red1, red2, red); //Combine upper and lower red hue ranges
-
-        Bitmap bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(blue, bm);
-        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
-
-        bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(red, bm);
-        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
 
         Imgproc.erode(blue, blue, new Mat(), new Point(-1, -1), 5, Core.BORDER_CONSTANT, new Scalar(-1));
         Imgproc.dilate(blue, blue, new Mat(), new Point(-1, -1), 25, Core.BORDER_CONSTANT, new Scalar(-1));
@@ -118,28 +117,15 @@ public class JewelDetection extends LinearOpMode {
         List<MatOfPoint> blueContours = new ArrayList<>();
         List<MatOfPoint> redContours = new ArrayList<>();
         Mat hierarchy = new Mat();
+
         Imgproc.findContours(blue, blueContours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         Imgproc.findContours(red, redContours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        //Get bounding rectangles
-        if(blueContours.size() == 1 && redContours.size() == 1) {
-            if (Imgproc.boundingRect(blueContours.get(0)).x < Imgproc.boundingRect(redContours.get(0)).x) telemetry.addData("Blue Red", "");
-            else telemetry.addData("Red Blue", "");
-        } else telemetry.addData("Unknown", "Blue: " + blueContours.size() + ", Red: " + redContours.size());
-
+        //Determine orientation of jewel
+        if(blueContours.size() == 1 && redContours.size() == 0) telemetry.addData("Blue Red", ""); //Red jewel is on right
+        else if (blueContours.size() == 0 && redContours.size() == 1) telemetry.addData("Red Blue", "");
+        else telemetry.addData("Unknown", "");
         telemetry.update();
-
-        bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(blue, bm);
-        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
-
-        bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(red, bm);
-        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
-
-        bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(rotated, bm);
-        MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
 
         mat.release();
         rotated.release();

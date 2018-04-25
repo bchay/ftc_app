@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TestCode;
 
 import android.graphics.Bitmap;
+import android.provider.MediaStore;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -28,7 +29,7 @@ import java.util.List;
 @TeleOp(name = "CV Cryptobox Detection", group = "Test Code")
 public class CryptoboxDetection extends LinearOpMode {
     VuforiaLocalizer vuforia;
-    Image rgb;
+    Image rgb; //Image that is obtained through Vuforia
 
     static {
         System.loadLibrary("opencv_java3");
@@ -51,10 +52,7 @@ public class CryptoboxDetection extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            if(gamepad1.a) {
-                processImage();
-                sleep(5000);
-            }
+            processImage();
         }
     }
 
@@ -83,6 +81,14 @@ public class CryptoboxDetection extends LinearOpMode {
         }
     }
 
+    /*
+    12 - 608
+    24 - 343
+    36 - 203
+    48 - 155
+     */
+
+
     void detectCryptobox(Bitmap bitmap) {
         Mat mat = new Mat();
         Mat rotated = new Mat();
@@ -91,7 +97,7 @@ public class CryptoboxDetection extends LinearOpMode {
         Mat red2 = new Mat();
 
         Utils.bitmapToMat(bitmap, mat);
-        Core.rotate(mat, rotated, Core.ROTATE_90_CLOCKWISE);
+        Core.rotate(mat, rotated, Core.ROTATE_90_COUNTERCLOCKWISE);
         Imgproc.blur(rotated, processed, new Size(10, 10));
         Imgproc.cvtColor(processed, processed, Imgproc.COLOR_RGB2HSV);
 
@@ -153,6 +159,19 @@ public class CryptoboxDetection extends LinearOpMode {
             }
         });
 
+        //Contains coordinates of center of each detected column
+        ArrayList<Integer> xCoordinates = new ArrayList<>();
+
+        //Determine position of center of each column, ignoring last column
+        //For loop will not execute if only one column is detected
+        for(int i = 0; i < columns.size() - 1; i++) {
+            //X values represent the left side of the bounding box
+            int x = columns.get(i).x + columns.get(i).width + ((columns.get(i + 1).x - (columns.get(i).x + columns.get(i).width)) / 2);
+            xCoordinates.add(x);
+
+            Imgproc.circle(rotated, new Point(x, columns.get(i).y), 10, new Scalar(0, 0, 0), 10);
+        }
+
         double avg = 0;
 
         for(int i = 0; i < columns.size() - 1; i++) {
@@ -161,16 +180,18 @@ public class CryptoboxDetection extends LinearOpMode {
 
         avg /= (double) (columns.size() - 1);
 
-        /*
+
         //Save Image to Gallery
         Bitmap bm = Bitmap.createBitmap(rotated.width(), rotated.height(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(rotated, bm);
         MediaStore.Images.Media.insertImage(hardwareMap.appContext.getContentResolver(), bm, "OPENCV Mat", "OpenCV");
-        */
 
 
-        telemetry.addData("Distance", 3963.51 / avg + 0.0795029);
+        //Distance algorithm will need to be altered slighyly once phone is mounted on robot - camera will be moved up and be upside down
+        telemetry.addData("Distance", 9090.64 / (avg + 29.9988) + -1.6938);
         telemetry.addData("Avg", avg);
+        telemetry.addData("Number", columns.size());
+        telemetry.addData("X Coordinates", xCoordinates);
         telemetry.update();
 
         mat.release();

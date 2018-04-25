@@ -22,14 +22,15 @@ import org.firstinspires.ftc.teamcode.VuMarkReader;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 
 /**
- * This class contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBaseNSR.
- * This class is for the North Super Regional robot for the 2017 - 2018 Relic Recovery FTC season. This class is abstract, and so all
+ * This class contains variables and methods used to control the robot. Autonomous and TeleOp classes are subclasses of OpModeBase.
+ * This class is for the FIRST World Championship robot for the 2017 - 2018 Relic Recovery FTC season. This class is abstract, and so all
  * implementations must be subclasses of it, rather than an instance of this class.
  */
 abstract class OpModeBase extends LinearOpMode {
@@ -45,67 +46,51 @@ abstract class OpModeBase extends LinearOpMode {
     DcMotor leftIntake;
     DcMotor rightIntake;
 
-    DcMotor led;
+    DcMotor led; //-1 produces blue light, +1 produces red light
 
     //Servos
     Servo colorSensorArm; //Arm is on right side of robot looking at robot from back
     Servo colorSensorRotator;
 
-    Servo leftFlipper;
+    Servo leftFlipper; //Flippers move in sync to dump glyph without torquing flipper
     Servo rightFlipper;
 
-    Servo glyphLever;
-
-    Servo grabber; //Grabber servo controls both sides of grabber attached to flipper
+    Servo glyphLever; //Located above intake to move glyphs from intake into flipper
 
     //Sensors
     BNO055IMU imu;
 
-    ColorSensor colorSensorFront; //Used for reading glyph color
-    ColorSensor colorSensorBack;
-
     //General Constants
-    static final double COLOR_SENSOR_ARM_INITIAL = .141;
-    static final double COLOR_ROTATOR_INITIAL = .082;
+    static final double COLOR_SENSOR_ARM_INITIAL = .091;
+    static final double COLOR_ROTATOR_INITIAL = .092;
 
     static final double GLYPH_LEVER_DOWN = .911;
-    static final double GLYPH_LEVER_UP = .400;
+    static final double GLYPH_LEVER_UP = .3;
     static final double GLYPH_LEVER_BACK = .1;
 
 
-    double LEFT_FLIPPER_UP = .828;
-    double LEFT_FLIPPER_PARTIALLY_UP = .698;
-    double LEFT_FLIPPER_FLAT = .408; //Up position used when jostling glyphs for alignment
-    double LEFT_FLIPPER_DOWN = .408;
+    double LEFT_FLIPPER_UP = .835;
+    double LEFT_FLIPPER_PARTIALLY_UP = .697; //No need for right flipper partially up
+    double LEFT_FLIPPER_FLAT = .56; //Up position used when jostling glyphs for alignment
+    double LEFT_FLIPPER_DOWN = .372;
 
-    double RIGHT_FLIPPER_UP = .562;
+    double RIGHT_FLIPPER_UP = .555;
     //No RIGHT_FLIPPER_PARTIALLY_UP
-    double RIGHT_FLIPPER_FLAT = .861;
-    double RIGHT_FLIPPER_DOWN = .961;
-
-    double GRABBER_OPEN = 0;
-    double GRABBER_CLOSED = .4;
+    double RIGHT_FLIPPER_FLAT = .816;
+    double RIGHT_FLIPPER_DOWN = .983;
 
     //Autonomous Specific Configuration
-    private double moveSpeedMin = .2;
-    double moveSpeedMax = .95;
-    private double ticksRatioForward = 3000 / 34.5; //Ticks / inch
-
-    private double ticksRatioStrafe = 3000 / 29.5;
+    private double moveSpeedMin = .1;
+    double moveSpeedMax = .4;
+    private double ticksRatioForward = 1000 / 9.6; //Ticks / inch
+    private double ticksRatioStrafe = 1000 / 33.9;
 
     //Values are changed by multiple glyph autonomous programs, these are the initial, default values
-    double turnSpeed = .5; //Speed is ramped down as turn proceeds
-    double turnSpeedMin = .2;
+    double turnSpeed = .3; //Speed is ramped down as turn proceeds
+    double turnSpeedMin = .05;
 
-    enum Direction {
+    enum Direction { //Enum values used for both turning and movement
         FORWARD, BACKWARD, LEFT, RIGHT;
-
-        //Taken from http://stackoverflow.com/a/17006263
-        private static Direction[] vals = values();
-
-        public Direction next() {
-            return vals[(this.ordinal() + 1) % vals.length];
-        }
     }
 
     public enum OpModeType {
@@ -113,12 +98,13 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     //Autonomous instance variables
-    private VuMarkReader vuMarkReader;
+    VuMarkReader vuMarkReader;
     private ElapsedTime time; //Used for sensor reading timeout
+    String jewelOrientation = ""; //Value set in hitJewel method
 
     //General Variables
-    private double previousHeading = 0;
-    private double integratedHeading = 0;
+    private double previousHeading = 0; //Saved heading from previous check, used to calculate integratedHeading
+    private double integratedHeading = 0; //Saves heading in range (-inf, +inf) instead of (-179, 179)
 
     /**
      * Configures all parts of the robot. This method is called by the subclasses of OpModeBase, which allows all of the various OpModes
@@ -131,7 +117,7 @@ abstract class OpModeBase extends LinearOpMode {
 
         //Drive motors
 
-        //Motors are flipped for teleop
+        //Motors are flipped for teleop because up position of joystick producces negative power
         if (opModeType.equals(OpModeType.AUTONOMOUS)) {
             motorLeftFront.setDirection(FORWARD);
             motorLeftBack.setDirection(FORWARD);
@@ -154,31 +140,31 @@ abstract class OpModeBase extends LinearOpMode {
         motorRightFront.setMode(RUN_USING_ENCODER);
         motorRightBack.setMode(RUN_USING_ENCODER);
 
-        motorLeftFront.setZeroPowerBehavior(BRAKE); //Default is FLOAT
+        motorLeftFront.setZeroPowerBehavior(BRAKE); //Default is FLOAT, robot should stop immediately upon being set to zero power
         motorLeftBack.setZeroPowerBehavior(BRAKE);
         motorRightFront.setZeroPowerBehavior(BRAKE);
         motorRightBack.setZeroPowerBehavior(BRAKE);
 
         //Other motors
 
-        glyphLift.setMode(STOP_AND_RESET_ENCODER);
-        glyphLift.setMode(RUN_USING_ENCODER);
+        //glyphLift.setMode(STOP_AND_RESET_ENCODER);
+        glyphLift.setMode(RUN_WITHOUT_ENCODER); //Runs without encoder to increase speed, using encoders reduces maximum available speed
         glyphLift.setZeroPowerBehavior(BRAKE);
 
         leftIntake.setZeroPowerBehavior(BRAKE);
         rightIntake.setZeroPowerBehavior(BRAKE);
 
-        led.setPower(-1); //Blue
+        led.setPower(0);
 
         //Servos initialized only during autonomous init period
         //Initialize autonomous specific variables
         if (opModeType.equals(OpModeType.AUTONOMOUS)) {
             initializeServos(OpModeType.AUTONOMOUS);
-            initializeIMU();
+            initializeIMU(); //IMU not needed during teleop
 
             vuMarkReader = new VuMarkReader(hardwareMap);
-            time = new ElapsedTime();
-            displayInitialTelemetry();
+            time = new ElapsedTime(); //Used for move, turn, jewel detection timeouts during autonomous
+            displayInitialTelemetry(); //Signify autonomous is ready to begin, display IMU and motor encoder status
         }
     }
 
@@ -201,8 +187,6 @@ abstract class OpModeBase extends LinearOpMode {
 
         //Sensors
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        colorSensorFront = hardwareMap.colorSensor.get("color front");
-        colorSensorBack = hardwareMap.colorSensor.get("color back");
 
         //Servos
         colorSensorArm = hardwareMap.servo.get("color arm");
@@ -212,8 +196,6 @@ abstract class OpModeBase extends LinearOpMode {
         rightFlipper = hardwareMap.servo.get("right flipper");
 
         glyphLever = hardwareMap.servo.get("glyph lever");
-
-        grabber = hardwareMap.servo.get("grabber");
     }
 
     /**
@@ -268,14 +250,23 @@ abstract class OpModeBase extends LinearOpMode {
      * If the opmode is stopped during initialization, the method gracefully exits.
      */
     private void displayInitialTelemetry() {
+        String jewelColor = vuMarkReader.detectJewel();
+        time.reset();
+
         while(!isStarted() && !isStopRequested()) { //Display distance telemetry for robot alignment
             telemetry.addData("Ready to start the program.", "");
             telemetry.addData("Encoders", motorLeftFront.getCurrentPosition() + motorLeftBack.getCurrentPosition() + motorRightFront.getCurrentPosition() + motorRightBack.getCurrentPosition());
             telemetry.addData("Heading", getIntegratedHeading());
             telemetry.addData("VuMark", vuMarkReader.getVuMark());
+            if(time.milliseconds() > 1000) { //Only update jewel color every secondr
+                jewelColor = vuMarkReader.detectJewel();
+                time.reset();
+            }
+            telemetry.addData("Jewel Color", jewelColor);
             telemetry.update();
         }
     }
+
 
     /**
      * This method hits off the jewel matching the opposing alliance's color.
@@ -284,40 +275,42 @@ abstract class OpModeBase extends LinearOpMode {
      * This must be equal to either "Blue" or "Red".
      */
     void hitJewel(String allianceColor) {
-        colorSensorArm.setPosition(.495); //Move arm down slightly
-        sleep(1300);
+        jewelOrientation = vuMarkReader.detectJewel(); //No need for separate thread, camera processing is fast
 
-        colorSensorRotator.setPosition(.2); //Move rotator to center between jewels
-        sleep(2000);
+        colorSensorArm.setPosition(.372); //Move arm down slightly
+        sleep(200);
 
-        colorSensorArm.setPosition(0); //Move arm down between jewels
-        sleep(1200);
+        colorSensorRotator.setPosition(.817); //Move rotator to center between jewels
+        sleep(400);
+
+        colorSensorArm.setPosition(.568); //Move arm down between jewels
+        sleep(400);
 
         //Knock off jewel of opposing alliance color
         time.reset();
-        while(getColor().equals("Unknown") && opModeIsActive() && time.milliseconds() < 5000) { //Timeout at 5 second
+        while(jewelOrientation.equals("") && opModeIsActive() && time.milliseconds() < 3000) { //Timeout at 5 seconds
             telemetry.addData("Color", "Unknown");
             telemetry.update();
         }
 
         //Color sensor reads left jewel
-        telemetry.addData("Color", getColor());
+        telemetry.addData("Color", jewelOrientation);
         telemetry.update();
 
-        //Color sensor is facing right jewel
-        if(getColor().equals(allianceColor) && !getColor().equals("Unknown")) {
-             colorSensorRotator.setPosition(.7); //Hit left jewel
-            sleep(1000);
-        } else if(!getColor().equals("Unknown")) { //Color is still detected, is opposing alliance's color
-            colorSensorRotator.setPosition(0); //Hit right jewel
-            sleep(1000);
+        //jewelOrientation variable holds color of left jewel
+        if(jewelOrientation.equals(allianceColor)) {
+             colorSensorRotator.setPosition(.545); //Hit right jewel
+            sleep(400);
+        } else if(!jewelOrientation.equals("Unknown") && !jewelOrientation.equals("")) { //Color is still detected, is opposing alliance's color
+            colorSensorRotator.setPosition(1); //Hit left jewel
+            sleep(400);
         }
 
         colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
-        sleep(1000);
+        sleep(400);
 
         colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
-        sleep(1000);
+        sleep(300);
     }
 
     /**
@@ -347,33 +340,30 @@ abstract class OpModeBase extends LinearOpMode {
     }
 
     void flipGlyph() {
-        //Move intake down by spinning wheels
-        colorSensorArm.setPosition(.515); //Move arm down slightly so that the intake can move down
-        sleep(1000);
-
+        //Move intake down so that flipper can move
         leftIntake.setPower(1);
-        rightIntake.setPower(-1);
-        sleep(1200);
-
+        rightIntake.setPower(1);
+        sleep(700);
         leftIntake.setPower(0);
         rightIntake.setPower(0);
 
         //Slowly move flipper up tp deposit glyph into cryptobox
         while(opModeIsActive() && Math.abs(leftFlipper.getPosition() - LEFT_FLIPPER_UP) > .01) {
-            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .008, 0, LEFT_FLIPPER_UP));
-            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .008, RIGHT_FLIPPER_UP, 1));
+            leftFlipper.setPosition(Range.clip(leftFlipper.getPosition() + .01, 0, LEFT_FLIPPER_UP));
+            rightFlipper.setPosition(Range.clip(rightFlipper.getPosition() - .01, RIGHT_FLIPPER_UP, 1));
         }
+
         leftFlipper.setPosition(LEFT_FLIPPER_UP); //Ensure that flipper is fully up because of Math.abs threshold
         rightFlipper.setPosition(RIGHT_FLIPPER_UP);
 
-        move(4, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+        move(2, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
 
         leftFlipper.setPosition(LEFT_FLIPPER_DOWN); //Move flipper into robot before ramming back into glyph
         rightFlipper.setPosition(RIGHT_FLIPPER_DOWN);
         sleep(500);
 
-        move(7, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again, pushing it into cryptobox
-        move(5, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
+        move(6, Direction.BACKWARD, moveSpeedMax, false, 1000); //Hit glyph again, pushing it into cryptobox
+        move(3, Direction.FORWARD, moveSpeedMax, false, 1000); //Back up
     }
 
     /**
@@ -417,7 +407,7 @@ abstract class OpModeBase extends LinearOpMode {
      * @param degrees   number of degrees to turn (positive)
      * @param direction Enum Direction.RIGHT or Direction.LEFT
      * @param maxSpeed  the maximum speed of the robot
-     * @param count     the number of times to recurse
+     * @param count     the number of times to recurse and correct turn if target is overshot
      * @see OpModeBase#turn(double, OpModeBase.Direction, double)
      * @see ModernRoboticsI2cGyro
      * @see DcMotor
@@ -467,9 +457,9 @@ abstract class OpModeBase extends LinearOpMode {
         telemetry.addData("Direction", -1 * (int) Math.signum(degrees));
         telemetry.update();
 
-        if (Math.abs(getIntegratedHeading() - targetHeading) > 3 && count > 0) { //If the target was significantly overshot
-            //Recurse to correct turn
-            turn(Math.abs(getIntegratedHeading() - targetHeading), direction.next(), .2, --count, 2000);
+        if (Math.abs(getIntegratedHeading() - targetHeading) > 1 && count > 0) { //If the target was significantly overshot
+            //Recurse to correct turn, turning in the opposite direction
+            turn(Math.abs(getIntegratedHeading() - targetHeading), direction.equals(Direction.LEFT) ? Direction.RIGHT : Direction.LEFT, .05, --count, 2000);
         }
     }
 
@@ -548,16 +538,102 @@ abstract class OpModeBase extends LinearOpMode {
             //Only one encoder target must be reached
 
             //Trapezoidal motion profile
-            if (Math.abs(motorLeftFront.getCurrentPosition() - motorInitial) < 1000) {
-                moveSpeed = Math.min(maxSpeed, moveSpeed + .05); //Ramp up motor speed at beginning of move
+            if (Math.abs(motorLeftFront.getCurrentPosition() - motorInitial) < 500) {
+                moveSpeed = Math.min(maxSpeed, moveSpeed + .03); //Ramp up motor speed at beginning of move
             } else if (Math.abs(motorLeftFront.getCurrentPosition() - motorLeftFront.getTargetPosition()) < 1000) { //Ramp down motor speed at end of move
-                moveSpeed = Math.max(moveSpeedMin, moveSpeed - .03);
+                moveSpeed = Math.max(moveSpeedMin, moveSpeed - .04);
             }
 
+            if(direction.equals(Direction.LEFT) || direction.equals(Direction.RIGHT)) moveSpeed = .8;
+
+            if(Math.abs(getIntegratedHeading() - initialHeading) > 2) {
+                if(getIntegratedHeading() < initialHeading) { //Turn left
+                    motorLeftFront.setPower(moveSpeed - .05);
+                    motorLeftBack.setPower(moveSpeed - .05);
+                    motorRightFront.setPower(moveSpeed + .05);
+                    motorRightBack.setPower(moveSpeed + .05);
+                } else { //Turn right
+                    motorLeftFront.setPower(moveSpeed + .05);
+                    motorLeftBack.setPower(moveSpeed + .05);
+                    motorRightFront.setPower(moveSpeed - .05);
+                    motorRightBack.setPower(moveSpeed - .05);
+                }
+            } else {
+                motorLeftFront.setPower(moveSpeed);
+                motorLeftBack.setPower(moveSpeed);
+                motorRightFront.setPower(moveSpeed);
+                motorRightBack.setPower(moveSpeed);
+            }
+
+            telemetry.addData("Motor Speed", moveSpeed);
+            telemetry.addData("Left Front Encoder", motorLeftFront.getCurrentPosition());
+            telemetry.addData("Left Back Encoder", motorLeftBack.getCurrentPosition());
+            telemetry.addData("Right Front Encoder", motorRightFront.getCurrentPosition());
+            telemetry.addData("Right Back Encoder", motorRightBack.getCurrentPosition());
+            telemetry.update();
+        }
+
+        motorLeftFront.setPower(0);
+        motorLeftBack.setPower(0);
+        motorRightFront.setPower(0);
+        motorRightBack.setPower(0);
+        sleep(400);
+
+        //Correct if robot turned during movement
+        if (Math.abs(getIntegratedHeading() - initialHeading) > 1 && recurse) {
+            turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() < initialHeading ? Direction.LEFT : Direction.RIGHT, .1);
+        }
+    }
+
+    public void strafeToCryptobox(Direction direction, double maxSpeed, String allianceColor) {
+        double initialHeading = getIntegratedHeading();
+
+        //Change mode because move() uses setTargetPosition()
+        motorLeftFront.setMode(RUN_USING_ENCODER);
+        motorLeftBack.setMode(RUN_USING_ENCODER);
+        motorRightFront.setMode(RUN_USING_ENCODER);
+        motorRightBack.setMode(RUN_USING_ENCODER);
+
+        double moveSpeed = moveSpeedMin;
+
+        if (direction == Direction.RIGHT) {
             motorLeftFront.setPower(moveSpeed);
+            motorLeftBack.setPower(-moveSpeed);
+            motorRightFront.setPower(-moveSpeed);
+            motorRightBack.setPower(moveSpeed);
+        } else {
+            motorLeftFront.setPower(-moveSpeed);
             motorLeftBack.setPower(moveSpeed);
             motorRightFront.setPower(moveSpeed);
-            motorRightBack.setPower(moveSpeed);
+            motorRightBack.setPower(-moveSpeed);
+        }
+
+        ElapsedTime timer = new ElapsedTime();
+        timer.startTime();
+
+        while (vuMarkReader.detectCryptobox(allianceColor).size() < 1 && timer.milliseconds() < 10000 && opModeIsActive()) {
+            if (timer.milliseconds() < 500) {
+                moveSpeed = Math.min(maxSpeed, moveSpeed + .05); //Ramp up motor speed at beginning of move
+            }
+
+            if(Math.abs(getIntegratedHeading() - initialHeading) > 2) {
+                if(getIntegratedHeading() < initialHeading) { //Turn left
+                    motorLeftFront.setPower(moveSpeed - .1);
+                    motorLeftBack.setPower(moveSpeed - .1);
+                    motorRightFront.setPower(moveSpeed + .1);
+                    motorRightBack.setPower(moveSpeed + .1);
+                } else { //Turn right
+                    motorLeftFront.setPower(moveSpeed + .1);
+                    motorLeftBack.setPower(moveSpeed + .1);
+                    motorRightFront.setPower(moveSpeed - .1);
+                    motorRightBack.setPower(moveSpeed - .1);
+                }
+            } else {
+                motorLeftFront.setPower(-moveSpeed);
+                motorLeftBack.setPower(moveSpeed);
+                motorRightFront.setPower(moveSpeed);
+                motorRightBack.setPower(-moveSpeed);
+            }
 
             telemetry.addData("Motor Speed", moveSpeed);
             telemetry.update();
@@ -570,19 +646,9 @@ abstract class OpModeBase extends LinearOpMode {
         sleep(400);
 
         //Correct if robot turned during movement
-        if (Math.abs(getIntegratedHeading() - initialHeading) > 5 && recurse) {
-            turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() < initialHeading ? Direction.RIGHT : Direction.LEFT, .2);
+        if (Math.abs(getIntegratedHeading() - initialHeading) > 5) {
+            turn(Math.abs(getIntegratedHeading() - initialHeading), getIntegratedHeading() < initialHeading ? Direction.LEFT : Direction.RIGHT, .2);
         }
-    }
-
-    /**
-     * Determines the color read by the color sensor.
-     * This method converts the RGB values returned from the REV Color / Distance sensor to the HSV color space.
-     *
-     * @return color: "Red", "Blue", "Unknown"
-     */
-    String getColor() {
-        return "Blue";
     }
 
     /**

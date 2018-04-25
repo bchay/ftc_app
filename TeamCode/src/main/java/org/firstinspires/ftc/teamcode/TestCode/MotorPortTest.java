@@ -12,10 +12,10 @@ public class MotorPortTest extends OpMode {
     DcMotor motor4;
 
     public void init() {
-        motor1 = hardwareMap.dcMotor.get("motor 1"); //Left intake, joystick up spits glyph out
-        motor2 = hardwareMap.dcMotor.get("motor 2"); //Right intake
-        motor3 = hardwareMap.dcMotor.get("motor 3");
-        motor4 = hardwareMap.dcMotor.get("motor 4"); //Lift, negative power is down
+        motor1 = hardwareMap.dcMotor.get("motor 1"); //right back
+        motor2 = hardwareMap.dcMotor.get("motor 2"); //left back
+        motor3 = hardwareMap.dcMotor.get("motor 3"); //right front
+        motor4 = hardwareMap.dcMotor.get("motor 4"); //left front
     }
 
     public void loop() {
