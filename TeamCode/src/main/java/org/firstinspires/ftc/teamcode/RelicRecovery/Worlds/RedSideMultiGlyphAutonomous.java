@@ -1,33 +1,35 @@
 package org.firstinspires.ftc.teamcode.RelicRecovery.Worlds;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
 /*
-This code is the code for the blue side cryptobox.
+This code is the code for the red side cryptobox, with multiple glyphs.
 The robot hits the jewel, reads the VuMark, and drives off of the balancing stone.
  It then drives to the correct cryptobox column and deposits the jewel.
  */
-@Autonomous(name = "Blue Side Worlds", group = "Worlds")
-public class BlueSideAutonomous extends OpModeBase {
+@Autonomous(name = "Red Side Multi Glyph Worlds", group = "Worlds")
+public class RedSideMultiGlyphAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);
 
-        hitJewel("Blue");
+        hitJewel("Red");
 
         //Read VuMark to determine cryptobox key
-        RelicRecoveryVuMark vuMark = readVuMark("Blue");
+        RelicRecoveryVuMark vuMark = readVuMark("Red");
 
         move(14.5, Direction.FORWARD); //Drive off of balancing stone
 
-        if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
-            turn(65, Direction.RIGHT);
-            move(14, Direction.BACKWARD);
+        if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
+            turn(70, Direction.LEFT);
+            move(13.5, Direction.BACKWARD);
         } else if(vuMark.equals(RelicRecoveryVuMark.CENTER)) {
-            turn(60, Direction.RIGHT);
-            move(16, Direction.BACKWARD);
-        } else if(vuMark.equals(RelicRecoveryVuMark.LEFT)) {
-            turn(53, Direction.RIGHT);
-            move(17.5, Direction.BACKWARD);
+            turn(63, Direction.LEFT);
+            move(15, Direction.BACKWARD);
+        } else if(vuMark.equals(RelicRecoveryVuMark.RIGHT)) {
+            turn(53, Direction.LEFT);
+            move(16, Direction.BACKWARD); //Drive to cryptobox
         }
 
         flipGlyph();

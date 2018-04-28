@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.RelicRecovery.NSR;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
@@ -44,6 +45,7 @@ Gamepad 2:
  * This is the code for the teleop program for the robot built for the North Super Regional competition.
  *
  */
+@Disabled
 @TeleOp(name = "Relic Recovery Teleop NSR", group = "NSR")
 public class RelicRecoveryTeleopNSR extends OpModeBase {
     private HashMap<String, Boolean> previousLoopValues = new HashMap<>();

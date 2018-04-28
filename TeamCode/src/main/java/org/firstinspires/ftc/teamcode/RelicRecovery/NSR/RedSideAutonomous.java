@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.RelicRecovery.NSR;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
 @Autonomous(name = "Red Side NSR", group = "NSR")
+@Disabled
 public class RedSideAutonomous extends OpModeBase {
     public void runOpMode() {
         super.runOpMode(OpModeType.AUTONOMOUS);

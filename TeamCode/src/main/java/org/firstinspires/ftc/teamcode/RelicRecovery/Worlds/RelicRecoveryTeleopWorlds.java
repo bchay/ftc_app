@@ -89,7 +89,7 @@ Gamepad 2:
 public class RelicRecoveryTeleopWorlds extends OpModeBase {
     private ArrayList<TaskData> pendingTasks = new ArrayList<>();
     boolean flag = true; //Used to determine the position of the glyph lever
-    double maxSpeed = .7;
+    double maxSpeed = .8;
 
     public void runOpMode() {
         super.runOpMode(OpModeType.TELEOP); //Initialize hardware; motors, etc. are accessible through interitance
@@ -162,14 +162,14 @@ public class RelicRecoveryTeleopWorlds extends OpModeBase {
 
             //Intakes
             if(gamepad1.left_bumper) { //Spit out glpyh
-                leftIntake.setPower(-.7);
-                rightIntake.setPower(-.7);
+                leftIntake.setPower(-.8);
+                rightIntake.setPower(-.8);
             } else if(gamepad1.left_trigger > .5) {  //Suck glyphs in
-                leftIntake.setPower(.7);
-                rightIntake.setPower(.7);
+                leftIntake.setPower(.8);
+                rightIntake.setPower(.8);
             } else {
-                leftIntake.setPower(Range.clip(gamepad2.right_stick_y, -.7, .7)); //Joystick up sucks in glyphs
-                rightIntake.setPower(Range.clip(gamepad2.left_stick_y, -.7, .7));
+                leftIntake.setPower(Range.clip(gamepad2.right_stick_y, -.8, .8)); //Joystick up sucks in glyphs
+                rightIntake.setPower(Range.clip(gamepad2.left_stick_y, -.8, .8));
             }
 
             if(gamepad1.b) led.setPower(1); //Red
@@ -194,17 +194,17 @@ public class RelicRecoveryTeleopWorlds extends OpModeBase {
             else if(gamepad2.left_trigger > .1) glyphLift.setPower(-gamepad2.left_trigger);
             else glyphLift.setPower(0);
 
-            //Move color sensor back to original position
-            //Necessary if servo loses power in the middle of a match - sending new position restores power
-            if(gamepad2.a) {
-                colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
-                colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
-            }
 
             //Turn LED on if the glyph lever is up - allows driver to see position of lever
             //Otherwise, if gamepad1 buttons that control LEDs are not pressed, turn LED off
             if(Math.abs(glyphLever.getPosition() - GLYPH_LEVER_DOWN) > .2) led.setPower(-1);
             else if(!gamepad1.b && !gamepad1.x) led.setPower(0);
+
+            //Move color sensor back to original position
+            //Necessary if servo loses power in the middle of a match - sending new position restores power
+            colorSensorArm.setPosition(COLOR_SENSOR_ARM_INITIAL);
+            colorSensorRotator.setPosition(COLOR_ROTATOR_INITIAL);
+
 
             executeThreads();
 
