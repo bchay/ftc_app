@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<Robot type="FirstInspires-FTC">
+    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2M94HQ" parentModuleAddress="5">
+        <LynxModule name="Expansion Hub 5" port="5">
+            <NeveRest20Gearmotor name="right back" port="0" />
+            <NeveRest20Gearmotor name="left back" port="1" />
+            <NeveRest20Gearmotor name="right front" port="2" />
+            <NeveRest20Gearmotor name="left front" port="3" />
+            <Servo name="color arm" port="0" />
+            <Servo name="color rotator" port="2" />
+            <Servo name="" port="3" />
+            <Servo name="grabber" port="4" />
+        </LynxModule>
+        <LynxModule name="Expansion Hub 2" port="2">
+            <NeveRest20Gearmotor name="right intake" port="0" />
+            <NeveRest20Gearmotor name="left intake" port="1" />
+            <NeveRest20Gearmotor name="led" port="2" />
+            <NeveRest20Gearmotor name="lift" port="3" />
+            <Servo name="left flipper" port="4" />
+            <Servo name="right flipper" port="2" />
+            <Servo name="glyph lever" port="3" />
+            <LynxEmbeddedIMU name="imu" port="0" bus="0" />
+        </LynxModule>
+    </LynxUsbDevice>
+</Robot>
