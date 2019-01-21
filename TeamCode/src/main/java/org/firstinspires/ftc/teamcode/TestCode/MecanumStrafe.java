@@ -14,7 +14,6 @@ public class MecanumStrafe extends LinearOpMode {
     private DcMotor rightFront;
     private DcMotor rightBack;
 
-    private double TICKS_RATIO = 1; //Ticks / inch
     private int ENCODER_THRESHOLD = 5;
 
     public void runOpMode() {
@@ -44,13 +43,11 @@ public class MecanumStrafe extends LinearOpMode {
     /**
      * Causes the robot to strafe in the indicated direction
      *
-     * @param distance the distance in inches that the robot should strafe
+     * @param distance the distance in ticks that the robot should strafe
      * @param angle the angle, in degrees, at which the robot should strafe
      *              measured counterclockwise with 0/360 degrees being the positive x axis
      */
-    public void strafe(double distance, double angle) {
-        distance *= TICKS_RATIO; //Convert inches to ticks
-
+    public void strafe(int distance, double angle) {
         angle *= Math.PI / 180; //Convert to radians
         angle -= Math.PI / 4; //Transform so that 0 represents positive x axis
 
@@ -75,12 +72,11 @@ public class MecanumStrafe extends LinearOpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        //Target distance is scaled based on angle
         //Target forwards or backwards is dictated by the sign of motor power variable
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + (int) (distance * leftFrontPower));
-        leftBack.setTargetPosition(leftBack.getCurrentPosition() + (int) (distance * leftBackPower));
-        rightFront.setTargetPosition(rightFront.getCurrentPosition() + (int) (distance * rightFrontPower));
-        rightBack.setTargetPosition(rightBack.getCurrentPosition() + (int) (distance * rightBackPower));
+        leftFront.setTargetPosition(leftFront.getCurrentPosition() + distance * (int) Math.signum(leftFrontPower));
+        leftBack.setTargetPosition(leftBack.getCurrentPosition() + distance * (int) Math.signum(leftBackPower));
+        rightFront.setTargetPosition(rightFront.getCurrentPosition() +  distance * (int) Math.signum(rightFrontPower));
+        rightBack.setTargetPosition(rightBack.getCurrentPosition() +  distance * (int) Math.signum(rightBackPower));
 
         //The target will be reached when the motors that have a power of 1 have reached their targets
         //For example, if moving 45 degrees, only LF and RB targets matter
